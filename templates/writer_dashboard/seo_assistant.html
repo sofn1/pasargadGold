@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold text-[#1C39BB] mb-6">دستیار سئو</h1>
+  <form method="POST" class="bg-white shadow p-6 rounded-xl space-y-4">
+    {% csrf_token %}
+    <input name="title" type="text" placeholder="عنوان محتوا" class="w-full border rounded px-3 py-2" required>
+    <textarea name="content" rows="5" placeholder="محتوا..." class="w-full border rounded px-3 py-2" required></textarea>
+    <input name="keywords" type="text" placeholder="کلمات کلیدی (با کاما جدا کنید)" class="w-full border rounded px-3 py-2">
+    <button type="submit" class="bg-[#1C39BB] text-white px-4 py-2 rounded shadow hover:opacity-90">تحلیل</button>
+  </form>
+
+  {% if result %}
+  <div class="mt-6 bg-white shadow p-6 rounded-xl space-y-4">
+    <h2 class="text-lg font-bold text-[#1C39BB]">نتایج</h2>
+    <p><strong>تعداد کلمات:</strong> {{ result.word_count }}</p>
+    <p><strong>طول عنوان:</strong> {{ result.title_length }}</p>
+    <p><strong>خوانایی:</strong> {{ result.ai_analysis.readability_score }}</p>
+    <p><strong>لحن:</strong> {{ result.ai_analysis.estimated_tone }}</p>
+    <ul>
+      {% for suggestion in result.suggestions %}
+      <li class="text-red-600">- {{ suggestion }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

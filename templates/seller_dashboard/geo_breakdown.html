@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">🌍 تفکیک جغرافیایی سفارش‌ها</h2>
+  <table class="w-full table-auto bg-white rounded shadow text-right">
+    <thead class="bg-[#1C39BB] text-white">
+      <tr>
+        <th class="p-3">منطقه</th>
+        <th class="p-3">تعداد سفارش</th>
+      </tr>
+    </thead>
+    <tbody id="geo-body"></tbody>
+  </table>
+</div>
+
+<script>
+  fetch("{% url 'seller_geo_breakdown' %}")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("geo-body");
+      data.forEach(item => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3">${item.region}</td>
+            <td class="p-3">${item.orders}</td>
+          </tr>
+        `;
+      });
+    });
+</script>
+{% endblock %}

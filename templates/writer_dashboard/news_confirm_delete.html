@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="max-w-xl mx-auto py-8 px-4 text-center">
+  <h1 class="text-xl font-bold text-red-600 mb-4">آیا مطمئن هستید؟</h1>
+  <p>شما در حال حذف خبر <strong>{{ news.name }}</strong> هستید.</p>
+  <form method="post" class="mt-4">
+    {% csrf_token %}
+    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">حذف</button>
+    <a href="{% url 'writer_news_list' %}" class="ml-4 text-[#1C39BB]">بازگشت</a>
+  </form>
+</section>
+{% endblock %}

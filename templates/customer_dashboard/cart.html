@@ -1,0 +1,18 @@
+<!-- templates/customer_dashboard/cart.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-4 text-[#1C39BB]">سبد خرید</h2>
+  {% if cart %}
+  <ul class="space-y-4">
+    {% for item in cart %}
+    <li class="bg-white p-4 shadow rounded">
+      {{ item.product.name }} - {{ item.quantity }} عدد - {{ item.price }} تومان
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>سبد خرید شما خالی است.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام مشتری | پاسارگاد گلد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+    <!-- Registration Card -->
+    <div class="card border-0 shadow-lg rounded-4">
+      <!-- Header Banner -->
+      <div class="bg-primary text-white text-center py-4 rounded-top-4">
+        <h2 class="h4 mb-1 fw-bold">ثبت‌نام مشتری</h2>
+        <p class="small opacity-75 mb-0">به خانواده پاسارگاد گلد خوش آمدید</p>
+      </div>
+
+      <!-- Form Body -->
+      <div class="card-body p-4 p-md-5">
+        <form method="post">
+          {% csrf_token %}
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label small fw-medium">ایمیل</label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              class="form-control form-control-lg"
+              placeholder="example@email.com"
+              required
+            >
+          </div>
+
+          <!-- Username -->
+          <div class="mb-3">
+            <label for="username" class="form-label small fw-medium">نام کاربری</label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              class="form-control form-control-lg"
+              placeholder="نام کاربری شما"
+              required
+            >
+          </div>
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label for="password" class="form-label small fw-medium">رمز عبور</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              class="form-control form-control-lg"
+              placeholder="••••••••"
+              required
+            >
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="btn btn-gold w-100 btn-lg rounded-pill shadow-sm"
+          >
+            ثبت‌نام در پاسارگاد گلد
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer Link -->
+      <div class="card-footer bg-light text-center py-3 border-0">
+        <p class="small text-muted mb-0">
+          قبلاً ثبت‌نام کرده‌اید؟
+          <a href="{% url 'login' %}" class="text-primary fw-medium text-decoration-underline">
+            وارد شوید
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

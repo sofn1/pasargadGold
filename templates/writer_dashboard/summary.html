@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold text-[#1C39BB] mb-6">داشبورد نویسنده</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white shadow rounded-xl p-6">
+      <h2 class="text-lg font-semibold text-[#1C39BB] mb-2">وبلاگ</h2>
+      <p>تعداد: {{ summary.total_blogs }}</p>
+      <p>بازدیدها: {{ summary.blog_views }}</p>
+      <p>میانگین زمان خواندن: {{ summary.avg_blog_read_time }} دقیقه</p>
+      <p>آخرین وبلاگ: {{ summary.last_blog }}</p>
+    </div>
+    <div class="bg-white shadow rounded-xl p-6">
+      <h2 class="text-lg font-semibold text-[#1C39BB] mb-2">اخبار</h2>
+      <p>تعداد: {{ summary.total_news }}</p>
+      <p>بازدیدها: {{ summary.news_views }}</p>
+      <p>میانگین زمان خواندن: {{ summary.avg_news_read_time }} دقیقه</p>
+      <p>آخرین خبر: {{ summary.last_news }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

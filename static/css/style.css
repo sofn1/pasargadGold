@@ -1,0 +1,16 @@
+/* Test: Make sure style.css is loading */
+footer {
+  background-color: #1A237E !important;
+  color: white !important;
+  padding: 2rem 0;
+}
+
+footer a {
+  color: #FFD700 !important; /* Gold links */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}

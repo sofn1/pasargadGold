@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="max-w-4xl mx-auto py-10 px-4">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">دیدگاه‌های بلاگ "{{ blog.name }}"</h2>
+
+  {% for comment in comments %}
+  <div class="border rounded-xl p-4 mb-4 bg-white shadow">
+    <div class="flex justify-between items-center">
+      <p class="text-sm font-semibold text-gray-700">{{ comment.user.username }}</p>
+      <p class="text-xs text-gray-500">{{ comment.created_at|date:"Y-m-d H:i" }}</p>
+    </div>
+    <p class="text-gray-800 mt-2">{{ comment.content }}</p>
+
+    {% if comment.replies.all %}
+    <div class="mt-4 pl-6 border-l-2 border-[#1C39BB]">
+      {% for reply in comment.replies.all %}
+      <div class="mb-2">
+        <p class="text-sm text-gray-600"><strong>{{ reply.user.username }}:</strong> {{ reply.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      <input type="hidden" name="parent_id" value="{{ comment.id }}">
+      <textarea name="reply" rows="2" class="w-full border rounded p-2 text-sm" placeholder="پاسخ..."></textarea>
+      <button type="submit" class="mt-2 bg-[#1C39BB] text-white px-4 py-2 rounded">ارسال پاسخ</button>
+    </form>
+  </div>
+  {% empty %}
+  <p>هنوز هیچ دیدگاهی ثبت نشده است.</p>
+  {% endfor %}
+</section>
+{% endblock %}

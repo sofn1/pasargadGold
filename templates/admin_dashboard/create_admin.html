@@ -1,0 +1,44 @@
+<!-- templates/admin_dashboard/create_admin.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}ایجاد مدیر جدید{% endblock %}
+
+{% block content %}
+<h2 class="my-4">ایجاد مدیر جدید</h2>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="first_name" class="form-label">نام</label>
+        <input type="text" class="form-control" id="first_name" name="first_name" required>
+      </div>
+      <div class="mb-3">
+        <label for="last_name" class="form-label">نام خانوادگی</label>
+        <input type="text" class="form-control" id="last_name" name="last_name" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">ایمیل</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">تلفن</label>
+        <input type="text" class="form-control" id="phone" name="phone">
+      </div>
+      <div class="mb-3">
+        <label for="permissions" class="form-label">دسترسی‌ها</label>
+        <select multiple class="form-control" id="permissions" name="permissions">
+          <option value="users">مدیریت کاربران</option>
+          <option value="products">مدیریت محصولات</option>
+          <option value="orders">مدیریت سفارشات</option>
+          <option value="settings">ویرایش تنظیمات</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">ایجاد مدیر</button>
+      <a href="{% url 'admin-dashboard-manage-admins' %}" class="btn btn-secondary">انصراف</a>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

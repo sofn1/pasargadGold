@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📊 خلاصه فروشنده</h2>
+  <table class="table-auto w-full bg-white shadow rounded-lg text-right">
+    <tbody>
+      <tr><td class="p-4 font-semibold">فروش کل</td><td class="p-4">{{ summary.total_sales }} تومان</td></tr>
+      <tr><td class="p-4 font-semibold">سود خالص</td><td class="p-4">{{ summary.net_profit }} تومان</td></tr>
+      <tr><td class="p-4 font-semibold">تعداد سفارش‌ها</td><td class="p-4">{{ summary.total_orders }}</td></tr>
+      <tr><td class="p-4 font-semibold">میانگین سفارش</td><td class="p-4">{{ summary.average_order_value }} تومان</td></tr>
+      <tr><td class="p-4 font-semibold">نرخ ترک سبد خرید</td><td class="p-4">{{ summary.cart_abandonment_rate }}%</td></tr>
+      <tr><td class="p-4 font-semibold">مشتریان جدید</td><td class="p-4">{{ summary.new_customers }}</td></tr>
+      <tr><td class="p-4 font-semibold">مشتریان بازگشتی</td><td class="p-4">{{ summary.returning_customers }}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="mt-6 flex gap-4">
+    <a href="{% url 'seller_export_excel' %}" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">📤 خروجی Excel</a>
+    <a href="{% url 'seller_export_csv' %}" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">📤 خروجی CSV</a>
+    <form action="{% url 'seller_schedule_weekly_report' %}" method="POST">
+      {% csrf_token %}
+      <button type="submit" class="bg-orange-500 text-white px-5 py-2 rounded hover:bg-orange-600">
+        🗓️ زمانبندی گزارش هفتگی
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

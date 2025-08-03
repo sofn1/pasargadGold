@@ -1,0 +1,35 @@
+<!-- templates/admin_dashboard/invite_admin.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}دعوت مدیر جدید{% endblock %}
+
+{% block content %}
+<h2 class="my-4">دعوت از مدیر جدید</h2>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="email" class="form-label">ایمیل مدیر</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="admin@pasargadgold.ir" required>
+      </div>
+      <div class="mb-3">
+        <label for="role" class="form-label">نقش</label>
+        <select class="form-control" id="role" name="role">
+          <option value="super">مدیر کل</option>
+          <option value="support">پشتیبانی</option>
+          <option value="content">مدیریت محتوا</option>
+        </select>
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="send_email" name="send_email" checked>
+        <label class="form-check-label" for="send_email">ارسال ایمیل دعوت</label>
+      </div>
+      <button type="submit" class="btn btn-primary">ارسال دعوت</button>
+      <a href="{% url 'admin-dashboard-manage-admins' %}" class="btn btn-secondary">بازگشت</a>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+<!-- templates/customer_dashboard/invoice.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-6 bg-white shadow rounded">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-4">صورتحساب سفارش #{{ order.id }}</h2>
+  <p><strong>تاریخ:</strong> {{ order.created_at|date:"Y-m-d" }}</p>
+  <p><strong>وضعیت:</strong> {{ order.status }}</p>
+  <h3 class="mt-6 text-xl font-semibold">اقلام:</h3>
+  <ul class="mt-2 space-y-2">
+    {% for item in order.orderitem_set.all %}
+    <li>
+      {{ item.product.title }} - {{ item.quantity }} عدد - {{ item.price }} تومان
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="mt-6 font-bold">مجموع کل: {{ order.total_price }} تومان</p>
+</div>
+{% endblock %}

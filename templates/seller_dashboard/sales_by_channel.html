@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📈 فروش به تفکیک کانال</h2>
+  <table class="w-full table-auto bg-white rounded shadow text-right">
+    <thead class="bg-[#1C39BB] text-white">
+      <tr>
+        <th class="p-3">کانال</th>
+        <th class="p-3">میزان فروش (تومان)</th>
+      </tr>
+    </thead>
+    <tbody id="channel-body"></tbody>
+  </table>
+</div>
+
+<script>
+  fetch("{% url 'seller_sales_by_channel' %}")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("channel-body");
+      data.forEach(row => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3">${row.channel}</td>
+            <td class="p-3">${row.sales}</td>
+          </tr>
+        `;
+      });
+    });
+</script>
+{% endblock %}

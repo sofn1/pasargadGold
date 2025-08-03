@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+  <h2 class="text-xl font-bold text-[#1C39BB] mb-4">لیست وبلاگ‌ها</h2>
+  <a href="{% url 'writer_blog_create' %}" class="bg-[#1C39BB] text-white px-4 py-2 rounded shadow mb-4 inline-block">+ ایجاد وبلاگ</a>
+
+  <table class="w-full border text-right">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="p-2">عنوان</th>
+        <th class="p-2">تاریخ انتشار</th>
+        <th class="p-2">بازدید</th>
+        <th class="p-2">عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for blog in blogs %}
+      <tr>
+        <td class="p-2">{{ blog.name }}</td>
+        <td class="p-2">{{ blog.publishTime|date:"Y-m-d" }}</td>
+        <td class="p-2">{{ blog.views }}</td>
+        <td class="p-2 flex gap-2">
+          <a href="{% url 'writer_blog_edit' blog.id %}" class="text-blue-500">ویرایش</a>
+          <a href="{% url 'writer_blog_delete' blog.id %}" class="text-red-500">حذف</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="p-2 text-center">وبلاگی یافت نشد.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

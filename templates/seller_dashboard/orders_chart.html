@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📦 نمودار تعداد سفارش‌ها</h2>
+  <canvas id="ordersChart" height="100"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('ordersChart').getContext('2d');
+  fetch("{% url 'seller_orders_chart_data' %}")
+    .then(res => res.json())
+    .then(data => {
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(item => item.day),
+          datasets: [{
+            label: 'تعداد سفارش',
+            data: data.map(item => item.orders),
+            backgroundColor: '#1C39BB'
+          }]
+        }
+      });
+    });
+</script>
+{% endblock %}

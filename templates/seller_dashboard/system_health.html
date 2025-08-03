@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto px-4 py-10 text-center">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">🛠️ بررسی سلامت سیستم</h2>
+  <p id="system-health" class="text-lg font-semibold text-gray-700"></p>
+</div>
+
+<script>
+  fetch("{% url 'seller_system_health' %}")
+    .then(res => res.json())
+    .then(data => {
+      const message = data.failed_orders > 0
+        ? `⚠️ ${data.failed_orders} سفارش ناموفق وجود دارد. لطفاً بررسی کنید.`
+        : "✅ همه چیز خوب است. مشکلی وجود ندارد.";
+      document.getElementById("system-health").innerText = message;
+    });
+</script>
+{% endblock %}

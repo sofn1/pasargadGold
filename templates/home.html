@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}خانه – فروشگاه پاسارگاد گلد{% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner -->
+{% if hero %}
+<section class="relative mb-10">
+  <img src="{{ hero.background_image.url }}" alt="Hero" class="w-full h-64 md:h-96 object-cover rounded-xl shadow-md" />
+  <div class="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center text-white text-center px-4">
+    <h1 class="text-3xl md:text-5xl font-bold mb-2">{{ hero.title }}</h1>
+    <p class="text-base md:text-xl">{{ hero.subtitle }}</p>
+    {% if hero.cta_text %}
+    <a href="{{ hero.cta_link }}" class="mt-4 bg-white text-primary px-6 py-2 rounded hover:bg-gray-200 font-semibold">
+      {{ hero.cta_text }}
+    </a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Top Banners -->
+{% if top_banners %}
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+  {% for banner in top_banners %}
+  <a href="{{ banner.link }}" class="block rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
+    <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="w-full h-48 object-cover" />
+  </a>
+  {% endfor %}
+</section>
+{% endif %}
+
+<!-- Featured Categories -->
+<section class="mb-10">
+  <h2 class="text-xl font-bold text-primary mb-4">دسته‌بندی‌های ویژه</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+    {% for category in categories %}
+    <a href="/category/{{ category.slug|default:category.id }}" class="bg-white rounded-xl p-4 text-center shadow hover:shadow-md transition">
+      <img src="{{ category.image }}" class="w-16 h-16 mx-auto mb-2 object-contain" />
+      <h3 class="text-primary font-semibold text-sm">{{ category.name }}</h3>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="mb-12">
+  <h2 class="text-xl font-bold text-primary mb-4">محصولات ویژه</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+    {% for product in featured_products %}
+      {% include "product_card.html" with product=product %}
+    {% empty %}
+      <p class="col-span-full text-center text-gray-500">محصولی یافت نشد.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Featured Products -->
+
+
+
+<!-- Middle Banner -->
+{% if middle_banner %}
+<section class="mb-12">
+  <a href="{{ middle_banner.link }}" class="block rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <img src="{{ middle_banner.image.url }}" alt="{{ middle_banner.title }}" class="w-full object-cover h-48 md:h-64" />
+  </a>
+</section>
+{% endif %}
+
+<!-- Brands -->
+<section class="mb-12">
+  <h2 class="text-xl font-bold text-primary mb-4">برندهای ما</h2>
+  <div class="flex flex-wrap gap-4 justify-center">
+    {% for brand in brands %}
+    <div class="bg-white rounded-lg shadow p-4 w-32 h-32 flex flex-col items-center justify-center text-center hover:shadow-md">
+      <img src="{{ brand.image.url }}" alt="{{ brand.name }}" class="w-16 h-16 object-contain mb-2" />
+      <p class="text-sm font-medium text-primary">{{ brand.name }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Bottom Banners -->
+{% if bottom_banners %}
+<section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  {% for banner in bottom_banners %}
+  <a href="{{ banner.link }}" class="block rounded-lg overflow-hidden shadow hover:shadow-md transition">
+    <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="w-full h-40 object-cover" />
+  </a>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% endblock %}

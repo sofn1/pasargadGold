@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto p-6">
+  <h2 class="text-xl font-bold text-[#1C39BB] mb-4">ایجاد وبلاگ جدید</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="mt-4 px-6 py-2 bg-[#1C39BB] text-white rounded">ذخیره</button>
+  </form>
+</div>
+{% endblock %}

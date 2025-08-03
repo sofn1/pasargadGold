@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📱 تفکیک دستگاه‌ها</h2>
+  <table class="w-full table-auto bg-white rounded shadow text-right">
+    <thead class="bg-[#1C39BB] text-white">
+      <tr>
+        <th class="p-3">دستگاه</th>
+        <th class="p-3">درصد استفاده</th>
+      </tr>
+    </thead>
+    <tbody id="device-body"></tbody>
+  </table>
+</div>
+
+<script>
+  fetch("{% url 'seller_device_breakdown' %}")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("device-body");
+      data.forEach(item => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3">${item.device}</td>
+            <td class="p-3">${item.percentage}%</td>
+          </tr>
+        `;
+      });
+    });
+</script>
+{% endblock %}
