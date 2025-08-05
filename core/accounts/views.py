@@ -15,11 +15,9 @@ def login_user(request, role, template_name):
         password = request.POST.get('password')
 
         user = authenticate(request, phone_number=phone, password=password)
-
         if not user:
             return render(request, template_name, {'error': 'کاربر یافت نشد یا رمز عبور اشتباه است.'})
 
-        # Role validation
         if role == 'admin':
             if not hasattr(user, 'adminpermission'):
                 if user.is_superuser:
@@ -33,10 +31,8 @@ def login_user(request, role, template_name):
             if not hasattr(user, 'seller'):
                 return render(request, template_name, {'error': 'شما فروشنده نیستید.'})
 
-        # Successful login
         login(request, user)
 
-        # Role-based redirection only (no ?next param used)
         if role == 'admin' and user.is_superuser:
             return redirect('/admin-dashboard/superadmin-dashboard/')
         elif role == 'admin':
@@ -46,9 +42,7 @@ def login_user(request, role, template_name):
         elif role == 'seller':
             return redirect('/seller-dashboard/')
 
-    # GET request
     return render(request, template_name)
-
 
 def seller_login_view(request):
     return login_user(request, 'seller', 'seller_login.html')
