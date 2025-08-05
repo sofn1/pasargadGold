@@ -76,7 +76,7 @@ def customer_login(request):
         # Redirect to previous page or customer dashboard
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             return redirect(next_url)
-        return redirect('/customer-dashboard/')
+        return redirect('/customer/dashboard/')
 
     return render(request, 'login.html')
 
