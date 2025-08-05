@@ -1,3 +1,4 @@
+from accounts.models import AdminPermission
 from .permissions import IsSuperAdminOrAdmin
 from django.shortcuts import render, redirect
 from rest_framework import generics, permissions
@@ -12,7 +13,6 @@ def login_user(request, role, template_name):
     if request.method == 'POST':
         phone = request.POST.get('phone_number')
         password = request.POST.get('password')
-        next_url = request.GET.get('next')
 
         user = authenticate(request, phone_number=phone, password=password)
 
@@ -20,14 +20,9 @@ def login_user(request, role, template_name):
             return render(request, template_name, {'error': 'کاربر یافت نشد یا رمز عبور اشتباه است.'})
 
         # Role validation
-        # if role == 'admin':
-        #     if not hasattr(user, 'adminpermission'):
-        #         return render(request, template_name, {'error': 'شما مدیر نیستید.'})
         if role == 'admin':
             if not hasattr(user, 'adminpermission'):
                 if user.is_superuser:
-                    # Create the admin permission on the fly
-                    from accounts.models import AdminPermission
                     AdminPermission.objects.get_or_create(user=user, defaults={"is_superadmin": True})
                 else:
                     return render(request, template_name, {'error': 'شما مدیر نیستید.'})
@@ -41,13 +36,9 @@ def login_user(request, role, template_name):
         # Successful login
         login(request, user)
 
-        # Optional redirect to previous page if allowed
-        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-            return redirect(next_url)
-
-        # Redirects based on role
+        # Role-based redirection only (no ?next param used)
         if role == 'admin' and user.is_superuser:
-            return redirect('/admin-dashboard/')
+            return redirect('/admin-dashboard/superadmin-dashboard/')
         elif role == 'admin':
             return redirect('/admin-dashboard/')
         elif role == 'writer':
