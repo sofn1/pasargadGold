@@ -53,6 +53,11 @@ def superadmin_dashboard_view(request):
 
 @admin_required
 def admin_dashboard_view(request):
+    print("User:", request.user)
+    print("Is authenticated:", request.user.is_authenticated)
+    print("Is superuser:", request.user.is_superuser)
+    if not request.user.is_superuser:
+        return redirect('/superadmin-dashboard/')
     return render(request, 'admin_dashboard/dashboard.html')
 
 
