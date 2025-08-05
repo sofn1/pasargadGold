@@ -12,7 +12,7 @@ def login_user(request, role, template_name):
     if request.method == 'POST':
         phone = request.POST.get('phone_number')
         password = request.POST.get('password')
-        next_url = request.GET.get('next') or '/'
+        next_url = request.GET.get('next')
 
         user = authenticate(request, phone_number=phone, password=password)
 
