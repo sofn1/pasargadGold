@@ -46,7 +46,7 @@ from accounts.decorators import admin_required, writer_required, seller_required
 
 @superadmin_required
 def superadmin_dashboard_view(request):
-    print("superadmin_dashboard_view")
+    print("✅ SUPERADMIN VIEW REACHED")
     return render(request, 'superadmin_dashboard/dashboard.html')
 
 
