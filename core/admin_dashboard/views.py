@@ -27,22 +27,27 @@ from accounts.serializers.seller import SellerSerializer
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import user_passes_test, login_required
 from accounts.serializers.admin import AdminPermissionSerializer
-from accounts.decorators import admin_required, writer_required, seller_required
 from accounts.models import User, AdminPermission, WriterPermission, AdminInviteToken
+from accounts.decorators import admin_required, writer_required, seller_required, superadmin_required
 
 
-@login_required(login_url='/accounts/admin-login/')
-def superadmin_dashboard_view(request):
-    print("User:", request.user)
-    print("Is authenticated:", request.user.is_authenticated)
-    print("Is superuser:", request.user.is_superuser)
-    if not request.user.is_superuser:
-        return redirect('/admin-dashboard/')
-    return render(request, 'superadmin_dashboard/dashboard.html')
+# @login_required(login_url='/accounts/admin-login/')
+# def superadmin_dashboard_view(request):
+#     print("User:", request.user)
+#     print("Is authenticated:", request.user.is_authenticated)
+#     print("Is superuser:", request.user.is_superuser)
+#     if not request.user.is_superuser:
+#         return redirect('/admin-dashboard/')
+#     return render(request, 'superadmin_dashboard/dashboard.html')
 
 # @user_passes_test(lambda u: u.is_authenticated and u.is_superuser, login_url='/accounts/admin-login/')
 # def superadmin_dashboard_view(request):
 #     return render(request, 'superadmin_dashboard/dashboard.html')
+
+@superadmin_required
+def superadmin_dashboard_view(request):
+    return render(request, 'superadmin_dashboard/dashboard.html')
+
 
 
 @admin_required
