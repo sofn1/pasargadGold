@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     # Local apps
     'accounts',
     'products',
-    # 'payments',
+    'payments',
     'blogs',
     'news',
     'comments.apps.CommentsConfig',
