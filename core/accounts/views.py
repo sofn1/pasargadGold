@@ -41,8 +41,8 @@ def login_user(request, role, template_name):
             return redirect('/writer-dashboard/')
         elif role == 'seller':
             return redirect('/seller-dashboard/')
-
     return render(request, template_name)
+
 
 def seller_login_view(request):
     return login_user(request, 'seller', 'seller_login.html')
@@ -58,6 +58,27 @@ def admin_login_view(request):
 
 def superadmin_login_view(request):
     return login_user(request, 'admin', 'admin_login.html')
+
+
+def customer_login(request):
+    if request.method == 'POST':
+        phone = request.POST.get('phone_number')
+        password = request.POST.get('password')
+        next_url = request.GET.get('next')
+
+        user = authenticate(request, phone_number=phone, password=password)
+
+        if not user:
+            return render(request, 'login.html', {'error': 'کاربر یافت نشد یا رمز عبور اشتباه است.'})
+
+        login(request, user)
+
+        # Redirect to previous page or customer dashboard
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            return redirect(next_url)
+        return redirect('/customer-dashboard/')
+
+    return render(request, 'login.html')
 
 
 # Register Customer - Anyone can register

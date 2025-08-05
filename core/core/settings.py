@@ -214,3 +214,17 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 
+# SuperAdmin → 09223692316 / mehrdad
+#
+# Admin → 09110000003 / admin123
+#
+# Writer → 09110000001 / writer123
+#
+# Seller → 09110000002 / seller123
+#
+# Customer → 09110000004 / customer123
+
+
+
+
+

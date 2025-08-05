@@ -1,20 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="max-w-md mx-auto px-4 py-20">
-  <form method="POST" class="bg-white rounded-xl shadow p-6 space-y-4">
-    {% csrf_token %}
-    <h2 class="text-2xl font-bold text-[#1C39BB] text-center mb-4">ورود</h2>
-    <div>
-      <label class="block font-medium">شماره موبایل</label>
-      <input name="phone_number" type="text" class="w-full p-3 border rounded-xl mt-1">
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body">
+          <h3 class="card-title text-center text-primary mb-4">ورود مشتری</h3>
+          <form method="POST" action="{% url 'customer-login' %}">
+            {% csrf_token %}
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-danger text-center" role="alert">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <div class="mb-3">
+              <label for="phone_number" class="form-label">شماره موبایل</label>
+              <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="مثلاً 09123456789" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">رمز عبور</label>
+              <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">ورود</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div>
-      <label class="block font-medium">رمز عبور</label>
-      <input name="password" type="password" class="w-full p-3 border rounded-xl mt-1">
-    </div>
-    <button type="submit" class="w-full mt-4 px-6 py-3 bg-[#1C39BB] text-white rounded-xl shadow hover:opacity-90 transition">
-      ورود
-    </button>
-  </form>
-</section>
+  </div>
+</div>
 {% endblock %}
