@@ -47,9 +47,9 @@ def login_user(request, role, template_name):
 
         # Redirects based on role
         if role == 'admin' and user.is_superuser:
-            return redirect('/admin-dashboard/superadmin-dashboard/')
+            return redirect('/superadmin-dashboard/')
         elif role == 'admin':
-            return redirect('/admin-dashboard/admin-dashboard/')
+            return redirect('/admin-dashboard/')
         elif role == 'writer':
             return redirect('/writer-dashboard/')
         elif role == 'seller':
