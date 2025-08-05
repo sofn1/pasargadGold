@@ -1,0 +1,61 @@
+<!-- templates/admin_dashboard/admin_logs.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}لاگ‌های سیستم{% endblock %}
+
+{% block content %}
+<h2 class="my-4">لاگ‌های مدیریتی</h2>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-striped table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>زمان</th>
+          <th>مدیر</th>
+          <th>عملیات</th>
+          <th>جزئیات</th>
+          <th>آی‌پی</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in admin_logs %}
+        <tr>
+          <td>{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+          <td>{{ log.admin.get_full_name }}</td>
+          <td><span class="badge bg-primary">{{ log.action_type }}</span></td>
+          <td>{{ log.details|truncatechars:50 }}</td>
+          <td><code>{{ log.ip_address }}</code></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted">هیچ لاگی یافت نشد.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination -->
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if admin_logs.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ admin_logs.previous_page_number }}">قبلی</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">قبلی</span></li>
+    {% endif %}
+    {% for i in admin_logs.paginator.page_range %}
+      <li class="page-item {% if admin_logs.number == i %}active{% endif %}">
+        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+      </li>
+    {% endfor %}
+    {% if admin_logs.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ admin_logs.next_page_number }}">بعدی</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">بعدی</span></li>
+    {% endif %}
+  </ul>
+</nav>
+
+{% endblock %}

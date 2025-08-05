@@ -1,0 +1,78 @@
+<!-- templates/admin_dashboard/summary.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}خلاصه عملکرد{% endblock %}
+
+{% block content %}
+<h2 class="my-4">خلاصه عملکرد سیستم</h2>
+
+<div class="row g-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="card text-center bg-primary text-white">
+      <div class="card-body">
+        <h5>درآمد امروز</h5>
+        <h3>{{ today_revenue|numberformat }}</h3>
+        <small>تومان</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card text-center bg-success text-white">
+      <div class="card-body">
+        <h5>سفارشات امروز</h5>
+        <h3>{{ today_orders }}</h3>
+        <small>سفارش</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card text-center bg-info text-white">
+      <div class="card-body">
+        <h5>کاربران جدید</h5>
+        <h3>{{ new_users_today }}</h3>
+        <small>نفر</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card text-center bg-warning text-dark">
+      <div class="card-body">
+        <h5>هشدارها</h5>
+        <h3>{{ low_stock_count }}</h3>
+        <small>محصول</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>آمار 7 روز اخیر</h5>
+        <canvas id="weeklyChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('weeklyChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ last_7_days|safe }},
+      datasets: [{
+        label: 'درآمد (تومان)',
+        data: {{ revenue_data|safe }},
+        borderColor: '#275DAD',
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+<!-- templates/admin_dashboard/low_stock_alerts.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}هشدارهای موجودی{% endblock %}
+
+{% block content %}
+<h2 class="my-4">هشدارهای موجودی</h2>
+
+<div class="alert alert-info">
+  این صفحه لیست تمام هشدارهای ارسال‌شده به انبارداران را نمایش می‌دهد.
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>محصول</th>
+          <th>موجودی در زمان هشدار</th>
+          <th>گیرنده</th>
+          <th>روش ارسال</th>
+          <th>تاریخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alert in stock_alerts %}
+        <tr>
+          <td>{{ alert.product.name }}</td>
+          <td>{{ alert.stock_at_time }}</td>
+          <td>{{ alert.recipient.get_full_name }}</td>
+          <td>
+            {% if alert.method == 'email' %}
+              📧 ایمیل
+            {% elif alert.method == 'sms' %}
+              📱 پیامک
+            {% else %}
+              🔔 نوتیفیکیشن
+            {% endif %}
+          </td>
+          <td>{{ alert.sent_at|date:"Y/m/d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted">هشداری یافت نشد.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

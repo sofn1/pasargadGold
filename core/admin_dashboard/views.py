@@ -35,7 +35,7 @@ from accounts.models import User, AdminPermission, WriterPermission, AdminInvite
 def superadmin_dashboard_view(request):
     # if not request.user.is_superuser:
     #     return redirect('/admin-dashboard/')
-    return render(request, 'admin_dashboard/superadmin_dashboard.html')
+    return render(request, 'superadmin_dashboard/dashboard.html')
 
 
 @admin_required

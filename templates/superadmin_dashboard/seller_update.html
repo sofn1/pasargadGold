@@ -1,0 +1,43 @@
+<!-- templates/admin_dashboard/seller_update.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}ویرایش فروشنده{% endblock %}
+
+{% block content %}
+<h2 class="my-4">ویرایش فروشنده: {{ seller.shop_name }}</h2>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="shop_name" class="form-label">نام فروشگاه</label>
+        <input type="text" class="form-control" id="shop_name" name="shop_name" value="{{ seller.shop_name }}" required>
+      </div>
+      <div class="mb-3">
+        <label for="owner_name" class="form-label">نام مالک</label>
+        <input type="text" class="form-control" id="owner_name" name="owner_name" value="{{ seller.owner_name }}" required>
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">تلفن تماس</label>
+        <input type="text" class="form-control" id="phone" name="phone" value="{{ seller.phone }}" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">ایمیل</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ seller.email }}">
+      </div>
+      <div class="mb-3">
+        <label for="address" class="form-label">آدرس</label>
+        <textarea class="form-control" id="address" name="address" rows="3">{{ seller.address }}</textarea>
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if seller.is_active %}checked{% endif %}>
+        <label class="form-check-label" for="is_active">فعال</label>
+      </div>
+      <button type="submit" class="btn btn-primary">به‌روزرسانی</button>
+      <a href="{% url 'admin-dashboard-sellers' %}" class="btn btn-secondary">بازگشت</a>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+<!-- templates/admin_dashboard/impersonate.html -->
+{% extends 'panel_base.html' %}
+
+{% block title %}تجسم کاربر{% endblock %}
+
+{% block content %}
+<h2 class="my-4">تجسم کاربر (Impersonate)</h2>
+
+<div class="alert alert-warning">
+  <strong>هشدار:</strong> شما در حال ورود به سیستم به عنوان کاربر دیگر هستید. این عملیات فقط برای مدیریت باید انجام شود.
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="user_select" class="form-label">انتخاب کاربر</label>
+        <select class="form-control" id="user_select" name="user_id" required>
+          <option value="">-- انتخاب کاربر --</option>
+          {% for user in users %}
+          <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.email }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-danger">شروع تجسم کاربر</button>
+      <a href="{% url 'admin-dashboard' %}" class="btn btn-secondary">انصراف</a>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
