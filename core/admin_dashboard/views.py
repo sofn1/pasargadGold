@@ -1,3 +1,4 @@
+from functools import wraps
 from openpyxl import Workbook
 from django.db.models import Q
 from orders.models import Order
@@ -6,9 +7,11 @@ from news.models.news import News
 from blogs.models.blog import Blog
 from django.db.models import Count
 from rest_framework import generics
+from django.shortcuts import render
 from comments.models import Comment
 from django.http import HttpResponse
 from django.utils.timezone import now
+from django.shortcuts import redirect
 from logs.models import AdminActionLog
 from django.core.mail import send_mail
 from rest_framework.views import APIView
@@ -21,9 +24,33 @@ from django.utils.crypto import get_random_string
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from accounts.serializers.seller import SellerSerializer
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from accounts.serializers.admin import AdminPermissionSerializer
+from accounts.decorators import admin_required, writer_required, seller_required
 from accounts.models import User, AdminPermission, WriterPermission, AdminInviteToken
+
+
+@login_required(login_url='/accounts/admin-login/')
+def superadmin_dashboard_view(request):
+    if not request.user.is_superuser:
+        return redirect('/admin-dashboard/')
+    return render(request, 'admin_dashboard/superadmin_dashboard.html')
+
+
+@admin_required
+def admin_dashboard_view(request):
+    return render(request, 'admin_dashboard/dashboard.html')
+
+
+@writer_required
+def writer_dashboard_view(request):
+    return render(request, 'writer_dashboard/dashboard.html')
+
+
+@seller_required
+def seller_dashboard_view(request):
+    return render(request, 'seller_dashboard/dashboard.html')
 
 
 class AdminSiteSummaryPage(LoginRequiredMixin, TemplateView):

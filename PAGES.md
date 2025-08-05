@@ -24,55 +24,55 @@ export BASE_URL=http://localhost:8000
 - **App**: `accounts`
 - **Test**: `$BASE_URL/register/writer`
 
-### `frontend/admin-logs`
+### `admin-dashboard/admin-logs`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/admin-logs`
 
-### `frontend/admins/create`
+### `admin-dashboard/admins/create`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/admins/create`
 
-### `frontend/failed-payments`
+### `admin-dashboard/failed-payments`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/failed-payments`
 
-### `frontend/flagged-comments`
+### `admin-dashboard/flagged-comments`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/flagged-comments`
 
-### `frontend/growth`
+### `admin-dashboard/growth`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/growth`
 
-### `frontend/impersonate`
+### `admin-dashboard/impersonate`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/impersonate`
 
-### `frontend/low-stock`
+### `admin-dashboard/low-stock`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/low-stock`
 
-### `frontend/manage-admins`
+### `admin-dashboard/manage-admins`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/manage-admins`
 
-### `frontend/sellers`
+### `admin-dashboard/sellers`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/sellers`
 
-### `frontend/sellers/<int:id>/update`
+### `admin-dashboard/sellers/<int:id>/update`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/sellers/<int:id>/update`
 
-### `frontend/sellers/create`
+### `admin-dashboard/sellers/create`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/sellers/create`
 
-### `frontend/summary`
+### `admin-dashboard/summary`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/summary`
 
-### `frontend/writers`
+### `admin-dashboard/writers`
 - **App**: `admin_dashboard`
 - **Test**: `$BASE_URL/frontend/writers`
 

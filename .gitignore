@@ -56,11 +56,11 @@ env.dev/
 *.iml
 *.iws
 
-# Environment variables
-.env
-.env.local
-.env.development
-.env.production
+## Environment variables
+#.env
+#.env.local
+#.env.development
+#.env.production
 
 # Jupyter Notebook
 .ipynb_checkpoints

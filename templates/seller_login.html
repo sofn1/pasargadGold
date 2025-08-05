@@ -1,0 +1,28 @@
+{% extends 'panel_login_base.html' %}
+
+{% block title %}ورود فروشنده{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4">
+      <h4 class="text-center mb-4">ورود فروشنده</h4>
+      <form method="post" action="{% url 'seller-login' %}">
+        {% csrf_token %}
+        {% if error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <div class="mb-3">
+          <label class="form-label">شماره موبایل</label>
+          <input type="text" name="phone_number" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">رمز عبور</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">ورود</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

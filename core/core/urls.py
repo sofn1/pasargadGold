@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/writer/dashboard/', include('writer_dashboard.urls')),
     path('api/customer/dashboard/', include('customer_dashboard.urls')),
 
+    path('accounts/', include('accounts.urls')),
     path('admin-dashboard/', include('admin_dashboard.urls')),
     path('writer/dashboard/', include('writer_dashboard.urls')),
     path('seller/dashboard/', include('seller_dashboard.urls')),

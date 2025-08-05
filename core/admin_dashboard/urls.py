@@ -3,7 +3,8 @@ from .views import (SiteSummaryView, SellersListView, WritersListView, FlaggedCo
                     FailedPaymentsView, SellerCreateView, SellerUpdateDeleteView, WriterPermissionUpdateView,
                     AdminCreateView, ExportSellersExcelView, ExportWritersExcelView, ExportFlaggedCommentsExcelView,
                     ExportFilteredLogsExcelView, AdminLogsView, AdminActivitySummaryView, AdminManagementView,
-                    InviteAdminView, ActivateAdminTokenView, AdminSuspendView, ImpersonateAdminView)
+                    InviteAdminView, ActivateAdminTokenView, AdminSuspendView, ImpersonateAdminView,
+                    admin_dashboard_view, writer_dashboard_view, seller_dashboard_view, superadmin_dashboard_view)
 
 from .views import (AdminSiteSummaryPage, AdminSellersPage, AdminWritersPage, AdminFlaggedCommentsPage,
                     AdminLowStockAlertsPage, AdminFailedPaymentsPage, AdminCreateSellerPage, AdminUpdateSellerPage,
@@ -32,6 +33,12 @@ urlpatterns = [
     path('activate-admin-token/', ActivateAdminTokenView.as_view()),
     path('admin-suspend/', AdminSuspendView.as_view()),
     path('impersonate-admin/', ImpersonateAdminView.as_view()),
+
+
+    path('', admin_dashboard_view, name='admin-dashboard'),
+    path('superadmin-dashboard/', superadmin_dashboard_view, name='superadmin-dashboard'),
+    path('writer-dashboard/', writer_dashboard_view, name='writer-dashboard'),
+    path('seller-dashboard/', seller_dashboard_view, name='seller-dashboard'),
 
     path("summary/", AdminSiteSummaryPage.as_view(), name="admin_summary"),
     path("sellers/", AdminSellersPage.as_view(), name="admin_sellers"),

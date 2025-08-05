@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import RegisterCustomerView, RegisterSellerView, RegisterWriterView
+from .views import RegisterCustomerView, RegisterSellerView, RegisterWriterView, seller_login_view, writer_login_view, \
+    admin_login_view, superadmin_login_view
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -9,4 +10,9 @@ urlpatterns = [
 
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    path('seller-login/', seller_login_view, name='seller-login'),
+    path('writer-login/', writer_login_view, name='writer-login'),
+    path('admin-login/', admin_login_view, name='admin-login'),
+    # path('superadmin-login/', superadmin_login_view, name='superadmin-login'),
 ]
