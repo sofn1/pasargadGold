@@ -35,8 +35,8 @@ urlpatterns = [
     path('impersonate-admin/', ImpersonateAdminView.as_view()),
 
 
-    path('', admin_dashboard_view, name='admin-dashboard'),
     path('superadmin-dashboard/', superadmin_dashboard_view, name='superadmin-dashboard'),
+    path('', admin_dashboard_view, name='admin-dashboard'),
     path('writer-dashboard/', writer_dashboard_view, name='writer-dashboard'),
     path('seller-dashboard/', seller_dashboard_view, name='seller-dashboard'),
 

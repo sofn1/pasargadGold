@@ -31,13 +31,17 @@ from accounts.decorators import admin_required, writer_required, seller_required
 from accounts.models import User, AdminPermission, WriterPermission, AdminInviteToken
 
 
-@login_required(login_url='/accounts/admin-login/')
+# @login_required(login_url='/accounts/admin-login/')
+# def superadmin_dashboard_view(request):
+#     print("User:", request.user)
+#     print("Is authenticated:", request.user.is_authenticated)
+#     print("Is superuser:", request.user.is_superuser)
+#     if not request.user.is_superuser:
+#         return redirect('/admin-dashboard/')
+#     return render(request, 'superadmin_dashboard/dashboard.html')
+
 def superadmin_dashboard_view(request):
-    print("User:", request.user)
-    print("Is authenticated:", request.user.is_authenticated)
-    print("Is superuser:", request.user.is_superuser)
-    if not request.user.is_superuser:
-        return redirect('/admin-dashboard/')
+    print("🚀 SUPERADMIN DASHBOARD LOADED")
     return render(request, 'superadmin_dashboard/dashboard.html')
 
 
