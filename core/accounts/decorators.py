@@ -28,7 +28,6 @@ def superadmin_required(view_func):
 
 
 # Predefined shortcuts
-# superuser_required = (superadmin_required('admin'))
 admin_required = role_required('adminpermission')
 writer_required = role_required('writer')
 seller_required = role_required('seller')
