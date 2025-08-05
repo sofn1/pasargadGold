@@ -24,8 +24,8 @@ from django.utils.crypto import get_random_string
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from accounts.serializers.seller import SellerSerializer
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import user_passes_test
 from accounts.serializers.admin import AdminPermissionSerializer
 from accounts.decorators import admin_required, writer_required, seller_required
 from accounts.models import User, AdminPermission, WriterPermission, AdminInviteToken
@@ -40,8 +40,8 @@ from accounts.models import User, AdminPermission, WriterPermission, AdminInvite
 #         return redirect('/admin-dashboard/')
 #     return render(request, 'superadmin_dashboard/dashboard.html')
 
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser, login_url='/accounts/admin-login/')
 def superadmin_dashboard_view(request):
-    print("🚀 SUPERADMIN DASHBOARD LOADED")
     return render(request, 'superadmin_dashboard/dashboard.html')
 
 
