@@ -40,7 +40,7 @@ def login_user(request, role, template_name):
         elif role == 'writer':
             return redirect('/writer/dashboard/')
         elif role == 'seller':
-            return redirect('/seller-dashboard/')
+            return redirect('/seller/dashboard/')
     return render(request, template_name)
 
 

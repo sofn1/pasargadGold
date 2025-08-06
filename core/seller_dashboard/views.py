@@ -15,9 +15,15 @@ from products.models.product import Product
 from rest_framework.response import Response
 from openpyxl.utils import get_column_letter
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.decorators import login_required
 from seller_dashboard.serializers import DateRangeFilterSerializer
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+@login_required
+@user_passes_test(lambda u: u.role == 'seller')
+def seller_dashboard_home(request):
+    return render(request, 'writer_dashboard/dashboard.html')
 
 
 @login_required

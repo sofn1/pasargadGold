@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import seller_dashboard_home
 
 urlpatterns = [
     path('summary/', views.SellerDashboardSummaryView.as_view()),
@@ -27,4 +28,6 @@ urlpatterns = [
     path('unfulfilled-orders/', views.unfulfilled_orders_view, name='seller_unfulfilled_orders'),
     path('system-health/', views.system_health_view, name='seller_system_health'),
     path('sales-by-channel/', views.sales_by_channel_view, name='seller_sales_by_channel'),
+
+    path("dashboard/", seller_dashboard_home, name="dashboard"),
 ]
