@@ -21,8 +21,15 @@ from news.serializers import NewsSerializer
 from comments.serializers import CommentSerializer
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from writer_dashboard.forms import WriterBlogForm, WriterNewsForm
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+@login_required
+@user_passes_test(lambda u: u.role == 'writer')
+def writer_dashboard_home(request):
+    return render(request, 'writer_dashboard/dashboard.html')
+
 
 
 @login_required
