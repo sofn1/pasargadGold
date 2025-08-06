@@ -31,7 +31,7 @@ urlpatterns = [
     path('admin/tickets/<int:ticket_id>/reply/', AdminTicketReplyView.as_view(), name='admin-ticket-reply'),
 
     # Frontend templates
-    path('customer/dashboard/', customer_dashboard_home, name='customer_dashboard_home'),
+    path('dashboard/', customer_dashboard_home, name='customer_dashboard_home'),
     path("frontend/orders/", OrderHistoryPage.as_view(), name="frontend_order_history"),
     path("frontend/profile/", ProfilePage.as_view(), name="frontend_profile"),
     path("frontend/recommended/", RecommendedProductsPage.as_view(), name="frontend_recommended"),
