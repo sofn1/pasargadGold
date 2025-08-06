@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 @login_required
 @user_passes_test(lambda u: u.role == 'seller')
 def seller_dashboard_home(request):
-    return render(request, 'writer_dashboard/dashboard.html')
+    return render(request, 'seller_dashboard/dashboard.html')
 
 
 @login_required
