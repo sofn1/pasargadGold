@@ -225,6 +225,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Customer → 09110000004 / customer123
 
 
+# http://103.75.196.67:8000/login/
+# http://103.75.196.67:8000/accounts/writer-login/
+# http://103.75.196.67:8000/accounts/seller-login/
+# http://103.75.196.67:8000/accounts/admin-login/
 
 
 

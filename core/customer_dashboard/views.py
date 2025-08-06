@@ -18,6 +18,7 @@ from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.mixins import LoginRequiredMixin
 from rest_framework.generics import ListAPIView, UpdateAPIView
+from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import WishlistItem, Address, Notification, SupportTicket, TicketReply
 from .serializers import (
     WishlistItemSerializer, AddressSerializer,
@@ -25,6 +26,12 @@ from .serializers import (
     SupportTicketSerializer, TicketReplySerializer)
 
 User = get_user_model()
+
+
+@login_required
+@user_passes_test(lambda u: u.role == 'customer')
+def customer_dashboard_home(request):
+    return render(request, 'customer_dashboard/dashboard.html')
 
 
 class OrderHistoryPage(LoginRequiredMixin, View):

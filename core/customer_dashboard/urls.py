@@ -3,7 +3,8 @@ from .views import (WishlistView, WishlistDetailView, CartView, AddressView, Add
                     NotificationListView, OrderSummaryView, CustomerOrderHistoryView, CustomerProfileView,
                     CustomerRecommendedProductsView, SupportTicketListCreateView, TicketReplyListCreateView,
                     InvoiceDownloadView, AdminTicketReplyView, UnreadNotificationsView, CustomerTicketListView,
-                    AdminReplyToTicketView, NotificationMarkReadView, CustomerSupportTicketListCreateView)
+                    AdminReplyToTicketView, NotificationMarkReadView, CustomerSupportTicketListCreateView,
+                    customer_dashboard_home)
 
 from .views import (OrderHistoryPage, ProfilePage, RecommendedProductsPage,
                     WishlistPage, CartPage, AddressesPage, NotificationsPage, SupportTicketsPage, InvoicePage)
@@ -30,6 +31,7 @@ urlpatterns = [
     path('admin/tickets/<int:ticket_id>/reply/', AdminTicketReplyView.as_view(), name='admin-ticket-reply'),
 
     # Frontend templates
+    path('customer/dashboard/', customer_dashboard_home, name='customer_dashboard_home'),
     path("frontend/orders/", OrderHistoryPage.as_view(), name="frontend_order_history"),
     path("frontend/profile/", ProfilePage.as_view(), name="frontend_profile"),
     path("frontend/recommended/", RecommendedProductsPage.as_view(), name="frontend_recommended"),
