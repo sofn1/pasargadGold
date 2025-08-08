@@ -1,5 +1,3 @@
-import requests
-from core import settings
 from django.views import View
 from reportlab.pdfgen import canvas
 from orders.models import OrderItem
@@ -64,57 +62,51 @@ class CartPage(LoginRequiredMixin, View):
         return render(request, "customer_dashboard/cart.html", {"cart_items": cart_items})
 
 
-class AddressesPage(View):
+class AddressesPage(LoginRequiredMixin, View):
     def get(self, request):
-        if not request.user.is_authenticated:
-            return redirect("login")
-        response = requests.get(
-            f"{settings.API_BASE_URL}/customer/dashboard/addresses/",
-            headers={"Authorization": f"Bearer {request.session.get('access')}"}
-        )
-        addresses = response.json() if response.status_code == 200 else []
+        addresses = Address.objects.filter(user=request.user)
         return render(request, "customer_dashboard/addresses.html", {"addresses": addresses})
 
 
-class NotificationsPage(View):
+class NotificationsPage(LoginRequiredMixin, View):
     def get(self, request):
-        if not request.user.is_authenticated:
-            return redirect("login")
-        response = requests.get(
-            f"{settings.API_BASE_URL}/customer/dashboard/notifications/",
-            headers={"Authorization": f"Bearer {request.session.get('access')}"}
-        )
-        notifications = response.json() if response.status_code == 200 else []
+        notifications = Notification.objects.filter(customer=request.user).order_by('-created_at')
         return render(request, "customer_dashboard/notifications.html", {"notifications": notifications})
 
 
-class SupportTicketsPage(View):
+class SupportTicketsPage(LoginRequiredMixin, View):
     def get(self, request):
-        if not request.user.is_authenticated:
-            return redirect("login")
-        response = requests.get(
-            f"{settings.API_BASE_URL}/customer/dashboard/support-tickets/",
-            headers={"Authorization": f"Bearer {request.session.get('access')}"}
-        )
-        tickets = response.json() if response.status_code == 200 else []
+        tickets = SupportTicket.objects.filter(customer=request.user).order_by('-created_at')
         return render(request, "customer_dashboard/support_tickets.html", {"tickets": tickets})
 
 
-class InvoicePage(View):
+class InvoicePage(LoginRequiredMixin, View):
     def get(self, request, order_id):
-        if not request.user.is_authenticated:
-            return redirect("login")
-
-        response = requests.get(
-            f"{settings.API_BASE_URL}/customer/dashboard/invoice/{order_id}/",
-            headers={"Authorization": f"Bearer {request.session.get('access')}"}
-        )
-
-        if response.status_code == 200:
-            pdf_data = response.content
-            return HttpResponse(pdf_data, content_type='application/pdf')
-        else:
+        try:
+            order = Order.objects.get(pk=order_id, user=request.user)
+        except Order.DoesNotExist:
             return render(request, "customer_dashboard/invoice_error.html", {"order_id": order_id})
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="invoice_{order_id}.pdf"'
+
+        p = canvas.Canvas(response)
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 800, f"Invoice for Order #{order.id}")
+        p.drawString(100, 780, f"Date: {order.created_at.strftime('%Y-%m-%d')}")
+        p.drawString(100, 760, f"Status: {order.status}")
+        p.drawString(100, 740, "Items:")
+
+        y = 720
+        for item in order.orderitem_set.all():
+            p.drawString(120, y, f"{item.product.title} x {item.quantity} @ {item.price} each")
+            y -= 20
+
+        p.drawString(100, y - 20, "Thank you for your purchase!")
+        p.showPage()
+        p.save()
+        return response
+
 
 
 class CustomerOrderHistoryView(APIView):
