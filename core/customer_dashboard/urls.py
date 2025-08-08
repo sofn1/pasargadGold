@@ -32,14 +32,14 @@ urlpatterns = [
 
     # Frontend templates
     path('dashboard/', customer_dashboard_home, name='customer_dashboard_home'),
-    path("frontend/orders/", OrderHistoryPage.as_view(), name="frontend_order_history"),
-    path("frontend/profile/", ProfilePage.as_view(), name="frontend_profile"),
-    path("frontend/recommended/", RecommendedProductsPage.as_view(), name="frontend_recommended"),
-    path("frontend/wishlist/", WishlistPage.as_view(), name="frontend_wishlist"),
-    path("frontend/cart/", CartPage.as_view(), name="frontend_cart"),
-    path("frontend/addresses/", AddressesPage.as_view(), name="frontend_addresses"),
-    path("frontend/notifications/", NotificationsPage.as_view(), name="frontend_notifications"),
-    path("frontend/support-tickets/", SupportTicketsPage.as_view(), name="frontend_support_tickets"),
-    path("frontend/invoice/<int:order_id>/", InvoicePage.as_view(), name="frontend_invoice"),
+    path("orders/", OrderHistoryPage.as_view(), name="frontend_order_history"),
+    path("profile/", ProfilePage.as_view(), name="frontend_profile"),
+    path("recommended/", RecommendedProductsPage.as_view(), name="frontend_recommended"),
+    path("wishlist/", WishlistPage.as_view(), name="frontend_wishlist"),
+    path("cart/", CartPage.as_view(), name="frontend_cart"),
+    path("addresses/", AddressesPage.as_view(), name="frontend_addresses"),
+    path("notifications/", NotificationsPage.as_view(), name="frontend_notifications"),
+    path("support-tickets/", SupportTicketsPage.as_view(), name="frontend_support_tickets"),
+    path("invoice/<int:order_id>/", InvoicePage.as_view(), name="frontend_invoice"),
 
 ]
