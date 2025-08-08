@@ -69,7 +69,6 @@ class AddressesPage(LoginRequiredMixin, View):
         return render(request, "customer_dashboard/addresses.html", {"addresses": addresses})
 
 
-
 class NotificationsPage(LoginRequiredMixin, View):
     def get(self, request):
         customer = request.user.customer  # ✅ Convert User to Customer
