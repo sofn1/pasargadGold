@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex">
+  {% include "customer_dashboard/sidebar.html" %}
+  <div class="flex-1 p-6">
+    <h2 class="text-2xl font-bold mb-4">پروفایل من</h2>
+    <div class="bg-white rounded shadow p-4 space-y-3">
+      <p><strong>نام کاربری:</strong> {{ user.username }}</p>
+      <p><strong>ایمیل:</strong> {{ user.email }}</p>
+      <p><strong>نام:</strong> {{ user.first_name }}</p>
+      <p><strong>نام خانوادگی:</strong> {{ user.last_name }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

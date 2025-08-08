@@ -70,13 +70,15 @@ class AddressesPage(LoginRequiredMixin, View):
 
 class NotificationsPage(LoginRequiredMixin, View):
     def get(self, request):
-        notifications = Notification.objects.filter(customer=request.user).order_by('-created_at')
+        customer = request.user.customer  # ✅ Convert User to Customer
+        notifications = Notification.objects.filter(customer=customer).order_by('-created_at')
         return render(request, "customer_dashboard/notifications.html", {"notifications": notifications})
 
 
 class SupportTicketsPage(LoginRequiredMixin, View):
     def get(self, request):
-        tickets = SupportTicket.objects.filter(customer=request.user).order_by('-created_at')
+        customer = request.user.customer  # ✅ fix
+        tickets = SupportTicket.objects.filter(customer=customer).order_by('-created_at')
         return render(request, "customer_dashboard/support_tickets.html", {"tickets": tickets})
 
 
