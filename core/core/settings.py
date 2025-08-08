@@ -28,10 +28,13 @@ SECRET_KEY = "django-insecure-6jk_6%5_1efxm=a$%80lb@kdoqzezio4!^o^s8!y_vow&xl46@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# this line below is config just for testing backend , nothing else (delete it )
+# Or in production:
+# API_BASE_URL = "https://yourdomain.com/api"
+API_BASE_URL = "http://103.75.196.67/api"
+
 # ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ['103.75.196.67']
-
-# this line below is config just for testing backend , nothing else (delete it )
 ALLOWED_HOSTS = ['your-server-ip', '*']  # '*' is insecure for production
 
 
