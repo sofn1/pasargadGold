@@ -108,7 +108,6 @@ class InvoicePage(LoginRequiredMixin, View):
         return response
 
 
-
 class CustomerOrderHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
