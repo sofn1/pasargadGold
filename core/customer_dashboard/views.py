@@ -64,8 +64,10 @@ class CartPage(LoginRequiredMixin, View):
 
 class AddressesPage(LoginRequiredMixin, View):
     def get(self, request):
-        addresses = Address.objects.filter(user=request.user)
+        customer = request.user.customer
+        addresses = Address.objects.filter(customer=customer)
         return render(request, "customer_dashboard/addresses.html", {"addresses": addresses})
+
 
 
 class NotificationsPage(LoginRequiredMixin, View):
