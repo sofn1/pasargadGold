@@ -1,12 +1,11 @@
 from django.urls import path
-from .views import (WishlistView, WishlistDetailView, CartView, AddressView, AddressDetailView,
-                    NotificationListView, OrderSummaryView, CustomerOrderHistoryView, CustomerProfileView,
-                    CustomerRecommendedProductsView, SupportTicketListCreateView, TicketReplyListCreateView,
-                    InvoiceDownloadView, AdminTicketReplyView, UnreadNotificationsView, CustomerTicketListView,
-                    AdminReplyToTicketView, NotificationMarkReadView, CustomerSupportTicketListCreateView,
-                    customer_dashboard_home)
+# from .views import (WishlistView, WishlistDetailView, CartView, AddressView, AddressDetailView,
+#                     NotificationListView, OrderSummaryView, CustomerOrderHistoryView, CustomerProfileView,
+#                     CustomerRecommendedProductsView, SupportTicketListCreateView, TicketReplyListCreateView,
+#                     InvoiceDownloadView, AdminTicketReplyView, UnreadNotificationsView, CustomerTicketListView,
+#                     AdminReplyToTicketView, NotificationMarkReadView, CustomerSupportTicketListCreateView)
 
-from .views import (OrderHistoryPage, ProfilePage, RecommendedProductsPage,
+from .views import (OrderHistoryPage, ProfilePage, RecommendedProductsPage, customer_dashboard_home,
                     WishlistPage, CartPage, AddressesPage, NotificationsPage, SupportTicketsPage, InvoicePage)
 
 urlpatterns = [
