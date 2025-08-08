@@ -1,12 +1,20 @@
+from django.contrib.auth import logout
 from accounts.models import AdminPermission
 from .permissions import IsSuperAdminOrAdmin
 from django.shortcuts import render, redirect
 from rest_framework import generics, permissions
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.utils.http import url_has_allowed_host_and_scheme
 from accounts.serializers.writer import WriterRegisterSerializer
 from accounts.serializers.seller import SellerRegisterSerializer
 from accounts.serializers.customer import CustomerRegisterSerializer
+
+
+@login_required
+def custom_logout_view(request):
+    logout(request)
+    return redirect('/login/')
 
 
 def login_user(request, role, template_name):
