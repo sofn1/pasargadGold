@@ -31,7 +31,7 @@ DEBUG = True
 # this line below is config just for testing backend , nothing else (delete it )
 # Or in production:
 # API_BASE_URL = "https://yourdomain.com/api"
-API_BASE_URL = "http://103.75.196.67/api"
+API_BASE_URL = "http://103.75.196.67:8000/api"
 
 # ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = ['103.75.196.67']
