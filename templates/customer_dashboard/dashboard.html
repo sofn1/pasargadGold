@@ -1,9 +1,13 @@
 <!-- templates/customer_dashboard/dashboard.html -->
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5">
-  <h1 class="text-center">به داشبورد مشتری خوش آمدید</h1>
-  <p class="text-center">شما با موفقیت وارد حساب کاربری خود شدید.</p>
-</div>
+  <div class="flex">
+    {% include 'customer_dashboard/sidebar.html' %}
+    <div class="flex-1 p-6">
+      <!-- Existing dashboard content here -->
+    </div>
+  </div>
 {% endblock %}
+
 
