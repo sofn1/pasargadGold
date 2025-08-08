@@ -2,15 +2,15 @@
   <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">پنل مشتری</h2>
   <ul class="space-y-2 text-sm">
     <li><a href="{% url 'customer_dashboard_home' %}" class="block py-2 px-3 rounded hover:bg-gray-200">داشبورد</a></li>
-    <li><a href="{% url 'customer-order-history' %}" class="block py-2 px-3 rounded hover:bg-gray-200">سفارش‌ها</a></li>
-    <li><a href="{% url 'customer-profile' %}" class="block py-2 px-3 rounded hover:bg-gray-200">پروفایل</a></li>
-    <li><a href="{% url 'wishlist-list-create' %}" class="block py-2 px-3 rounded hover:bg-gray-200">لیست علاقه‌مندی</a></li>
-    <li><a href="{% url 'customer-addresses' %}" class="block py-2 px-3 rounded hover:bg-gray-200">آدرس‌ها</a></li>
-    <li><a href="{% url 'cart' %}" class="block py-2 px-3 rounded hover:bg-gray-200">سبد خرید</a></li>
-    <li><a href="{% url 'invoice-download' order_id=1 %}" class="block py-2 px-3 rounded hover:bg-gray-200">فاکتور</a></li>
-    <li><a href="{% url 'notifications' %}" class="block py-2 px-3 rounded hover:bg-gray-200">اعلان‌ها</a></li>
-    <li><a href="{% url 'recommended-products' %}" class="block py-2 px-3 rounded hover:bg-gray-200">محصولات پیشنهادی</a></li>
-    <li><a href="{% url 'support-ticket-list-create' %}" class="block py-2 px-3 rounded hover:bg-gray-200">تیکت پشتیبانی</a></li>
+    <li><a href="{% url 'frontend_order_history' %}" class="block py-2 px-3 rounded hover:bg-gray-200">سفارش‌ها</a></li>
+    <li><a href="{% url 'frontend_profile' %}" class="block py-2 px-3 rounded hover:bg-gray-200">پروفایل</a></li>
+    <li><a href="{% url 'frontend_wishlist' %}" class="block py-2 px-3 rounded hover:bg-gray-200">لیست علاقه‌مندی</a></li>
+    <li><a href="{% url 'frontend_addresses' %}" class="block py-2 px-3 rounded hover:bg-gray-200">آدرس‌ها</a></li>
+    <li><a href="{% url 'frontend_cart' %}" class="block py-2 px-3 rounded hover:bg-gray-200">سبد خرید</a></li>
+    <li><a href="{% url 'frontend_invoice' order_id=1 %}" class="block py-2 px-3 rounded hover:bg-gray-200">فاکتور</a></li>
+    <li><a href="{% url 'frontend_notifications' %}" class="block py-2 px-3 rounded hover:bg-gray-200">اعلان‌ها</a></li>
+    <li><a href="{% url 'frontend_recommended' %}" class="block py-2 px-3 rounded hover:bg-gray-200">محصولات پیشنهادی</a></li>
+    <li><a href="{% url 'frontend_support_tickets' %}" class="block py-2 px-3 rounded hover:bg-gray-200">تیکت پشتیبانی</a></li>
     <li><a href="{% url 'logout' %}" class="block py-2 px-3 rounded text-red-600 hover:bg-red-100">خروج</a></li>
   </ul>
 </div>
