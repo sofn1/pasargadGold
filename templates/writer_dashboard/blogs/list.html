@@ -1,33 +1,38 @@
 {% extends "base.html" %}
+{% block title %}مدیریت بلاگ‌ها{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto p-6">
-  <h2 class="text-xl font-bold text-[#1C39BB] mb-4">لیست وبلاگ‌ها</h2>
-  <a href="{% url 'writer_blog_create' %}" class="bg-[#1C39BB] text-white px-4 py-2 rounded shadow mb-4 inline-block">+ ایجاد وبلاگ</a>
+<div class="container" dir="rtl">
+  <h1>بلاگ‌های من</h1>
+  <p><a class="btn primary" href="{% url 'writer:blog_create' %}">+ ایجاد بلاگ جدید</a></p>
 
-  <table class="w-full border text-right">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="p-2">عنوان</th>
-        <th class="p-2">تاریخ انتشار</th>
-        <th class="p-2">بازدید</th>
-        <th class="p-2">عملیات</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for blog in blogs %}
-      <tr>
-        <td class="p-2">{{ blog.name }}</td>
-        <td class="p-2">{{ blog.publishTime|date:"Y-m-d" }}</td>
-        <td class="p-2">{{ blog.views }}</td>
-        <td class="p-2 flex gap-2">
-          <a href="{% url 'writer_blog_edit' blog.id %}" class="text-blue-500">ویرایش</a>
-          <a href="{% url 'writer_blog_delete' blog.id %}" class="text-red-500">حذف</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="4" class="p-2 text-center">وبلاگی یافت نشد.</td></tr>
+  {% if blogs %}
+    <table class="tbl">
+      <thead><tr><th>عنوان</th><th>زمان انتشار</th><th>زمان مطالعه</th><th></th></tr></thead>
+      <tbody>
+      {% for b in blogs %}
+        <tr>
+          <td>{{ b.name|default:b.english_name }}</td>
+          <td>{% if b.publish_time %}{{ b.publish_time|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+          <td>{% if b.read_time %}{{ b.read_time }} دقیقه{% else %}-{% endif %}</td>
+          <td class="actions">
+            <a href="{% url 'writer:blog_edit' b.pk %}">ویرایش</a> |
+            <a href="{% url 'writer:blog_delete' b.pk %}">حذف</a> |
+            <a href="{% url 'writer:blog_comments_html' b.pk %}">نظرات</a>
+          </td>
+        </tr>
       {% endfor %}
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  {% else %}
+    <p>بلاگی ثبت نشده است.</p>
+  {% endif %}
 </div>
+
+<style>
+.container{max-width:1000px;margin:2rem auto;padding:0 1rem}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{border:1px solid #eee;padding:.6rem}
+.actions a{text-decoration:none}
+.btn.primary{display:inline-block;padding:.5rem .9rem;border-radius:10px;border:1px solid #1C39BB;background:#1C39BB;color:#fff;text-decoration:none}
+</style>
 {% endblock %}

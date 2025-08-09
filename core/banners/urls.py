@@ -1,7 +1,7 @@
 # core/banners/urls.py
 from django.urls import path
-from .views import BannerListView
+from .views import BannerListPage
 
 urlpatterns = [
-    path("banners/", BannerListView.as_view()),
+    path("banners/", BannerListPage.as_view(), name="banners-list-page"),
 ]

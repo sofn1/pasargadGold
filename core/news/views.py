@@ -1,64 +1,77 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, permissions, status
+# news/views.py
 from .models.news import News
-from .serializers import NewsSerializer, NewsCategorySerializer
+from django.db.models import Q
+from django.http import Http404
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .mongo_service.category_service import NewsCategoryService
+from django.views.generic import TemplateView, ListView, DetailView
 
 
-# ====== Category Views ======
-class NewsCategoryListCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+def _map_category_doc(doc):
+    """Normalize a Mongo category document for templates."""
+    if not doc:
+        return None
+    return {
+        "id": str(doc.get("_id")),
+        "name": doc.get("name"),
+        "english_name": doc.get("englishName"),
+        "sub_categories": [str(x) for x in doc.get("subCategories", [])],
+    }
 
-    def get(self, request):
+
+class NewsCategoryListPage(LoginRequiredMixin, TemplateView):
+    template_name = "news/category_list.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
         service = NewsCategoryService()
-        categories = service.get_all_categories()
-        return Response(categories)
+        raw = service.get_all_categories()  # list of dicts with _id
+        ctx["categories"] = [_map_category_doc(c) for c in raw]
+        return ctx
 
-    def post(self, request):
+
+class NewsCategoryDetailPage(LoginRequiredMixin, TemplateView):
+    template_name = "news/category_detail.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        category_id = kwargs.get("pk")
         service = NewsCategoryService()
-        name = request.data.get("name")
-        english_name = request.data.get("english_name")
-        parent_id = request.data.get("parent_id")
+        doc = service.get_category(category_id)
+        category = _map_category_doc(doc)
+        if not category:
+            raise Http404("Category not found")
 
-        if not name or not english_name:
-            return Response({"error": "name and english_name are required"}, status=status.HTTP_400_BAD_REQUEST)
+        ctx["category"] = category
+        ctx["news_list"] = (
+            News.objects.filter(category_id=category_id)
+            .order_by("-publish_time")
+        )
+        return ctx
 
-        category_id = service.create_category(name, english_name, parent_id)
-        return Response({"id": category_id}, status=status.HTTP_201_CREATED)
 
+class NewsListPage(LoginRequiredMixin, ListView):
+    template_name = "news/news_list.html"
+    context_object_name = "news_list"
+    paginate_by = 10
 
-class NewsCategoryDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, pk):
-        service = NewsCategoryService()
-        category = service.get_category(pk)
+    def get_queryset(self):
+        qs = News.objects.all().order_by("-publish_time")
+        category = self.request.GET.get("category")
         if category:
-            return Response(category)
-        return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            qs = qs.filter(category_id=category)
 
-    def put(self, request, pk):
-        service = NewsCategoryService()
-        name = request.data.get("name")
-        english_name = request.data.get("english_name")
-        service.update_category(pk, name, english_name)
-        return Response({"message": "Updated"})
-
-    def delete(self, request, pk):
-        service = NewsCategoryService()
-        service.delete_category(pk)
-        return Response({"message": "Deleted"}, status=status.HTTP_204_NO_CONTENT)
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(english_name__icontains=q) |
+                Q(short_description__icontains=q)
+            )
+        return qs
 
 
-# ====== News Views ======
-class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class NewsDetailPage(LoginRequiredMixin, DetailView):
+    template_name = "news/news_detail.html"
+    model = News
+    context_object_name = "news"

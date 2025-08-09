@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}دسته‌بندی‌های خبر{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>دسته‌بندی‌های خبر</h1>
+
+  {% if categories %}
+    <ul class="cat-grid">
+      {% for c in categories %}
+        <li class="cat-card">
+          <a href="{% url 'news_category_detail' c.id %}">
+            <div class="title">{{ c.name|default:c.english_name }}</div>
+            {% if c.english_name %}<div class="en">{{ c.english_name }}</div>{% endif %}
+            {% if c.sub_categories and c.sub_categories|length %}
+              <div class="sub">زیرگروه‌ها: {{ c.sub_categories|length }}</div>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>دسته‌ای یافت نشد.</p>
+  {% endif %}
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.cat-grid { list-style: none; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); }
+.cat-card { border: 1px solid #eee; border-radius: 12px; background: #fff; }
+.cat-card a { display: block; padding: 1rem; color: inherit; text-decoration: none; }
+.title { font-weight: 700; }
+.en { color: #666; font-size: .9rem; margin-top: .2rem; }
+.sub { color: #555; font-size: .85rem; margin-top: .4rem; }
+</style>
+{% endblock %}

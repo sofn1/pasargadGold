@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}نظرات خبر{% endblock %}
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>نظرات: {{ news.name|default:news.english_name }}</h1>
+
+  {% if comments %}
+    <ul class="comments">
+      {% for c in comments %}
+        <li class="comment">
+          <div class="head">
+            <strong>{{ c.user.username }}</strong>
+            <span class="date">{{ c.created_at|date:"Y-m-d H:i" }}</span>
+          </div>
+          <div class="body">{{ c.content }}</div>
+
+          <form method="post" action="{% url 'writer:writer_comment_reply' c.id %}" class="reply-form">
+            {% csrf_token %}
+            <input name="content" placeholder="پاسخ..." required>
+            <button class="btn" type="submit">ارسال پاسخ</button>
+          </form>
+
+          {% if c.replies.all %}
+            <ul class="replies">
+              {% for r in c.replies.all %}
+                <li>
+                  <div class="head"><strong>{{ r.user.username }}</strong> — {{ r.created_at|date:"Y-m-d H:i" }}</div>
+                  <div class="body">{{ r.content }}</div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>نظری ثبت نشده است.</p>
+  {% endif %}
+
+  <p style="margin-top:1rem;"><a class="btn" href="{% url 'writer:news_list' %}">بازگشت</a></p>
+</div>
+
+<style>
+.container{max-width:900px;margin:2rem auto;padding:0 1rem}
+.comments{list-style:none;padding:0;display:grid;gap:.75rem}
+.comment{border:1px solid #eee;border-radius:12px;padding:1rem;background:#fff}
+.head{display:flex;gap:1rem;color:#555;font-size:.9rem;margin-bottom:.4rem}
+.reply-form{display:flex;gap:.5rem;margin-top:.6rem}
+.reply-form input{flex:1;border:1px solid #ddd;border-radius:10px;padding:.5rem}
+.replies{list-style:none;padding:0 1rem;margin:.5rem 0 0;display:grid;gap:.5rem;border-right:3px solid #f3f4f6}
+.btn{display:inline-block;padding:.4rem .8rem;border-radius:10px;border:1px solid #ddd;background:#fff;text-decoration:none}
+</style>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}لیست مطالب{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>مطالب</h1>
+
+  <form class="filters" method="get">
+    <input type="text" name="q" placeholder="جستجو..." value="{{ request.GET.q }}">
+    <input type="text" name="category" placeholder="شناسه دسته (Mongo)" value="{{ request.GET.category }}">
+    <button type="submit">اعمال</button>
+  </form>
+
+  {% if blogs %}
+    <ul class="blog-list">
+      {% for b in blogs %}
+        <li class="blog-item">
+          <a href="{% url 'blog_detail' b.pk %}">
+            <div class="row">
+              <div class="txt">
+                <h2 class="title">{{ b.name|default:b.english_name }}</h2>
+                <div class="meta">
+                  {% if b.publish_time %}<span>{{ b.publish_time|date:"Y-m-d H:i" }}</span>{% endif %}
+                  {% if b.read_time %}<span>زمان مطالعه: {{ b.read_time }} دقیقه</span>{% endif %}
+                  {% if b.writer_name %}<span>نویسنده: {{ b.writer_name }}</span>{% endif %}
+                </div>
+                {% if b.short_description %}
+                  <p class="desc">{{ b.short_description|truncatechars:200 }}</p>
+                {% endif %}
+              </div>
+              {% if b.view_image %}
+                <div class="thumb">
+                  <img src="{{ b.view_image.url }}" alt="{{ b.name|default:'Blog' }}">
+                </div>
+              {% endif %}
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if is_paginated %}
+      <nav class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">قبلی</a>
+        {% endif %}
+        <span>صفحه {{ page_obj.number }} از {{ paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">بعدی</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <p>محتوایی یافت نشد.</p>
+  {% endif %}
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.filters { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.blog-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.blog-item { border: 1px solid #eee; border-radius: 12px; }
+.blog-item a { display: block; padding: 1rem; text-decoration: none; color: inherit; }
+.row { display: grid; grid-template-columns: 1fr 220px; gap: 1rem; align-items: start; }
+.thumb img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.title { margin: 0; }
+.meta { display: flex; gap: 1rem; font-size: .85rem; color: #666; margin-top: .25rem; }
+.desc { margin-top: .5rem; color: #333; }
+@media (max-width: 720px) {
+  .row { grid-template-columns: 1fr; }
+}
+.pagination { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+</style>
+{% endblock %}

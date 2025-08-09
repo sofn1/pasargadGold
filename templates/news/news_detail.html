@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}جزئیات خبر{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <a class="back" href="{% url 'news_list' %}">← بازگشت به اخبار</a>
+
+  <article class="article">
+    <header>
+      <h1>{{ news.name|default:news.english_name }}</h1>
+      <div class="meta">
+        {% if news.publish_time %}<span>{{ news.publish_time|date:"Y-m-d H:i" }}</span>{% endif %}
+        {% if news.read_time %}<span>زمان مطالعه: {{ news.read_time }} دقیقه</span>{% endif %}
+        {% if news.writer_name %}
+          <span>خبرنگار:
+            {% if news.writer_profile %}
+              <a href="{{ news.writer_profile }}" target="_blank" rel="noopener">{{ news.writer_name }}</a>
+            {% else %}
+              {{ news.writer_name }}
+            {% endif %}
+          </span>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if news.view_image %}
+      <figure class="hero"><img src="{{ news.view_image.url }}" alt="{{ news.name|default:'News' }}"></figure>
+    {% endif %}
+
+    {% if news.short_description %}
+      <p class="lead">{{ news.short_description }}</p>
+    {% endif %}
+
+    <section class="content">
+      {{ news.content|safe }}
+    </section>
+
+    {% if news.rel_news or news.rel_blogs or news.rel_products %}
+      <section class="related">
+        <h2>مرتبط</h2>
+
+        {% if news.rel_news %}
+          <div class="chip-row">
+            <div class="chip-head">اخبار مرتبط:</div>
+            {% for nid in news.rel_news %}
+              <span class="chip">#{{ nid }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if news.rel_blogs %}
+          <div class="chip-row">
+            <div class="chip-head">بلاگ‌های مرتبط:</div>
+            {% for bid in news.rel_blogs %}
+              <span class="chip">#{{ bid }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if news.rel_products %}
+          <div class="chip-row">
+            <div class="chip-head">محصولات مرتبط:</div>
+            {% for pid in news.rel_products %}
+              <span class="chip">#{{ pid }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </article>
+</div>
+
+<style>
+.container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+.back { text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+.article h1 { margin: .25rem 0 .5rem; }
+.meta { display: flex; gap: 1rem; font-size: .9rem; color: #666; margin-bottom: .75rem; flex-wrap: wrap; }
+.hero img { width: 100%; height: auto; border-radius: 12px; }
+.lead { font-size: 1.05rem; color: #333; background: #f9fafb; padding: .75rem 1rem; border-radius: 12px; }
+.content { margin-top: 1rem; line-height: 1.9; }
+.related { margin-top: 2rem; }
+.chip-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; }
+.chip-head { font-weight: 700; }
+.chip { display: inline-block; padding: .25rem .6rem; border: 1px solid #ddd; border-radius: 999px; font-size: .85rem; }
+</style>
+{% endblock %}

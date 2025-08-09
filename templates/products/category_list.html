@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}دسته‌بندی‌های محصول{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>دسته‌بندی‌ها</h1>
+
+  {% if categories %}
+    <ul class="grid">
+      {% for c in categories %}
+        <li class="card">
+          <a href="{% url 'product_category_detail' c.id %}">
+            {% if c.image %}<img class="thumb" src="{{ c.image }}" alt="{{ c.name|default:c.english_name }}">{% endif %}
+            <div class="title">{{ c.name|default:c.english_name }}</div>
+            {% if c.english_name %}<div class="en">{{ c.english_name }}</div>{% endif %}
+            {% if c.sub_categories and c.sub_categories|length %}
+              <div class="sub">زیرگروه‌ها: {{ c.sub_categories|length }}</div>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>دسته‌ای یافت نشد.</p>
+  {% endif %}
+</div>
+
+<style>
+.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
+.grid{list-style:none;padding:0;display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.card{border:1px solid #eee;border-radius:12px;background:#fff;overflow:hidden}
+.card a{display:block;padding:1rem;color:inherit;text-decoration:none}
+.thumb{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:.5rem}
+.title{font-weight:700}
+.en{color:#666;font-size:.9rem;margin-top:.25rem}
+.sub{color:#555;font-size:.85rem;margin-top:.25rem}
+</style>
+{% endblock %}

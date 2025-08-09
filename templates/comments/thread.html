@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}نظرات{% endblock %}
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>نظرات</h1>
+
+  {% if messages %}
+    <ul class="msgs">{% for m in messages %}<li class="m {{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn primary" type="submit">ارسال</button>
+  </form>
+
+  <hr>
+
+  {% if comments %}
+    <ul class="list">
+      {% for c in comments %}
+        <li class="card">
+          <div class="head">
+            <strong>{{ c.user.username }}</strong>
+            <span class="date">{{ c.created_at|date:"Y-m-d H:i" }}</span>
+          </div>
+          <div class="body">{{ c.content }}</div>
+
+          <div class="actions">
+            <form method="post" action="{% url 'comment_like_toggle' c.id %}">
+              {% csrf_token %}
+              <button class="btn" type="submit">
+                {% if c.id in liked_ids %}برداشتن لایک{% else %}لایک{% endif %}
+                ({{ c.likes.count }})
+              </button>
+            </form>
+
+            {% if c.user_id == request.user.id %}
+              <a class="btn" href="{% url 'comment_edit' c.id %}">ویرایش</a>
+              <a class="btn danger" href="{% url 'comment_delete' c.id %}">حذف</a>
+            {% endif %}
+          </div>
+
+          <!-- quick reply -->
+          <form method="post" class="reply">
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" value="{{ c.id }}">
+            <textarea name="content" rows="2" placeholder="پاسخ..."></textarea>
+            <button class="btn" type="submit">ارسال پاسخ</button>
+          </form>
+
+          {% if c.replies %}
+            <ul class="replies">
+              {% for r in c.replies %}
+                <li>
+                  <div class="head">
+                    <strong>{{ r.user.username }}</strong>
+                    <span class="date">{{ r.created_at|date:"Y-m-d H:i" }}</span>
+                  </div>
+                  <div class="body">{{ r.content }}</div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>هنوز نظری ثبت نشده است.</p>
+  {% endif %}
+</div>
+
+<style>
+.container{max-width:900px;margin:2rem auto;padding:0 1rem}
+.form textarea{width:100%;border:1px solid #ddd;border-radius:10px;padding:.6rem}
+.list{list-style:none;padding:0;display:grid;gap:1rem}
+.card{border:1px solid #eee;border-radius:12px;padding:1rem;background:#fff}
+.head{display:flex;gap:1rem;color:#666;font-size:.9rem;margin-bottom:.4rem}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+.btn{padding:.4rem .8rem;border:1px solid #ddd;border-radius:10px;background:#fff;text-decoration:none}
+.btn.primary{background:#1C39BB;color:#fff;border-color:#1C39BB}
+.btn.danger{background:#fee2e2;border-color:#fecaca}
+.reply textarea{width:100%;margin-top:.5rem;border:1px solid #eee;border-radius:10px;padding:.5rem}
+.replies{list-style:none;padding:0 1rem;margin-top:.5rem;border-right:3px solid #f3f4f6;display:grid;gap:.5rem}
+.msgs{list-style:none;padding:0;margin:.5rem 0}
+.m{padding:.4rem .6rem;border-radius:8px;background:#f3f4f6}
+</style>
+{% endblock %}

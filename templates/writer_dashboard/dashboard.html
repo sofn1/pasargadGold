@@ -1,9 +1,26 @@
 {% extends "base.html" %}
+{% block title %}داشبورد نویسنده{% endblock %}
 {% block content %}
-<div class="container mt-5">
-  <div class="text-center">
-    <h1 class="mb-3">🎉 داشبورد نویسنده</h1>
-    <p class="lead">خوش آمدید! در این صفحه می‌توانید مطالب خود را مدیریت کنید.</p>
+<div class="container" dir="rtl">
+  <h1>داشبورد نویسنده</h1>
+  <p>به پنل نویسندگی خوش آمدید.</p>
+
+  <div class="grid">
+    <a class="card" href="{% url 'writer:writer_summary' %}">خلاصه عملکرد</a>
+    <a class="card" href="{% url 'writer:writer_seo' %}">دستیار سئو</a>
+    <a class="card" href="{% url 'writer:writer_trends' %}">ترند محتوایی ۳۰ روز اخیر</a>
+    <a class="card" href="{% url 'writer:writer_top_performers' %}">برترین‌ها</a>
+    <a class="card" href="{% url 'writer:writer_export' %}">خروجی اکسل</a>
+
+    <a class="card" href="{% url 'writer:blog_list' %}">مدیریت بلاگ‌ها</a>
+    <a class="card" href="{% url 'writer:news_list' %}">مدیریت خبرها</a>
   </div>
 </div>
+
+<style>
+.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+.card{display:block;border:1px solid #eee;border-radius:12px;padding:1rem;text-decoration:none;color:inherit;background:#fff}
+.card:hover{box-shadow:0 4px 18px rgba(0,0,0,.06)}
+</style>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}ویرایش نظر{% endblock %}
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>ویرایش نظر</h1>
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn primary" type="submit">ذخیره</button>
+    <a class="btn" href="{% url 'comment_thread' model=comment.content_type.model object_id=comment.object_id %}">بازگشت</a>
+  </form>
+</div>
+
+<style>
+.container{max-width:700px;margin:2rem auto;padding:0 1rem}
+.form textarea{width:100%;border:1px solid #ddd;border-radius:10px;padding:.6rem}
+.btn{padding:.4rem .8rem;border:1px solid #ddd;border-radius:10px;background:#fff;text-decoration:none}
+.btn.primary{background:#1C39BB;color:#fff;border-color:#1C39BB}
+</style>
+{% endblock %}

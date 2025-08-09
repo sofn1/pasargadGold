@@ -1,22 +1,34 @@
 {% extends "base.html" %}
+{% block title %}خلاصه عملکرد{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold text-[#1C39BB] mb-6">داشبورد نویسنده</h1>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white shadow rounded-xl p-6">
-      <h2 class="text-lg font-semibold text-[#1C39BB] mb-2">وبلاگ</h2>
-      <p>تعداد: {{ summary.total_blogs }}</p>
-      <p>بازدیدها: {{ summary.blog_views }}</p>
-      <p>میانگین زمان خواندن: {{ summary.avg_blog_read_time }} دقیقه</p>
-      <p>آخرین وبلاگ: {{ summary.last_blog }}</p>
+<div class="container" dir="rtl">
+  <h1>خلاصه عملکرد</h1>
+
+  <div class="stats">
+    <div class="card">
+      <h3>بلاگ‌ها</h3>
+      <p>تعداد کل: <strong>{{ total_blogs }}</strong></p>
+      <p>میانگین زمان مطالعه: <strong>{{ avg_blog_read_time|floatformat:1 }}</strong> دقیقه</p>
+      <p>آخرین انتشار: <strong>{% if last_blog %}{{ last_blog|date:"Y-m-d H:i" }}{% else %}-{% endif %}</strong></p>
     </div>
-    <div class="bg-white shadow rounded-xl p-6">
-      <h2 class="text-lg font-semibold text-[#1C39BB] mb-2">اخبار</h2>
-      <p>تعداد: {{ summary.total_news }}</p>
-      <p>بازدیدها: {{ summary.news_views }}</p>
-      <p>میانگین زمان خواندن: {{ summary.avg_news_read_time }} دقیقه</p>
-      <p>آخرین خبر: {{ summary.last_news }}</p>
+
+    <div class="card">
+      <h3>خبرها</h3>
+      <p>تعداد کل: <strong>{{ total_news }}</strong></p>
+      <p>میانگین زمان مطالعه: <strong>{{ avg_news_read_time|floatformat:1 }}</strong> دقیقه</p>
+      <p>آخرین انتشار: <strong>{% if last_news %}{{ last_news|date:"Y-m-d H:i" }}{% else %}-{% endif %}</strong></p>
     </div>
   </div>
+
+  <p style="margin-top:1rem;">
+    <a class="btn" href="{% url 'writer:dashboard' %}">← بازگشت به داشبورد</a>
+  </p>
 </div>
+
+<style>
+.container{max-width:1000px;margin:2rem auto;padding:0 1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.card{border:1px solid #eee;border-radius:12px;padding:1rem;background:#fff}
+.btn{display:inline-block;padding:.5rem .9rem;border-radius:10px;border:1px solid #ddd;background:#fff;text-decoration:none}
+</style>
 {% endblock %}

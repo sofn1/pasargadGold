@@ -13,7 +13,6 @@ class Comment(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-
     parent = models.ForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
 
     likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
@@ -29,6 +28,11 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.user.phone_number} → {self.content[:30]}'
+
+    @property
+    def replies(self):
+        """Alias for templates that expect `comment.replies` while DB relation is `children`."""
+        return self.children.all()
 
     class Meta:
         ordering = ['created_at']

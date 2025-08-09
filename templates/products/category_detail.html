@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}دسته محصولات{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <a class="back" href="{% url 'product_category_list' %}">← بازگشت به دسته‌ها</a>
+
+  <header class="head">
+    <h1>{{ category.name|default:category.english_name }}</h1>
+    {% if category.english_name %}<div class="sub">{{ category.english_name }}</div>{% endif %}
+  </header>
+
+  {% if products %}
+    <ul class="cards">
+      {% for p in products %}
+        <li class="card">
+          <a href="{% url 'product_detail' p.pk %}">
+            <div class="img">
+              {% if p.view_image %}<img src="{{ p.view_image.url }}" alt="{{ p.name }}">{% endif %}
+              {% if p.featured %}<span class="badge">ویژه</span>{% endif %}
+            </div>
+            <div class="body">
+              <div class="title">{{ p.name }}</div>
+              {% if p.brand %}<div class="brand">برند: {{ p.brand.name }}</div>{% endif %}
+              <div class="price">{{ p.price }}</div>
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>محصولی در این دسته موجود نیست.</p>
+  {% endif %}
+</div>
+
+<style>
+.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
+.back{text-decoration:none;display:inline-block;margin-bottom:1rem}
+.cards{list-style:none;padding:0;display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.card{border:1px solid #eee;border-radius:12px;background:#fff;overflow:hidden}
+.card a{display:block;color:inherit;text-decoration:none}
+.img{position:relative;height:180px;background:#fafafa;display:grid;place-items:center}
+.img img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;top:.5rem;left:.5rem;background:#1C39BB;color:#fff;border-radius:999px;padding:.2rem .6rem;font-size:.8rem}
+.body{padding:.7rem .9rem}
+.title{font-weight:700;margin-bottom:.25rem}
+.brand{font-size:.9rem;color:#666}
+.price{margin-top:.25rem;font-weight:700}
+</style>
+{% endblock %}

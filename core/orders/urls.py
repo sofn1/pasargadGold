@@ -1,13 +1,11 @@
+# orders/urls.py
 from django.urls import path
-from .views import (
-    CartItemView, CartItemDeleteView, CreateOrderView,
-    PayWithZarinpal, ZarinpalVerify
-)
+from .views import CartPage, CartItemRemoveView, CheckoutPage, ZarinpalVerifyView
+
 
 urlpatterns = [
-    path('cart/', CartItemView.as_view(), name='cart_list_create'),
-    path('cart/<int:pk>/', CartItemDeleteView.as_view(), name='cart_delete'),
-    path('create/', CreateOrderView.as_view(), name='create_order'),
-    path('pay/<int:order_id>/', PayWithZarinpal.as_view(), name='pay_zarinpal'),
-    path('verify/', ZarinpalVerify.as_view(), name='verify_zarinpal'),
+    path("cart/", CartPage.as_view(), name="orders_cart"),
+    path("cart/remove/<int:pk>/", CartItemRemoveView.as_view(), name="orders_cart_remove"),
+    path("checkout/", CheckoutPage.as_view(), name="orders_checkout"),
+    path("verify/", ZarinpalVerifyView.as_view(), name="zarinpal_verify"),
 ]

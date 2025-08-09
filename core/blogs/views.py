@@ -1,64 +1,65 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, permissions, status
+# blogs/views.py
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, ListView, DetailView
+from django.shortcuts import get_object_or_404
 from .models.blog import Blog
-from .serializers import BlogSerializer, BlogCategorySerializer
 from .mongo_service.category_service import BlogCategoryService
 
 
-# ========== Blog Category Views ==========
-class BlogCategoryListCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+# ===== Categories (Mongo) =====
+class BlogCategoryListPage(LoginRequiredMixin, TemplateView):
+    template_name = "blogs/category_list.html"
 
-    def get(self, request):
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
         service = BlogCategoryService()
-        categories = service.get_all_categories()
-        return Response(categories)
+        ctx["categories"] = service.get_all_categories()  # list[dict]
+        return ctx
 
-    def post(self, request):
+
+class BlogCategoryDetailPage(LoginRequiredMixin, TemplateView):
+    template_name = "blogs/category_detail.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        category_id = kwargs.get("pk")
         service = BlogCategoryService()
-        name = request.data.get("name")
-        english_name = request.data.get("english_name")
-        parent_id = request.data.get("parent_id")
+        category = service.get_category(category_id)
+        if not category:
+            # Keep consistent behavior with 404 if not found
+            # Since we don't have a Django model, we emulate 404 by raising manually.
+            from django.http import Http404
+            raise Http404("Category not found")
 
-        if not name or not english_name:
-            return Response({"error": "name and english_name are required"}, status=status.HTTP_400_BAD_REQUEST)
+        ctx["category"] = category
+        # Blogs linked to this Mongo category (Blog.category_id is a string)
+        ctx["blogs"] = Blog.objects.filter(category_id=category_id).order_by("-publish_time")
+        return ctx
 
-        category_id = service.create_category(name, english_name, parent_id)
-        return Response({"id": category_id}, status=status.HTTP_201_CREATED)
 
+# ===== Blogs (PostgreSQL model) =====
+class BlogListPage(LoginRequiredMixin, ListView):
+    template_name = "blogs/blog_list.html"
+    context_object_name = "blogs"
+    paginate_by = 10
 
-class BlogCategoryDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, pk):
-        service = BlogCategoryService()
-        category = service.get_category(pk)
+    def get_queryset(self):
+        qs = Blog.objects.all().order_by("-publish_time")
+        # Optional filter by category via ?category=<mongo_id>
+        category = self.request.GET.get("category")
         if category:
-            return Response(category)
-        return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    def put(self, request, pk):
-        service = BlogCategoryService()
-        name = request.data.get("name")
-        english_name = request.data.get("english_name")
-        service.update_category(pk, name, english_name)
-        return Response({"message": "Updated"})
-
-    def delete(self, request, pk):
-        service = BlogCategoryService()
-        service.delete_category(pk)
-        return Response({"message": "Deleted"}, status=status.HTTP_204_NO_CONTENT)
+            qs = qs.filter(category_id=category)
+        # Optional search by title/name/short_description (?q=...)
+        q = self.request.GET.get("q")
+        if q:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(name__icontains=q) | Q(english_name__icontains=q) | Q(short_description__icontains=q)
+            )
+        return qs
 
 
-# ========== Blog Views ==========
-class BlogListCreateView(generics.ListCreateAPIView):
-    queryset = Blog.objects.all()
-    serializer_class = BlogSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Blog.objects.all()
-    serializer_class = BlogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class BlogDetailPage(LoginRequiredMixin, DetailView):
+    template_name = "blogs/blog_detail.html"
+    model = Blog
+    context_object_name = "blog"

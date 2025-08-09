@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Banners{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1 style="margin: 1rem 0;">بنرها</h1>
+
+  {% if banners %}
+    <div class="grid">
+      {% for b in banners %}
+        <article class="card">
+          <header class="card-header">
+            <span class="pos">{{ b.get_position_display }}</span>
+            <h2 class="title">{{ b.title }}</h2>
+          </header>
+
+          <div class="media">
+            {% if b.link %}
+              <a href="{{ b.link }}">
+                <img src="{{ b.image.url }}" alt="{{ b.title }}">
+              </a>
+            {% else %}
+              <img src="{{ b.image.url }}" alt="{{ b.title }}">
+            {% endif %}
+          </div>
+
+          <footer class="card-footer">
+            {% if b.button_text and b.link %}
+              <a class="btn" href="{{ b.link }}">{{ b.button_text }}</a>
+            {% elif b.link %}
+              <a class="btn" href="{{ b.link }}">مشاهده</a>
+            {% endif %}
+            <span class="priority">اولویت: {{ b.priority }}</span>
+          </footer>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>هیچ بنر فعالی موجود نیست.</p>
+  {% endif %}
+</div>
+
+<style>
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem 2rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+  .card { border: 1px solid #eee; border-radius: 14px; overflow: hidden; background: #fff; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; }
+  .title { font-size: 1rem; margin: 0; }
+  .pos { font-size: .8rem; padding: .2rem .6rem; border-radius: 999px; background: #f3f4f6; }
+  .media img { width: 100%; height: auto; display: block; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; }
+  .btn { display: inline-block; padding: .5rem .9rem; border-radius: 10px; border: 1px solid #ddd; text-decoration: none; }
+  .priority { font-size: .85rem; color: #666; }
+</style>
+{% endblock %}

@@ -1,15 +1,18 @@
+# news/urls.py
 from django.urls import path
 from .views import (
-    NewsCategoryListCreateView, NewsCategoryDetailView,
-    NewsListCreateView, NewsDetailView
+    NewsCategoryListPage,
+    NewsCategoryDetailPage,
+    NewsListPage,
+    NewsDetailPage,
 )
 
 urlpatterns = [
-    # Categories
-    path('categories/', NewsCategoryListCreateView.as_view(), name='news-category-list-create'),
-    path('categories/<str:pk>/', NewsCategoryDetailView.as_view(), name='news-category-detail'),
+    # Category pages (Mongo)
+    path("categories/", NewsCategoryListPage.as_view(), name="news_category_list"),
+    path("categories/<str:pk>/", NewsCategoryDetailPage.as_view(), name="news_category_detail"),
 
-    # News
-    path('', NewsListCreateView.as_view(), name='news_list_create'),
-    path('<int:pk>/', NewsDetailView.as_view(), name='news_detail'),
+    # News pages (Postgres)
+    path("", NewsListPage.as_view(), name="news_list"),
+    path("<int:pk>/", NewsDetailPage.as_view(), name="news_detail"),
 ]

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}دسته‌بندی‌های بلاگ{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>دسته‌بندی‌ها</h1>
+
+  {% if categories %}
+    <ul class="cat-list">
+      {% for c in categories %}
+        <li class="cat-item">
+          <a href="{% url 'blog_category_detail' c.id %}">
+            <div class="cat-title">{{ c.name|default:c.english_name }}</div>
+            {% if c.english_name %}<div class="cat-en">{{ c.english_name }}</div>{% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>هیچ دسته‌بندی‌ای یافت نشد.</p>
+  {% endif %}
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.cat-list { list-style: none; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); }
+.cat-item { border: 1px solid #eee; border-radius: 12px; }
+.cat-item a { display: block; padding: .9rem 1rem; text-decoration: none; color: inherit; }
+.cat-title { font-weight: 600; }
+.cat-en { font-size: .85rem; color: #666; margin-top: .25rem; }
+</style>
+{% endblock %}

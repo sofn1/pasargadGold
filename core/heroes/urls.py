@@ -1,8 +1,7 @@
 # heroes/urls.py
 from django.urls import path
-from .views import HeroListView
-
+from .views import HeroListPage
 
 urlpatterns = [
-    path("heroes/", HeroListView.as_view()),
+    path("heroes/", HeroListPage.as_view(), name="heroes-list-page"),
 ]

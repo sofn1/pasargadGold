@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}سبد خرید{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>سبد خرید</h1>
+
+  {% if messages %}
+    <ul class="msgs">{% for m in messages %}<li class="m {{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if items %}
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>محصول</th>
+          <th>قیمت</th>
+          <th>تعداد</th>
+          <th>مجموع</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.product.name }}</td>
+          <td>{{ it.product.price|default:0 }}</td>
+          <td>{{ it.quantity }}</td>
+          <td>{{ it.product.price|default:0|add:"0"|floatformat:0|add:""|safe }}{% if it.product.price %}{% endif %}{{ it.product.price|default:0|mul:it.quantity }}</td>
+          <td>
+            <form method="post" action="{% url 'orders_cart_remove' it.pk %}">
+              {% csrf_token %}
+              <button class="btn danger" type="submit">حذف</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="text-align:left;">جمع کل</td>
+          <td colspan="2"><strong>{{ total_price }}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="actions">
+      <a class="btn primary" href="{% url 'orders_checkout' %}">ادامه برای پرداخت</a>
+    </div>
+  {% else %}
+    <p>سبد خرید خالی است.</p>
+  {% endif %}
+
+  <hr>
+
+  <h2>افزودن به سبد</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ add_form.as_p }}
+    <button class="btn" type="submit">افزودن</button>
+  </form>
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.tbl { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+.tbl th, .tbl td { border: 1px solid #eee; padding: .6rem .5rem; }
+.actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.btn { padding: .5rem .9rem; border-radius: 10px; border: 1px solid #ddd; background: #fff; text-decoration: none; }
+.btn.primary { background: #1C39BB; color: #fff; border-color: #1C39BB; }
+.btn.danger { background: #fee2e2; border-color: #fecaca; }
+.msgs { list-style: none; padding: 0; margin: .5rem 0; }
+.m { padding: .4rem .6rem; border-radius: 8px; background: #f3f4f6; }
+</style>
+{% endblock %}

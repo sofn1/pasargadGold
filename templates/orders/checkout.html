@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>تسویه حساب</h1>
+
+  {% if messages %}
+    <ul class="msgs">{% for m in messages %}<li class="m {{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if items %}
+    <section class="summary">
+      <h2>خلاصه سفارش</h2>
+      <ul class="lines">
+        {% for it in items %}
+          <li>{{ it.product.name }} × {{ it.quantity }}</li>
+        {% endfor %}
+      </ul>
+      <div class="total">مبلغ کل: <strong>{{ total_price }}</strong></div>
+    </section>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn primary" type="submit">پرداخت با زرین‌پال</button>
+    </form>
+  {% else %}
+    <p>سبد خرید شما خالی است.</p>
+  {% endif %}
+</div>
+
+<style>
+.container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+.summary { border: 1px solid #eee; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.lines { list-style: none; padding: 0; margin: 0 0 .5rem; }
+.total { margin-top: .5rem; }
+.btn { padding: .5rem .9rem; border-radius: 10px; border: 1px solid #ddd; background: #fff; text-decoration: none; }
+.btn.primary { background: #1C39BB; color: #fff; border-color: #1C39BB; }
+.msgs { list-style: none; padding: 0; margin: .5rem 0; }
+.m { padding: .4rem .6rem; border-radius: 8px; background: #f3f4f6; }
+</style>
+{% endblock %}

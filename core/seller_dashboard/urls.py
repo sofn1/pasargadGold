@@ -3,18 +3,7 @@ from . import views
 from .views import seller_dashboard_home
 
 urlpatterns = [
-    path('summary/', views.SellerDashboardSummaryView.as_view()),
-    path('timeseries/revenue/', views.RevenueTimeSeriesView.as_view()),
-    path('timeseries/orders/', views.OrderTimeSeriesView.as_view()),
-    path('timeseries/profit/', views.ProfitTimeSeriesView.as_view()),
-    path('products/top/', views.TopProductsView.as_view()),
-    path('products/low-stock/', views.LowStockProductsView.as_view()),
-    path('funnel/', views.OrderFunnelView.as_view()),
-    path('geo/', views.GeoBreakdownView.as_view()),
-    path('devices/', views.DeviceBreakdownView.as_view()),
-    path('alerts/unfulfilled-orders/', views.UnfulfilledOrdersView.as_view()),
-    path('alerts/system-health/', views.SystemHealthCheckView.as_view()),
-    path('sales/channels/', views.SalesByChannelView.as_view()),
+    path("dashboard/", seller_dashboard_home, name="dashboard"),
 
     path('summary/', views.seller_summary_view, name='seller_summary'),
     path('revenue-time-series/', views.revenue_time_series_view, name='seller_revenue_time_series'),
@@ -29,5 +18,4 @@ urlpatterns = [
     path('system-health/', views.system_health_view, name='seller_system_health'),
     path('sales-by-channel/', views.sales_by_channel_view, name='seller_sales_by_channel'),
 
-    path("dashboard/", seller_dashboard_home, name="dashboard"),
 ]

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}دسته‌بندی بلاگ{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <a class="back" href="{% url 'blog_category_list' %}">← بازگشت به همه دسته‌بندی‌ها</a>
+
+  <header class="head">
+    <h1>{{ category.name|default:category.english_name }}</h1>
+    {% if category.english_name %}<div class="sub">{{ category.english_name }}</div>{% endif %}
+  </header>
+
+  <section>
+    <h2>مطالب این دسته</h2>
+    {% if blogs %}
+      <ul class="blog-list">
+        {% for b in blogs %}
+          <li class="blog-item">
+            <a href="{% url 'blog_detail' b.pk %}">
+              <div class="blog-title">{{ b.name|default:b.english_name }}</div>
+              <div class="meta">
+                {% if b.publish_time %}<span>{{ b.publish_time|date:"Y-m-d H:i" }}</span>{% endif %}
+                {% if b.read_time %}<span>زمان مطالعه: {{ b.read_time }} دقیقه</span>{% endif %}
+              </div>
+              {% if b.short_description %}
+                <p class="desc">{{ b.short_description|truncatechars:160 }}</p>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>هنوز مطلبی برای این دسته ثبت نشده است.</p>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.back { text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+.head h1 { margin: .2rem 0; }
+.sub { color: #666; }
+.blog-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.blog-item { border: 1px solid #eee; border-radius: 12px; padding: .9rem 1rem; }
+.blog-title { font-weight: 700; }
+.meta { display: flex; gap: 1rem; font-size: .85rem; color: #666; margin-top: .25rem; }
+.desc { margin: .5rem 0 0; color: #333; }
+</style>
+{% endblock %}

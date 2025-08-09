@@ -1,33 +1,38 @@
 {% extends "base.html" %}
+{% block title %}مدیریت خبرها{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto p-6">
-  <h2 class="text-xl font-bold text-[#1C39BB] mb-4">لیست خبرها</h2>
-  <a href="{% url 'writer_news_create' %}" class="bg-[#1C39BB] text-white px-4 py-2 rounded shadow mb-4 inline-block">+ ایجاد خبر</a>
+<div class="container" dir="rtl">
+  <h1>خبرهای من</h1>
+  <p><a class="btn primary" href="{% url 'writer:news_create' %}">+ ایجاد خبر جدید</a></p>
 
-  <table class="w-full border text-right">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="p-2">عنوان</th>
-        <th class="p-2">تاریخ انتشار</th>
-        <th class="p-2">بازدید</th>
-        <th class="p-2">عملیات</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in news %}
-      <tr>
-        <td class="p-2">{{ item.name }}</td>
-        <td class="p-2">{{ item.publishTime|date:"Y-m-d" }}</td>
-        <td class="p-2">{{ item.views }}</td>
-        <td class="p-2 flex gap-2">
-          <a href="{% url 'writer_news_edit' item.id %}" class="text-blue-500">ویرایش</a>
-          <a href="{% url 'writer_news_delete' item.id %}" class="text-red-500">حذف</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="4" class="p-2 text-center">خبری یافت نشد.</td></tr>
+  {% if news_list %}
+    <table class="tbl">
+      <thead><tr><th>عنوان</th><th>زمان انتشار</th><th>زمان مطالعه</th><th></th></tr></thead>
+      <tbody>
+      {% for n in news_list %}
+        <tr>
+          <td>{{ n.name|default:n.english_name }}</td>
+          <td>{% if n.publish_time %}{{ n.publish_time|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+          <td>{% if n.read_time %}{{ n.read_time }} دقیقه{% else %}-{% endif %}</td>
+          <td class="actions">
+            <a href="{% url 'writer:news_edit' n.pk %}">ویرایش</a> |
+            <a href="{% url 'writer:news_delete' n.pk %}">حذف</a> |
+            <a href="{% url 'writer:news_comments_html' n.pk %}">نظرات</a>
+          </td>
+        </tr>
       {% endfor %}
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  {% else %}
+    <p>خبری ثبت نشده است.</p>
+  {% endif %}
 </div>
+
+<style>
+.container{max-width:1000px;margin:2rem auto;padding:0 1rem}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{border:1px solid #eee;padding:.6rem}
+.actions a{text-decoration:none}
+.btn.primary{display:inline-block;padding:.5rem .9rem;border-radius:10px;border:1px solid #1C39BB;background:#1C39BB;color:#fff;text-decoration:none}
+</style>
 {% endblock %}

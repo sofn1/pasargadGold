@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}لیست اخبار{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <h1>اخبار</h1>
+
+  <form class="filters" method="get">
+    <input type="text" name="q" placeholder="جستجو..." value="{{ request.GET.q }}">
+    <input type="text" name="category" placeholder="شناسه دسته (Mongo)" value="{{ request.GET.category }}">
+    <button type="submit">اعمال</button>
+  </form>
+
+  {% if news_list %}
+    <ul class="cards">
+      {% for n in news_list %}
+        <li class="card">
+          <a href="{% url 'news_detail' n.pk %}">
+            <div class="row">
+              <div class="txt">
+                <h2 class="title">{{ n.name|default:n.english_name }}</h2>
+                <div class="meta">
+                  {% if n.publish_time %}<span>{{ n.publish_time|date:"Y-m-d H:i" }}</span>{% endif %}
+                  {% if n.read_time %}<span>زمان مطالعه: {{ n.read_time }} دقیقه</span>{% endif %}
+                  {% if n.writer_name %}<span>خبرنگار: {{ n.writer_name }}</span>{% endif %}
+                </div>
+                {% if n.short_description %}
+                  <p class="desc">{{ n.short_description|truncatechars:200 }}</p>
+                {% endif %}
+              </div>
+              {% if n.view_image %}
+                <div class="thumb"><img src="{{ n.view_image.url }}" alt="{{ n.name|default:'News' }}"></div>
+              {% endif %}
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if is_paginated %}
+      <nav class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">قبلی</a>
+        {% endif %}
+        <span>صفحه {{ page_obj.number }} از {{ paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">بعدی</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <p>خبری یافت نشد.</p>
+  {% endif %}
+</div>
+
+<style>
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.filters { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.cards { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.card { border: 1px solid #eee; border-radius: 12px; background: #fff; }
+.card a { display: block; padding: 1rem; color: inherit; text-decoration: none; }
+.row { display: grid; grid-template-columns: 1fr 220px; gap: 1rem; align-items: start; }
+.thumb img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.title { margin: 0; }
+.meta { display: flex; gap: 1rem; font-size: .85rem; color: #666; margin-top: .25rem; flex-wrap: wrap; }
+.desc { margin-top: .5rem; color: #333; }
+@media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+.pagination { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+</style>
+{% endblock %}

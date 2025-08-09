@@ -1,14 +1,9 @@
 from django.contrib.auth import logout
 from accounts.models import AdminPermission
-from .permissions import IsSuperAdminOrAdmin
 from django.shortcuts import render, redirect
-from rest_framework import generics, permissions
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.http import url_has_allowed_host_and_scheme
-from accounts.serializers.writer import WriterRegisterSerializer
-from accounts.serializers.seller import SellerRegisterSerializer
-from accounts.serializers.customer import CustomerRegisterSerializer
 
 
 @login_required
@@ -88,20 +83,3 @@ def customer_login(request):
 
     return render(request, 'login.html')
 
-
-# Register Customer - Anyone can register
-class RegisterCustomerView(generics.CreateAPIView):
-    serializer_class = CustomerRegisterSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-# Register Seller - Only admin/superadmin
-class RegisterSellerView(generics.CreateAPIView):
-    serializer_class = SellerRegisterSerializer
-    permission_classes = [IsSuperAdminOrAdmin]
-
-
-# Register Writer - Only admin/superadmin
-class RegisterWriterView(generics.CreateAPIView):
-    serializer_class = WriterRegisterSerializer
-    permission_classes = [IsSuperAdminOrAdmin]

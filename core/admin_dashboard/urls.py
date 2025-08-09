@@ -1,40 +1,11 @@
 from django.urls import path
-from .views import (SiteSummaryView, SellersListView, WritersListView, FlaggedContentView, LowStockAlertsView,
-                    FailedPaymentsView, SellerCreateView, SellerUpdateDeleteView, WriterPermissionUpdateView,
-                    AdminCreateView, ExportSellersExcelView, ExportWritersExcelView, ExportFlaggedCommentsExcelView,
-                    ExportFilteredLogsExcelView, AdminLogsView, AdminActivitySummaryView, AdminManagementView,
-                    InviteAdminView, ActivateAdminTokenView, AdminSuspendView, ImpersonateAdminView,
-                    admin_dashboard_view, writer_dashboard_view, seller_dashboard_view, superadmin_dashboard_view)
-
 from .views import (AdminSiteSummaryPage, AdminSellersPage, AdminWritersPage, AdminFlaggedCommentsPage,
                     AdminLowStockAlertsPage, AdminFailedPaymentsPage, AdminCreateSellerPage, AdminUpdateSellerPage,
                     AdminCreateAdminPage, AdminLogsPage, AdminManageAdminsPage, AdminImpersonationPage,
-                    AdminGrowthAnalyticsPage)
+                    AdminGrowthAnalyticsPage, admin_dashboard_view, writer_dashboard_view, seller_dashboard_view,
+                    superadmin_dashboard_view)
 
 urlpatterns = [
-    path('site-summary/', SiteSummaryView.as_view()),
-    path('sellers/', SellersListView.as_view()),
-    path('writers/', WritersListView.as_view()),
-    path('moderation/comments/', FlaggedContentView.as_view()),
-    path('low-stock-alerts/', LowStockAlertsView.as_view()),
-    path('failed-payments/', FailedPaymentsView.as_view()),
-    path('sellers/create/', SellerCreateView.as_view()),
-    path('sellers/<int:id>/update-delete/', SellerUpdateDeleteView.as_view()),
-    path('writers/<int:writer_id>/permissions/', WriterPermissionUpdateView.as_view()),
-    path('admins/create/', AdminCreateView.as_view()),
-    path('export/sellers/', ExportSellersExcelView.as_view()),
-    path('export/writers/', ExportWritersExcelView.as_view()),
-    path('export/flagged-comments/', ExportFlaggedCommentsExcelView.as_view()),
-    path('export/admin-logs/', ExportFilteredLogsExcelView.as_view()),
-    path('logs/', AdminLogsView.as_view()),
-    path('activity-summary/', AdminActivitySummaryView.as_view()),
-    path('manage-admins/', AdminManagementView.as_view()),
-    path('invite-admin/', InviteAdminView.as_view()),
-    path('activate-admin-token/', ActivateAdminTokenView.as_view()),
-    path('admin-suspend/', AdminSuspendView.as_view()),
-    path('impersonate-admin/', ImpersonateAdminView.as_view()),
-
-
     path('superadmin-dashboard/', superadmin_dashboard_view, name='superadmin-dashboard'),
     path('', admin_dashboard_view, name='admin-dashboard'),
     path('writer-dashboard/', writer_dashboard_view, name='writer-dashboard'),

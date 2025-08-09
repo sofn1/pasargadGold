@@ -1,16 +1,17 @@
+# products/urls.py
 from django.urls import path
 from .views import (
-    ProductListCreateView, ProductDetailView,
-    ProductCategoryListCreateView, ProductCategoryDetailView, FeaturedProductsView
+    ProductCategoryListPage, ProductCategoryDetailPage,
+    ProductListPage, ProductDetailPage, FeaturedProductsPage
 )
 
 urlpatterns = [
-    # Categories
-    path('categories/', ProductCategoryListCreateView.as_view(), name='category_list_create'),
-    path('categories/<str:pk>/', ProductCategoryDetailView.as_view(), name='category_detail'),
+    # Categories (HTML)
+    path("categories/", ProductCategoryListPage.as_view(), name="product_category_list"),
+    path("categories/<str:pk>/", ProductCategoryDetailPage.as_view(), name="product_category_detail"),
 
-    # Products
-    path('', ProductListCreateView.as_view(), name='product_list_create'),
-    path('<int:pk>/', ProductDetailView.as_view(), name='product_detail'),
-    path('featured/', FeaturedProductsView.as_view(), name='featured-products'),
+    # Products (HTML)
+    path("", ProductListPage.as_view(), name="product_list"),
+    path("<int:pk>/", ProductDetailPage.as_view(), name="product_detail"),
+    path("featured/", FeaturedProductsPage.as_view(), name="product_featured"),
 ]

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}جزئیات مطلب{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <a class="back" href="{% url 'blog_list' %}">← بازگشت به لیست مطالب</a>
+
+  <article class="article">
+    <header>
+      <h1>{{ blog.name|default:blog.english_name }}</h1>
+      <div class="meta">
+        {% if blog.publish_time %}<span>{{ blog.publish_time|date:"Y-m-d H:i" }}</span>{% endif %}
+        {% if blog.read_time %}<span>زمان مطالعه: {{ blog.read_time }} دقیقه</span>{% endif %}
+        {% if blog.writer_name %}
+          <span>نویسنده:
+            {% if blog.writer_profile %}
+              <a href="{{ blog.writer_profile }}" target="_blank" rel="noopener">{{ blog.writer_name }}</a>
+            {% else %}
+              {{ blog.writer_name }}
+            {% endif %}
+          </span>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if blog.view_image %}
+      <figure class="hero">
+        <img src="{{ blog.view_image.url }}" alt="{{ blog.name|default:'Blog' }}">
+      </figure>
+    {% endif %}
+
+    {% if blog.short_description %}
+      <p class="lead">{{ blog.short_description }}</p>
+    {% endif %}
+
+    <section class="content">
+      {{ blog.content|safe }}
+    </section>
+  </article>
+</div>
+
+<style>
+.container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+.back { text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+.article h1 { margin: .25rem 0 .5rem; }
+.meta { display: flex; gap: 1rem; font-size: .9rem; color: #666; margin-bottom: .75rem; flex-wrap: wrap; }
+.hero img { width: 100%; height: auto; border-radius: 12px; }
+.lead { font-size: 1.05rem; color: #333; background: #f9fafb; padding: .75rem 1rem; border-radius: 12px; }
+.content { margin-top: 1rem; line-height: 1.9; }
+</style>
+{% endblock %}

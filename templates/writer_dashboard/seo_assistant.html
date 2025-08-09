@@ -1,28 +1,59 @@
 {% extends "base.html" %}
+{% block title %}دستیار سئو{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold text-[#1C39BB] mb-6">دستیار سئو</h1>
-  <form method="POST" class="bg-white shadow p-6 rounded-xl space-y-4">
+<div class="container" dir="rtl">
+  <h1>دستیار سئو</h1>
+
+  <form method="post" class="form">
     {% csrf_token %}
-    <input name="title" type="text" placeholder="عنوان محتوا" class="w-full border rounded px-3 py-2" required>
-    <textarea name="content" rows="5" placeholder="محتوا..." class="w-full border rounded px-3 py-2" required></textarea>
-    <input name="keywords" type="text" placeholder="کلمات کلیدی (با کاما جدا کنید)" class="w-full border rounded px-3 py-2">
-    <button type="submit" class="bg-[#1C39BB] text-white px-4 py-2 rounded shadow hover:opacity-90">تحلیل</button>
+    <label>عنوان</label>
+    <input type="text" name="title" value="{{ title|default_if_none:'' }}">
+
+    <label>کلیدواژه‌ها (با ویرگول جدا کنید)</label>
+    <input type="text" name="keywords" value="{{ keywords|default_if_none:'' }}">
+
+    <label>محتوا</label>
+    <textarea name="content" rows="10">{{ content|default_if_none:'' }}</textarea>
+
+    <button class="btn primary" type="submit">تحلیل</button>
+    <a class="btn" href="{% url 'writer:dashboard' %}">بازگشت</a>
   </form>
 
-  {% if result %}
-  <div class="mt-6 bg-white shadow p-6 rounded-xl space-y-4">
-    <h2 class="text-lg font-bold text-[#1C39BB]">نتایج</h2>
-    <p><strong>تعداد کلمات:</strong> {{ result.word_count }}</p>
-    <p><strong>طول عنوان:</strong> {{ result.title_length }}</p>
-    <p><strong>خوانایی:</strong> {{ result.ai_analysis.readability_score }}</p>
-    <p><strong>لحن:</strong> {{ result.ai_analysis.estimated_tone }}</p>
+  {% if word_count is not None %}
+  <div class="results">
+    <h2>نتایج</h2>
     <ul>
-      {% for suggestion in result.suggestions %}
-      <li class="text-red-600">- {{ suggestion }}</li>
+      <li>تعداد کلمات: <strong>{{ word_count }}</strong></li>
+      <li>طول عنوان (کلمات): <strong>{{ title_length }}</strong></li>
+    </ul>
+
+    {% if keyword_density %}
+    <h3>چگالی کلیدواژه‌ها</h3>
+    <ul>
+      {% for k, d in keyword_density.items %}
+        <li>{{ k }}: {{ d|floatformat:2 }}٪</li>
       {% endfor %}
     </ul>
+    {% endif %}
+
+    {% if suggestions %}
+    <h3>پیشنهادها</h3>
+    <ul>
+      {% for s in suggestions %}
+        <li>{{ s }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
   </div>
   {% endif %}
 </div>
+
+<style>
+.container{max-width:900px;margin:2rem auto;padding:0 1rem}
+.form{display:grid;gap:.6rem}
+.form input,.form textarea{border:1px solid #ddd;border-radius:10px;padding:.6rem}
+.btn{display:inline-block;padding:.5rem .9rem;border-radius:10px;border:1px solid #ddd;background:#fff;text-decoration:none}
+.btn.primary{background:#1C39BB;color:#fff;border-color:#1C39BB}
+.results{margin-top:1rem;border:1px solid #eee;border-radius:12px;padding:1rem;background:#fff}
+</style>
 {% endblock %}

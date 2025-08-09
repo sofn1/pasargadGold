@@ -1,24 +1,47 @@
 {% extends "base.html" %}
+{% block title %}برترین‌ها{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold text-[#1C39BB] mb-6">برترین مطالب</h1>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white p-6 shadow rounded-xl">
-      <h2 class="font-semibold text-[#1C39BB] mb-2">برترین وبلاگ‌ها</h2>
-      <ul>
-        {% for blog in top.top_blogs %}
-        <li>{{ blog.name }} - {{ blog.views }} بازدید</li>
-        {% endfor %}
-      </ul>
+<div class="container" dir="rtl">
+  <h1>برترین‌ها</h1>
+
+  <div class="grid">
+    <div class="card">
+      <h3>۵ بلاگ برتر</h3>
+      {% if top_blogs %}
+        <ol>
+          {% for b in top_blogs %}
+            <li>#{{ b.id }} — {{ b.name }}</li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p>موردی یافت نشد.</p>
+      {% endif %}
     </div>
-    <div class="bg-white p-6 shadow rounded-xl">
-      <h2 class="font-semibold text-[#1C39BB] mb-2">برترین اخبار</h2>
-      <ul>
-        {% for news in top.top_news %}
-        <li>{{ news.name }} - {{ news.views }} بازدید</li>
-        {% endfor %}
-      </ul>
+
+    <div class="card">
+      <h3>۵ خبر برتر</h3>
+      {% if top_news %}
+        <ol>
+          {% for n in top_news %}
+            <li>#{{ n.id }} — {{ n.name }}</li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p>موردی یافت نشد.</p>
+      {% endif %}
     </div>
   </div>
+
+  <p style="margin-top:1rem;">
+    <a class="btn" href="{% url 'writer:dashboard' %}">← بازگشت به داشبورد</a>
+  </p>
 </div>
+
+<style>
+.container{max-width:900px;margin:2rem auto;padding:0 1rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media (max-width:800px){.grid{grid-template-columns:1fr}}
+.card{border:1px solid #eee;border-radius:12px;padding:1rem;background:#fff}
+.btn{display:inline-block;padding:.5rem .9rem;border-radius:10px;border:1px solid #ddd;background:#fff;text-decoration:none}
+</style>
 {% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container" dir="rtl">
+  <a class="back" href="{% url 'product_list' %}">← بازگشت به محصولات</a>
+
+  <article class="product">
+    <header class="head">
+      <h1>{{ product.name }}</h1>
+      {% if product.brand %}<div class="brand">برند: {{ product.brand.name }}</div>{% endif %}
+      <div class="price">قیمت: <strong>{{ product.price }}</strong></div>
+      {% if product.featured %}<span class="badge">ویژه</span>{% endif %}
+    </header>
+
+    {% if product.view_image %}
+      <figure class="hero"><img src="{{ product.view_image.url }}" alt="{{ product.name }}"></figure>
+    {% endif %}
+
+    {% if product.short_description %}
+      <p class="lead">{{ product.short_description }}</p>
+    {% endif %}
+
+    <section class="content">
+      {{ product.description|safe }}
+    </section>
+
+    {% if product.features %}
+      <section class="features">
+        <h2>ویژگی‌ها</h2>
+        <ul>
+          {% for k, v in product.features.items %}
+            <li><strong>{{ k }}:</strong> {{ v }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% if product.images %}
+      <section class="gallery">
+        <h2>گالری</h2>
+        <div class="grid">
+          {% for img in product.images %}
+            <img src="{{ img }}" alt="{{ product.name }}">
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if product.rel_products or product.rel_news or product.rel_blogs %}
+      <section class="related">
+        <h2>مرتبط</h2>
+        {% if product.rel_products %}
+          <div class="chips"><span class="head">محصولات:</span>{% for pid in product.rel_products %}<span class="chip">#{{ pid }}</span>{% endfor %}</div>
+        {% endif %}
+        {% if product.rel_news %}
+          <div class="chips"><span class="head">خبرها:</span>{% for nid in product.rel_news %}<span class="chip">#{{ nid }}</span>{% endfor %}</div>
+        {% endif %}
+        {% if product.rel_blogs %}
+          <div class="chips"><span class="head">بلاگ‌ها:</span>{% for bid in product.rel_blogs %}<span class="chip">#{{ bid }}</span>{% endfor %}</div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </article>
+</div>
+
+<style>
+.container{max-width:900px;margin:2rem auto;padding:0 1rem}
+.back{text-decoration:none;display:inline-block;margin-bottom:1rem}
+.head h1{margin:.25rem 0}
+.brand{color:#666}
+.price{margin-top:.25rem}
+.badge{display:inline-block;margin-top:.4rem;background:#1C39BB;color:#fff;border-radius:999px;padding:.2rem .6rem;font-size:.8rem}
+.hero img{width:100%;height:auto;border-radius:12px}
+.lead{font-size:1.05rem;color:#333;background:#f9fafb;padding:.75rem 1rem;border-radius:12px;margin-top:.8rem}
+.content{margin-top:1rem;line-height:1.9}
+.features{margin-top:1.2rem}
+.features ul{list-style:disc;margin:0;padding-right:1.2rem}
+.gallery .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin-top:.5rem}
+.gallery img{width:100%;height:140px;object-fit:cover;border-radius:10px}
+.related{margin-top:1.5rem}
+.chips{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.head{font-weight:700}
+.chip{display:inline-block;padding:.25rem .6rem;border:1px solid #ddd;border-radius:999px;font-size:.85rem}
+</style>
+{% endblock %}
