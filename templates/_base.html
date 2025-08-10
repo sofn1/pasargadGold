@@ -15,22 +15,33 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
 
-  <!-- Custom Styles -->
+  <!-- Color Palette & Custom Styles -->
   <style>
     :root {
-      --bs-primary: #1A237E; /* Deep Persian Blue */
-      --bs-accent: #FFD700; /* Gold */
+      /* Site color palette from Django variables */
+      --color-primary: {{ color_primary|default:"#1A237E" }};
+      --color-secondary: {{ color_secondary|default:"#FFD700" }};
+      --color-accent: {{ color_accent|default:"#E91E63" }};
+      --color-bg: {{ color_bg|default:"#f8f9fa" }};
+      --color-text: {{ color_text|default:"#212529" }};
+      --color-muted: {{ color_muted|default:"#e0e0e0" }};
+
+      /* Bootstrap integration */
+      --bs-primary: var(--color-primary);
+      --bs-secondary: var(--color-secondary);
+      --bs-body-bg: var(--color-bg);
+      --bs-body-color: var(--color-text);
     }
 
     body {
       font-family: 'Vazirmatn', sans-serif;
-      background-color: #f8f9fa;
-      color: #212529;
+      background-color: var(--color-bg);
+      color: var(--color-text);
     }
 
-    /* Gold Button */
+    /* Gold Button (secondary color) */
     .btn-gold {
-      background-color: #FFD700;
+      background-color: var(--color-secondary);
       color: #000;
       border: none;
       font-weight: 600;
@@ -38,7 +49,7 @@
       border-radius: 0.5rem;
     }
     .btn-gold:hover {
-      background-color: #f0c800;
+      background-color: color-mix(in srgb, var(--color-secondary) 90%, black);
       color: #000;
     }
 
@@ -46,6 +57,7 @@
     .navbar-brand {
       font-weight: 700;
       font-size: 1.5rem;
+      color: var(--color-primary) !important;
     }
 
     /* Card Elevation */
@@ -54,6 +66,8 @@
       border-radius: 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s, box-shadow 0.2s;
+      background-color: var(--color-bg);
+      color: var(--color-text);
     }
     .card:hover {
       transform: translateY(-5px);
@@ -62,18 +76,18 @@
 
     /* Form Inputs */
     .form-control:focus {
-      border-color: #1A237E;
-      box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.25);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, white);
     }
 
     /* Footer Links */
     .footer-link {
-      color: #e0e0e0;
+      color: var(--color-muted);
       text-decoration: none;
       font-size: 0.9rem;
     }
     .footer-link:hover {
-      color: #FFD700;
+      color: var(--color-secondary);
       text-decoration: underline;
     }
   </style>

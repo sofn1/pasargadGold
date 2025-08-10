@@ -48,19 +48,19 @@ def login_user(request, role, template_name):
 
 
 def seller_login_view(request):
-    return login_user(request, 'seller', 'seller_login.html')
+    return login_user(request, 'seller', 'login_seller.html')
 
 
 def writer_login_view(request):
-    return login_user(request, 'writer', 'writer_login.html')
+    return login_user(request, 'writer', 'login_writer.html')
 
 
 def admin_login_view(request):
-    return login_user(request, 'admin', 'admin_login.html')
+    return login_user(request, 'admin', 'login_admin.html')
 
 
 def superadmin_login_view(request):
-    return login_user(request, 'admin', 'admin_login.html')
+    return login_user(request, 'admin', 'login_admin.html')
 
 
 def customer_login(request):

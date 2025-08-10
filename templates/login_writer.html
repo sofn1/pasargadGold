@@ -1,13 +1,13 @@
-{% extends 'panel_login_base.html' %}
+{% extends '___base.html' %}
 
-{% block title %}ورود فروشنده{% endblock %}
+{% block title %}ورود نویسنده{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-5">
     <div class="card p-4">
-      <h4 class="text-center mb-4">ورود فروشنده</h4>
-      <form method="post" action="{% url 'seller-login' %}">
+      <h4 class="text-center mb-4">ورود نویسنده</h4>
+<form method="post" action="{% url 'writer-login' %}">
         {% csrf_token %}
         {% if error %}
           <div class="alert alert-danger">{{ error }}</div>
