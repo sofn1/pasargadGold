@@ -42,25 +42,25 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'writer_summary' %}">
+      <a class="nav-link" href="{% url 'writer:writer_summary' %}">
         <i class="fas fa-clipboard-list"></i>
         خلاصه فعالیت
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'writer_seo' %}">
+      <a class="nav-link" href="{% url 'writer:writer_seo' %}">
         <i class="fas fa-search"></i>
         راهنمای SEO
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'writer_trends' %}">
+      <a class="nav-link" href="{% url 'writer:writer_trends' %}">
         <i class="fas fa-chart-bar"></i>
         روند محتوا
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'writer_top_performers' %}">
+      <a class="nav-link" href="{% url 'writer:writer_top_performers' %}">
         <i class="fas fa-medal"></i>
         بهترین‌ها
       </a>
@@ -74,13 +74,13 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'blog_comments_html' blog_id=0 %}?page=1">
+      <a class="nav-link" href="{% url 'writer:blog_comments_html' blog_id=0 %}?page=1">
         <i class="fas fa-comment-dots"></i>
         نظرات بلاگ‌ها
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'news_comments_html' news_id=0 %}?page=1">
+      <a class="nav-link" href="{% url 'writer:news_comments_html' news_id=0 %}?page=1">
         <i class="fas fa-comment-alt"></i>
         نظرات اخبار
       </a>
@@ -90,7 +90,7 @@
   <!-- Export -->
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'writer_export' %}">
+      <a class="nav-link" href="{% url 'writer:writer_export' %}">
         <i class="fas fa-file-export"></i>
         📤 خروجی مطالب
       </a>
