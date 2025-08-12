@@ -6,25 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}ورود به پنل{% endblock %}</title>
 
-  <!-- Bootstrap 5.3 RTL CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet"
-        integrity="sha384-..." crossorigin="anonymous">
+  <!-- Bootstrap 5.3 RTL -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
-  <!-- Vazirmatn Persian Font (latest) -->
+  <!-- Vazirmatn Persian Font -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@30.1.0/dist/font-face.css" />
+
+  <!-- Font Awesome (for icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <style>
     :root {
       --color-primary: {{ color_primary|default:"#1A237E" }};
       --color-secondary: {{ color_secondary|default:"#FFD700" }};
       --color-accent: {{ color_accent|default:"#E91E63" }};
-      --color-bg: {{ color_bg|default:"#f0f2f5" }};
+      --color-bg: {{ color_bg|default:"#f8f9fa" }};
       --color-text: {{ color_text|default:"#212529" }};
-      --color-muted: {{ color_muted|default:"#e0e0e0" }};
+      --color-muted: {{ color_muted|default:"#6c757d" }};
 
-      /* Sync with Bootstrap */
       --bs-primary: var(--color-primary);
-      --bs-secondary: var(--color-secondary);
       --bs-body-bg: var(--color-bg);
       --bs-body-color: var(--color-text);
     }
@@ -36,82 +36,51 @@
     }
 
     body {
-      font-family: 'Vazirmatn', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 100% -10%, color-mix(in srgb, var(--color-secondary) 15%, transparent), transparent 60%),
-        radial-gradient(1000px 500px at -10% 100%, color-mix(in srgb, var(--color-primary) 15%, transparent), transparent 60%),
-        linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 94%, #ffffff) 0%, var(--color-bg) 100%);
+      font-family: 'Vazirmatn', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--color-bg);
       color: var(--color-text);
-      overflow-x: hidden;
     }
 
-    /* Center content with full viewport height */
+    /* Remove default wrapper to allow full layout control in child templates */
     .auth-wrapper {
-      min-height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
+      display: contents; /* So it doesn't interfere */
     }
 
-    /* Enhanced card with glassmorphism */
+    /* Responsive background for small screens */
+    @media (max-width: 991.98px) {
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--color-primary) 10%, white), var(--color-bg));
+        z-index: -1;
+        opacity: 0.8;
+      }
+    }
+
+    /* Card Style */
     .auth-card {
-      width: 100%;
-      max-width: 480px;
       border-radius: 1.25rem;
       overflow: hidden;
-      background: color-mix(in srgb, #ffffff 92%, var(--color-bg));
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: #ffffff;
       border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
       box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.08),
-        0 10px 15px rgba(0, 0, 0, 0.05),
-        0 0 0 1px color-mix(in srgb, var(--color-primary) 5%, transparent);
+        0 10px 15px rgba(0, 0, 0, 0.05);
       position: relative;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .auth-card:hover {
-      transform: translateY(-5px);
-      box-shadow:
-        0 30px 50px rgba(0, 0, 0, 0.12),
-        0 15px 20px rgba(0, 0, 0, 0.08);
     }
 
     .auth-card::before {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 5px;
+      top: 0; left: 0; width: 100%; height: 5px;
       background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-      border-top-left-radius: 1.25rem;
-      border-top-right-radius: 1.25rem;
-    }
-
-    .card-body {
-      padding: 2rem;
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: var(--color-text);
-      font-size: 0.9rem;
-    }
-
-    .form-control {
-      border-radius: 0.8rem;
-      border: 1.5px solid color-mix(in srgb, var(--color-text) 15%, #ddd);
-      padding: 0.75rem 1rem;
-      transition: all 0.2s ease;
+      border-radius: 1.25rem 1.25rem 0 0;
     }
 
     .form-control:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 20%, transparent);
-      background-color: transparent;
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 15%, transparent);
     }
 
     .btn-primary {
@@ -120,66 +89,26 @@
       border-radius: 0.8rem;
       font-weight: 700;
       padding: 0.75rem 0;
-      font-size: 1.05rem;
-      transition: all 0.2s ease;
-      letter-spacing: -0.2px;
     }
 
     .btn-primary:hover {
       background-color: color-mix(in srgb, var(--color-primary) 80%, black);
       border-color: color-mix(in srgb, var(--color-primary) 80%, black);
-      transform: translateY(-1px);
     }
 
-    .btn-primary:active {
-      transform: translateY(0);
+    .divider hr {
+      border-top: 1px solid #dee2e6;
     }
 
     .text-muted {
-      color: color-mix(in srgb, var(--color-text) 60%, #9aa3af) !important;
-    }
-
-    .alert {
-      border-radius: 0.8rem;
-      font-size: 0.9rem;
-    }
-
-    h4.card-title {
-      font-weight: 800;
-      color: var(--color-primary);
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
-    }
-
-    /* Optional: Add wave decoration at bottom (lightweight SVG) */
-    .wave-decoration {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      z-index: -1;
-      opacity: 0.2;
-      pointer-events: none;
+      color: var(--color-muted) !important;
     }
   </style>
 </head>
 <body>
+  {% block content %}{% endblock %}
 
-  <!-- Animated background wave -->
-  <svg class="wave-decoration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice">
-    <path fill="var(--color-primary)" fill-opacity="0.1" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,176C672,160,768,160,864,176C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-  </svg>
-
-  <div class="auth-wrapper">
-    <div class="container d-flex justify-content-center">
-      {% block content %}{% endblock %}
-    </div>
-  </div>
-
-  <!-- Bootstrap JS Bundle (for future interactivity if needed) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-..." crossorigin="anonymous"></script>
-
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
