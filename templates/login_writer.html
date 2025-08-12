@@ -1,28 +1,61 @@
+<!-- templates/login_writer.html -->
 {% extends '___base.html' %}
 
 {% block title %}ورود نویسنده{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card auth-card p-4 position-relative">
-      <h4 class="card-title text-center mb-4">ورود نویسنده</h4>
-        <form method="post" action="{% url 'writer-login' %}">
-        {% csrf_token %}
-        {% if error %}
-          <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-        <div class="mb-3">
-          <label class="form-label">شماره موبایل</label>
-          <input type="text" name="phone_number" class="form-control" required>
+<div class="auth-card shadow-sm">
+  <div class="card-body p-4">
+    <h4 class="card-title text-center mb-4">🔐 ورود نویسنده</h4>
+
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>خطا:</strong> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'writer-login' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="phone_number" class="form-label">📱 شماره موبایل</label>
+        <input type="text"
+               name="phone_number"
+               class="form-control"
+               id="phone_number"
+               placeholder="مثلاً: 09123456789"
+               autocomplete="tel"
+               required>
+        <div class="invalid-feedback">لطفاً شماره موبایل معتبر وارد کنید.</div>
+      </div>
+
+      <div class="mb-4">
+        <label for="password" class="form-label">🔑 رمز عبور</label>
+        <input type="password"
+               name="password"
+               class="form-control"
+               id="password"
+               placeholder="رمز عبور خود را وارد کنید"
+               autocomplete="current-password"
+               required>
+        <div class="invalid-feedback">رمز عبور را وارد کنید.</div>
+        <div class="form-text text-end mt-1">
+          <a href="{% url 'writer-password-reset' %}" class="text-muted small">رمز عبور خود را فراموش کرده‌اید؟</a>
         </div>
-        <div class="mb-3">
-          <label class="form-label">رمز عبور</label>
-          <input type="password" name="password" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">ورود</button>
-      </form>
-    </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mb-3">
+        ورود به پنل
+      </button>
+
+      <div class="text-center mt-3">
+        <span class="text-muted small">
+          حساب کاربری ندارید؟
+          <a href="{% url 'writer-register' %}" class="text-decoration-none">ثبت‌نام کنید</a>
+        </span>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}

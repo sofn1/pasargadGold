@@ -1,4 +1,8 @@
-# this is a test message
+git add .
+git commit -m 'serna modifications'
+git push
+
+
 # 🎯 Frontend-Visible Pages (Dynamic Base URL)
 
 Use these endpoints in your browser or frontend testing tool.
