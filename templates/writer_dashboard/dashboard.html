@@ -1,26 +1,25 @@
 {% extends "__base.html" %}
+
 {% block title %}داشبورد نویسنده{% endblock %}
+
 {% block content %}
-<div class="container" dir="rtl">
-  <h1>داشبورد نویسنده</h1>
-  <p>به پنل نویسندگی خوش آمدید.</p>
+{% include '__header.html' %}
 
-  <div class="grid">
-    <a class="card" href="{% url 'writer:writer_summary' %}">خلاصه عملکرد</a>
-    <a class="card" href="{% url 'writer:writer_seo' %}">دستیار سئو</a>
-    <a class="card" href="{% url 'writer:writer_trends' %}">ترند محتوایی ۳۰ روز اخیر</a>
-    <a class="card" href="{% url 'writer:writer_top_performers' %}">برترین‌ها</a>
-    <a class="card" href="{% url 'writer:writer_export' %}">خروجی اکسل</a>
+  <div class="container-fluid">
+    <div class="row">
 
-    <a class="card" href="{% url 'writer:blog_list' %}">مدیریت بلاگ‌ها</a>
-    <a class="card" href="{% url 'writer:news_list' %}">مدیریت خبرها</a>
+      <!-- Sidebar -->
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <!-- Tools & Analytics Section -->
+        {% include 'writer_dashboard/_sidebar.html' %}
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
+      </main>
+    </div>
   </div>
-</div>
 
-<style>
-.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
-.card{display:block;border:1px solid #eee;border-radius:12px;padding:1rem;text-decoration:none;color:inherit;background:#fff}
-.card:hover{box-shadow:0 4px 18px rgba(0,0,0,.06)}
-</style>
+{% include '__footer.html' %}
 {% endblock %}

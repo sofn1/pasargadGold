@@ -1,0 +1,110 @@
+<div class="position-sticky pt-3">
+  <!-- Sidebar Title -->
+  <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mb-3 text-white text-uppercase small">
+    <span>{{ sidebar_title|default:"منوی نویسنده" }}</span>
+    <i class="fas fa-feather-alt"></i>
+  </h6>
+
+  <!-- Dashboard -->
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>
+        🏠 داشبورد اصلی
+      </a>
+    </li>
+  </ul>
+
+  <!-- Content Management -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-book-open me-1"></i>
+    مدیریت محتوا
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'blog_list' %}">
+        <i class="fas fa-pen-fancy"></i>
+        📝 بلاگ‌ها
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'news_list' %}">
+        <i class="fas fa-newspaper"></i>
+        📰 اخبار
+      </a>
+    </li>
+  </ul>
+
+  <!-- Analytics & Tools -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-chart-line me-1"></i>
+    آنالیز و ابزارها
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'writer_summary' %}">
+        <i class="fas fa-clipboard-list"></i>
+        خلاصه فعالیت
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'writer_seo' %}">
+        <i class="fas fa-search"></i>
+        راهنمای SEO
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'writer_trends' %}">
+        <i class="fas fa-chart-bar"></i>
+        روند محتوا
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'writer_top_performers' %}">
+        <i class="fas fa-medal"></i>
+        بهترین‌ها
+      </a>
+    </li>
+  </ul>
+
+  <!-- Comments -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-comments me-1"></i>
+    نظرات
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'blog_comments_html' blog_id=0 %}?page=1">
+        <i class="fas fa-comment-dots"></i>
+        نظرات بلاگ‌ها
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'news_comments_html' news_id=0 %}?page=1">
+        <i class="fas fa-comment-alt"></i>
+        نظرات اخبار
+      </a>
+    </li>
+  </ul>
+
+  <!-- Export -->
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'writer_export' %}">
+        <i class="fas fa-file-export"></i>
+        📤 خروجی مطالب
+      </a>
+    </li>
+  </ul>
+
+  <!-- Logout -->
+  <hr class="my-3 border-light opacity-25">
+  <ul class="nav flex-column px-3">
+    <li class="nav-item">
+      <a class="nav-link text-danger small" href="#">
+        <i class="fas fa-sign-out-alt"></i>
+        خروج از حساب
+      </a>
+    </li>
+  </ul>
+</div>
