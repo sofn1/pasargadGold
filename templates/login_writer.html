@@ -84,7 +84,7 @@
 
         {% if error %}
           <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>خطا:</strong> {{ error }}
+            <strong>خطا : </strong> {{ error }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         {% endif %}
@@ -101,6 +101,7 @@
               placeholder="0912 345 6789"
               autocomplete="tel"
               required
+              style="direction: ltr; text-align: left;"
             >
           </div>
           <div class="mb-4">
