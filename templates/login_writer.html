@@ -4,6 +4,7 @@
 
 {% block title %}ورود نویسنده{% endblock %}
 
+<!-- Internal CSS for background image (safe with {% static %}) -->
 <style>
   .login-image-section {
     background-image: url('{% static "image/dashboard/panel_login_hero.svg" %}');
@@ -15,74 +16,77 @@
 </style>
 
 {% block content %}
-<div class="container-fluid h-100 d-flex align-items-center justify-content-center p-3">
-  <!-- Main Card: Image + Form (Only visible on large screens) -->
-  <div class="row shadow-lg rounded-5 overflow-hidden" 
-       style="max-width: 1100px; width: 100%; height: 600px; direction: ltr; background: #ffffff;">
-    
-    <!-- Left: Image with Shadow -->
-    <div class="col-lg-6 d-none d-lg-block p-0">
-      <div class="h-100 login-image-section"></div>
-    </div>
+<!-- Main Container -->
+<div class="container-fluid h-100 d-flex align-items-center justify-content-center p-3" style="min-height: 100vh;">
+  
+  <!-- Desktop View: Split Layout (Image + Form) -->
+  <div class="d-none d-lg-flex w-100 justify-content-center">
+    <div class="row shadow-lg rounded-5 overflow-hidden" 
+         style="max-width: 1100px; width: 100%; height: 600px; direction: rtl; background: #ffffff;">
+      
+      <!-- Left: Image -->
+      <div class="col-lg-6 p-0">
+        <div class="h-100 login-image-section"></div>
+      </div>
 
-    <!-- Right: Login Form -->
-    <div class="col-lg-6 d-flex flex-column justify-content-center p-4 p-lg-5 position-relative">
-      <!-- Subtle shadow to separate from image side -->
-      <div class="position-absolute top-0 start-0 w-100 h-100" 
-           style="box-shadow: -4px 0 20px -4px rgba(0, 0, 0, 0.15); z-index: 1;"></div>
+      <!-- Right: Login Form -->
+      <div class="col-lg-6 d-flex flex-column justify-content-center p-4 p-lg-5 position-relative">
+        <!-- Separator shadow -->
+        <div class="position-absolute top-0 end-0 w-100 h-100"
+             style="box-shadow: -4px 0 20px -4px rgba(0, 0, 0, 0.15); z-index: 1;"></div>
 
-      <div style="position: relative; z-index: 2;">
-        <div class="text-center mb-4">
-          <h3 class="fw-bold" style="color: var(--color-primary);">ورود نویسنده</h3>
-          <p class="text-muted small">برای ادامه وارد حساب خود شوید</p>
+        <div style="position: relative; z-index: 2;">
+          <div class="text-center mb-4">
+            <h3 class="fw-bold" style="color: var(--color-primary);">ورود نویسنده</h3>
+            <p class="text-muted small">برای ادامه وارد حساب خود شوید</p>
+          </div>
+
+          {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <strong>خطا:</strong> {{ error }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endif %}
+
+          <form method="post" action="{% url 'writer-login' %}" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="phone_number" class="form-label">📱 شماره موبایل</label>
+              <input
+                type="text"
+                name="phone_number"
+                class="form-control"
+                id="phone_number"
+                placeholder="0912 345 6789"
+                autocomplete="tel"
+                required
+              >
+              <div class="invalid-feedback">لطفاً شماره موبایل معتبر وارد کنید.</div>
+            </div>
+
+            <div class="mb-4">
+              <label for="password" class="form-label">🔑 رمز عبور</label>
+              <input
+                type="password"
+                name="password"
+                class="form-control"
+                id="password"
+                placeholder="رمز عبور خود را وارد کنید"
+                autocomplete="current-password"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              ورود به پنل
+            </button>
+          </form>
         </div>
-
-        {% if error %}
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>خطا:</strong> {{ error }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endif %}
-
-        <form method="post" action="{% url 'writer-login' %}" novalidate>
-          {% csrf_token %}
-
-          <div class="mb-3">
-            <label for="phone_number" class="form-label">📱 شماره موبایل</label>
-            <input
-              type="text"
-              name="phone_number"
-              class="form-control"
-              id="phone_number"
-              placeholder="0912 345 6789"
-              autocomplete="tel"
-              required
-            >
-            <div class="invalid-feedback">لطفاً شماره موبایل معتبر وارد کنید.</div>
-          </div>
-
-          <div class="mb-4">
-            <label for="password" class="form-label">🔑 رمز عبور</label>
-            <input
-              type="password"
-              name="password"
-              class="form-control"
-              id="password"
-              placeholder="رمز عبور خود را وارد کنید"
-              autocomplete="current-password"
-              required
-            >
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 mb-3">
-            ورود به پنل
-          </button>
-        </form>
       </div>
     </div>
   </div>
 
-  <!-- Mobile: Only Form (Image Hidden) -->
+  <!-- Mobile View: Only Form (Hidden on large screens) -->
   <div class="d-lg-none w-100" style="max-width: 440px;">
     <div class="auth-card shadow-sm mx-auto rounded-5">
       <div class="card-body p-4">
@@ -102,11 +106,27 @@
           {% csrf_token %}
           <div class="mb-3">
             <label for="phone_number" class="form-label">📱 شماره موبایل</label>
-            <input type="text" name="phone_number" class="form-control" id="phone_number" placeholder="0912 345 6789" required>
+            <input
+              type="text"
+              name="phone_number"
+              class="form-control"
+              id="phone_number"
+              placeholder="0912 345 6789"
+              autocomplete="tel"
+              required
+            >
           </div>
           <div class="mb-4">
             <label for="password" class="form-label">🔑 رمز عبور</label>
-            <input type="password" name="password" class="form-control" id="password" placeholder="رمز عبور" required>
+            <input
+              type="password"
+              name="password"
+              class="form-control"
+              id="password"
+              placeholder="رمز عبور"
+              autocomplete="current-password"
+              required
+            >
           </div>
           <button type="submit" class="btn btn-primary w-100 mb-3">ورود به پنل</button>
         </form>
