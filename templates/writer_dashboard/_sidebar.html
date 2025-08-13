@@ -8,7 +8,7 @@
   <!-- Dashboard -->
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'dashboard' %}">
+      <a class="nav-link" href="{% url 'writer:dashboard' %}">
         <i class="fas fa-tachometer-alt"></i>
         🏠 داشبورد اصلی
       </a>
@@ -22,13 +22,13 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'blog_list' %}">
+      <a class="nav-link" href="{% url 'writer:blog_list' %}">
         <i class="fas fa-pen-fancy"></i>
         📝 بلاگ‌ها
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'news_list' %}">
+      <a class="nav-link" href="{% url 'writer:news_list' %}">
         <i class="fas fa-newspaper"></i>
         📰 اخبار
       </a>
