@@ -1,10 +1,15 @@
 from django.db import models
+from django.contrib.auth.models import User
+
 
 
 class Blog(models.Model):
     name = models.CharField(max_length=255)
     english_name = models.CharField(max_length=255)
     category_id = models.CharField(max_length=64)  # MongoDB category ID
+
+    # Link to actual User
+    writer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blogs')
 
     writer_name = models.CharField(max_length=255)
     writer_profile = models.URLField()

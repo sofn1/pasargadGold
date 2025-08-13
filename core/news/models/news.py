@@ -1,10 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class News(models.Model):
     name = models.CharField(max_length=255)
     english_name = models.CharField(max_length=255)
     category_id = models.CharField(max_length=64)  # MongoDB ObjectID as string
+
+    # Link to actual User
+    writer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
 
     writer_name = models.CharField(max_length=255)
     writer_profile = models.URLField()
