@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class News(models.Model):
@@ -8,7 +8,8 @@ class News(models.Model):
     category_id = models.CharField(max_length=64)  # MongoDB ObjectID as string
 
     # Link to actual User
-    writer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
+    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='news')
+
 
     writer_name = models.CharField(max_length=255)
     writer_profile = models.URLField()
