@@ -35,14 +35,14 @@ urlpatterns = [
     path("comments/<int:comment_id>/reply/", writer_reply_to_comment, name="writer_comment_reply"),
 
     # Blog CRUD (template)
-    path("frontend/blogs/", BlogListView.as_view(), name="blog_list"),
-    path("frontend/blogs/create/", BlogCreateView.as_view(), name="blog_create"),
-    path("frontend/blogs/<int:pk>/edit/", BlogUpdateView.as_view(), name="blog_edit"),
-    path("frontend/blogs/<int:pk>/delete/", BlogDeleteView.as_view(), name="blog_delete"),
+    path("blogs/list/", BlogListView.as_view(), name="blog_list"),
+    path("blogs/create/", BlogCreateView.as_view(), name="blog_create"),
+    path("blogs/<int:pk>/edit/", BlogUpdateView.as_view(), name="blog_edit"),
+    path("blogs/<int:pk>/delete/", BlogDeleteView.as_view(), name="blog_delete"),
 
     # News CRUD (template)
-    path("frontend/news/", NewsListView.as_view(), name="news_list"),
-    path("frontend/news/create/", NewsCreateView.as_view(), name="news_create"),
-    path("frontend/news/<int:pk>/edit/", NewsUpdateView.as_view(), name="news_edit"),
-    path("frontend/news/<int:pk>/delete/", NewsDeleteView.as_view(), name="news_delete"),
+    path("news/list/", NewsListView.as_view(), name="news_list"),
+    path("news/create/", NewsCreateView.as_view(), name="news_create"),
+    path("news/<int:pk>/edit/", NewsUpdateView.as_view(), name="news_edit"),
+    path("news/<int:pk>/delete/", NewsDeleteView.as_view(), name="news_delete"),
 ]
