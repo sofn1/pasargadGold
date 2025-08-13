@@ -19,7 +19,7 @@
               title="{{ day.day }}: {{ day.count }} مقاله"
               style="
                 width: 100%;
-                height: {{ day.count|add:1|mul:10 }}px;
+                height: {{ day.height }}px;
                 background: #0d6efd;
                 border-radius: 4px 4px 0 0;
               ">
@@ -46,7 +46,7 @@
               title="{{ day.day }}: {{ day.count }} خبر"
               style="
                 width: 100%;
-                height: {{ day.count|add:1|mul:10 }}px;
+                height: {{ day.height }}px;
                 background: #28a745;
                 border-radius: 4px 4px 0 0;
               ">
