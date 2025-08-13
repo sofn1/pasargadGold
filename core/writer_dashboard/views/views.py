@@ -8,6 +8,7 @@ from django.utils.timezone import now
 from django.db.models import Avg, Count
 from django.views.generic import TemplateView
 from django.http import Http404, HttpResponse
+from django.db.models.functions import TruncDate
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 
@@ -101,8 +102,6 @@ class WriterContentTrendsPage(TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        from django.db.models.functions import TruncDate
-
         u = self.request.user
         ctx = super().get_context_data(**kwargs)
         start = now().date() - timedelta(days=30)
@@ -114,6 +113,12 @@ class WriterContentTrendsPage(TemplateView):
             .annotate(count=Count("id"))
             .order_by("day")
         )
+
+        # Add height on each item
+        ctx["blog_time_series"] = [
+            {**item, "height": (item["count"] + 1) * 10} for item in blog_counts
+        ]
+
         news_counts = (
             News.objects.filter(writer=u, publish_time__date__gte=start)
             .annotate(day=TruncDate("publish_time"))
@@ -122,8 +127,10 @@ class WriterContentTrendsPage(TemplateView):
             .order_by("day")
         )
 
-        ctx["blog_time_series"] = list(blog_counts)
-        ctx["news_time_series"] = list(news_counts)
+        ctx["news_time_series"] = [
+            {**item, "height": (item["count"] + 1) * 10} for item in news_counts
+        ]
+
         ctx["start_date"] = start
         ctx["end_date"] = now().date()
         return ctx
