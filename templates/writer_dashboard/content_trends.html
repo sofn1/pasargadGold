@@ -1,10 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<!-- writer_dashboard/content_trends.html -->
+{% extends "writer_dashboard/dashboard.html" %}
 
-</body>
-</html>
+{% block mainContent %}
+<div class="container" dir="rtl">
+  <h1>تحلیل فعالیت محتوایی</h1>
+  <p class="text-muted">
+    نمایش تعداد مطالب منتشر شده در ۳۰ روز گذشته
+  </p>
+
+  <!-- Blog Trends -->
+  <section class="mt-4">
+    <h4>مقالات</h4>
+    {% if blog_time_series %}
+      <div class="chart-container" style="display:grid;gap:4px;max-width:100%;overflow-x:auto;padding:1rem 0;">
+        {% for day in blog_time_series %}
+          <div style="display:flex;align-items:center;min-width:30px;">
+            <div
+              title="{{ day.day }}: {{ day.count }} مقاله"
+              style="
+                width: 100%;
+                height: {{ day.count|add:1|mul:10 }}px;
+                background: #0d6efd;
+                border-radius: 4px 4px 0 0;
+              ">
+            </div>
+            <small style="font-size:0.75rem;color:#666;white-space:nowrap;margin-top:2px;">
+              {{ day.day|date:"d" }}
+            </small>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>مقاله‌ای در این بازه زمانی منتشر نشده است.</p>
+    {% endif %}
+  </section>
+
+  <!-- News Trends -->
+  <section class="mt-5">
+    <h4>اخبار</h4>
+    {% if news_time_series %}
+      <div class="chart-container" style="display:grid;gap:4px;max-width:100%;overflow-x:auto;padding:1rem 0;">
+        {% for day in news_time_series %}
+          <div style="display:flex;align-items:center;min-width:30px;">
+            <div
+              title="{{ day.day }}: {{ day.count }} خبر"
+              style="
+                width: 100%;
+                height: {{ day.count|add:1|mul:10 }}px;
+                background: #28a745;
+                border-radius: 4px 4px 0 0;
+              ">
+            </div>
+            <small style="font-size:0.75rem;color:#666;white-space:nowrap;margin-top:2px;">
+              {{ day.day|date:"d" }}
+            </small>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>خبری در این بازه زمانی منتشر نشده است.</p>
+    {% endif %}
+  </section>
+
+  <!-- Date Range -->
+  <p class="text-secondary mt-4 small">
+    بازه زمانی: {{ start_date|date:"Y-m-d" }} تا {{ end_date|date:"Y-m-d" }}
+  </p>
+
+  <!-- Back Button -->
+  <p class="mt-5">
+    <a href="{% url 'writer:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+      بازگشت به داشبورد
+    </a>
+  </p>
+</div>
+
+<style>
+  .chart-container {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1rem;
+    background: #f9f9f9;
+    direction: ltr; /* For proper horizontal layout */
+  }
+  .chart-container > div {
+    align-items: flex-end;
+    justify-content: center;
+  }
+</style>
+{% endblock %}
