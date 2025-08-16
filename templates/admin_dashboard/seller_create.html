@@ -1,37 +1,94 @@
 <!-- templates/admin_dashboard/seller_create.html -->
-{% extends "admin_dashboard/dashboard.html" %}
+{% extends "admin_dashboard/_base.html" %}
+
+{% block title %}ایجاد فروشنده جدید{% endblock %}
 
 {% block mainContent %}
-<h2 class="my-4">ایجاد فروشنده جدید</h2>
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">ایجاد فروشنده جدید</h2>
 
-<div class="card shadow-sm">
-  <div class="card-body">
-    <form method="post">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="shop_name" class="form-label">نام فروشگاه</label>
-        <input type="text" class="form-control" id="shop_name" name="shop_name" required>
-      </div>
-      <div class="mb-3">
-        <label for="owner_name" class="form-label">نام مالک</label>
-        <input type="text" class="form-control" id="owner_name" name="owner_name" required>
-      </div>
-      <div class="mb-3">
-        <label for="phone" class="form-label">تلفن تماس</label>
-        <input type="text" class="form-control" id="phone" name="phone" required>
-      </div>
-      <div class="mb-3">
-        <label for="email" class="form-label">ایمیل</label>
-        <input type="email" class="form-control" id="email" name="email">
-      </div>
-      <div class="mb-3">
-        <label for="address" class="form-label">آدرس</label>
-        <textarea class="form-control" id="address" name="address" rows="3"></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary">ایجاد فروشنده</button>
-      <a href="{% url 'admin:admin-dashboard-sellers' %}" class="btn btn-secondary">انصراف</a>
-    </form>
+  <div class="alert alert-info mb-4" style="direction: rtl;">
+    <strong>ℹ️ توجه:</strong>
+    پس از ایجاد فروشنده، یک ایمیل تأیید به آدرس ارسال می‌شود و حساب تا تأیید مالک فعال نخواهد شد.
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="id_shop_name" class="form-label">نام فروشگاه</label>
+            <input type="text"
+                   class="form-control"
+                   id="id_shop_name"
+                   name="shop_name"
+                   placeholder="فروشگاه طلای پارس"
+                   required>
+          </div>
+          <div class="col-md-6">
+            <label for="id_owner_name" class="form-label">نام و نام خانوادگی مالک</label>
+            <input type="text"
+                   class="form-control"
+                   id="id_owner_name"
+                   name="owner_name"
+                   placeholder="محمدمهدی رضایی"
+                   required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="id_phone" class="form-label">تلفن تماس</label>
+            <input type="text"
+                   class="form-control ltr-input"
+                   id="id_phone"
+                   name="phone"
+                   placeholder="09123456789"
+                   dir="ltr"
+                   required>
+            <small class="text-muted">بدون صفر ابتدایی</small>
+          </div>
+          <div class="col-md-6">
+            <label for="id_email" class="form-label">ایمیل</label>
+            <input type="email"
+                   class="form-control ltr-input"
+                   id="id_email"
+                   name="email"
+                   placeholder="seller@example.com"
+                   dir="ltr">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="id_address" class="form-label">آدرس</label>
+          <textarea class="form-control"
+                    id="id_address"
+                    name="address"
+                    rows="3"
+                    placeholder="تهران، خیابان فلان، پلاک ۱۲۳"></textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="fas fa-store"></i> ایجاد فروشنده
+          </button>
+          <a href="{% url 'admin:admin_sellers' %}" class="btn btn-secondary px-4">
+            <i class="fas fa-times"></i> انصراف
+          </a>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
+
+<style>
+  .ltr-input {
+    font-family: 'Courier New', monospace;
+    direction: ltr;
+    text-align: left;
+  }
+</style>
 
 {% endblock %}

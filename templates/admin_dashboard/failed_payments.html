@@ -1,40 +1,87 @@
 <!-- templates/admin_dashboard/failed_payments.html -->
-{% extends "admin_dashboard/dashboard.html" %}
+{% extends "admin_dashboard/_base.html" %}
+
+{% block title %}پرداخت‌های ناموفق{% endblock %}
 
 {% block mainContent %}
-<h2 class="my-4">پرداخت‌های ناموفق</h2>
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">پرداخت‌های ناموفق</h2>
 
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <table class="table table-striped mb-0">
-      <thead class="table-danger">
-        <tr>
-          <th>شماره پرداخت</th>
-          <th>کاربر</th>
-          <th>مبلغ</th>
-          <th>درگاه</th>
-          <th>تاریخ</th>
-          <th>خطا</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for payment in failed_payments %}
-        <tr>
-          <td>{{ payment.id }}</td>
-          <td>{{ payment.user.get_full_name }}</td>
-          <td>{{ payment.amount|numberformat }} تومان</td>
-          <td>{{ payment.gateway }}</td>
-          <td>{{ payment.created_at|date:"Y/m/d" }}</td>
-          <td><span class="text-danger">{{ payment.error_message|truncatechars:40 }}</span></td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="6" class="text-center text-muted">پرداخت ناموفقی یافت نشد.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      {% if failed_payments %}
+        <table class="table table-striped mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>شماره پرداخت</th>
+              <th>کاربر</th>
+              <th>مبلغ</th>
+              <th>درگاه</th>
+              <th>تاریخ</th>
+              <th>خطا</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in failed_payments %}
+            <tr>
+              <td><code>{{ payment.id }}</code></td>
+              <td>{{ payment.user.get_full_name|default:payment.user.email }}</td>
+              <td class="text-nowrap">{{ payment.amount|intcomma }} <small class="text-muted">تومان</small></td>
+              <td>
+                <span class="badge bg-warning text-dark">
+                  {{ payment.gateway|default:"نامشخص" }}
+                </span>
+              </td>
+              <td>{{ payment.created_at|date:"Y/m/d H:i" }}</td>
+              <td>
+                <span class="text-danger" title="{{ payment.error_message }}">
+                  {{ payment.error_message|truncatechars:60 }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="text-center p-5 text-muted">
+          <i class="fas fa-times-circle fa-2x mb-3"></i>
+          <p>هیچ پرداخت ناموفقی یافت نشد.</p>
+        </div>
+      {% endif %}
+    </div>
   </div>
-</div>
 
+  <!-- Optional: Pagination -->
+  {% if failed_payments.has_other_pages %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if failed_payments.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ failed_payments.previous_page_number }}">قبلی</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">قبلی</span>
+          </li>
+        {% endif %}
+
+        {% for i in failed_payments.paginator.page_range %}
+          <li class="page-item {% if failed_payments.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+          </li>
+        {% endfor %}
+
+        {% if failed_payments.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ failed_payments.next_page_number }}">بعدی</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">بعدی</span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
 {% endblock %}

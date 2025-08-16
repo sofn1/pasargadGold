@@ -1,0 +1,159 @@
+<!-- templates/admin_dashboard/growth_analytics.html -->
+{% extends "admin_dashboard/_base.html" %}
+
+{% block title %}تحلیل رشد سیستم{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">تحلیل رشد سیستم</h2>
+
+  <!-- Charts -->
+  <div class="row g-4">
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">افزایش کاربران (ماهانه)</h5>
+          <canvas id="usersChart" class="chart-canvas" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">فروش ماهانه (تومان)</h5>
+          <canvas id="salesChart" class="chart-canvas" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Stats Table -->
+  <div class="mt-4">
+    <h5 class="text-white mb-3">آمار ماهانه</h5>
+    {% if monthly_stats %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-dark table-striped align-middle">
+          <thead class="table-secondary">
+            <tr>
+              <th>ماه</th>
+              <th>کاربران جدید</th>
+              <th>درآمد (تومان)</th>
+              <th>سفارشات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for month in monthly_stats %}
+            <tr>
+              <td>{{ month.name }}</td>
+              <td class="text-center">{{ month.new_users|intcomma }}</td>
+              <td class="text-end">{{ month.revenue|intcomma }}</td>
+              <td class="text-center">{{ month.orders|intcomma }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted p-4 bg-dark bg-opacity-50 rounded">
+        <i class="fas fa-chart-line fa-2x mb-2 opacity-50"></i>
+        <p>داده‌ای برای نمایش وجود ندارد.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Load Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Chart Initialization Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Chart defaults for RTL & Persian UI
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    Chart.defaults.color = '#dee2e6';
+
+    // Users Chart
+    const usersCtx = document.getElementById('usersChart').getContext('2d');
+    new Chart(usersCtx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_months|safe }},
+        datasets: [{
+          label: 'کاربران جدید',
+          data: {{ user_data|safe }},
+          borderColor: '#275DAD',
+          backgroundColor: 'rgba(39, 93, 173, 0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, align: 'end' },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          }
+        }
+      }
+    });
+
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_months|safe }},
+        datasets: [{
+          label: 'درآمد (تومان)',
+          data: {{ sales_data|safe }},
+          backgroundColor: '#4CAF50',
+          borderColor: '#388E3C',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, align: 'end' }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString() + ' ت';
+              }
+            },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .chart-canvas {
+    max-height: 300px;
+  }
+  .table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+</style>
+
+{% endblock %}
