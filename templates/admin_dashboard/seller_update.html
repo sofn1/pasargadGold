@@ -1,9 +1,7 @@
 <!-- templates/admin_dashboard/seller_update.html -->
-{% extends '__base.html' %}
+{% extends "admin_dashboard/dashboard.html" %}
 
-{% block title %}ویرایش فروشنده{% endblock %}
-
-{% block content %}
+{% block mainContent %}
 <h2 class="my-4">ویرایش فروشنده: {{ seller.shop_name }}</h2>
 
 <div class="card shadow-sm">

@@ -5,6 +5,8 @@ from .views import (AdminSiteSummaryPage, AdminSellersPage, AdminWritersPage, Ad
                     AdminGrowthAnalyticsPage, admin_dashboard_view, writer_dashboard_view, seller_dashboard_view,
                     superadmin_dashboard_view)
 
+app_name = 'admin'
+
 urlpatterns = [
     path('superadmin-dashboard/', superadmin_dashboard_view, name='superadmin-dashboard'),
     path('', admin_dashboard_view, name='admin-dashboard'),

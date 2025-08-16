@@ -1,17 +1,26 @@
-{% extends '__base.html' %}
+{% extends "__base.html" %}
 
-{% block title %}داشبورد مدیر{% endblock %}
+{% block title %}داشبورد ادمین{% endblock %}
+{% block navBarTitle %}نام ادمین{% endblock %}
 
 {% block content %}
-<div class="pt-4">
-  <h2 class="mb-4">🎛️ داشبورد مدیر</h2>
-  <div class="row">
-    <div class="col-md-6">
-      <div class="card p-3">
-        <h5>به پنل مدیریت خوش آمدید</h5>
-        <p class="text-muted">در این بخش می‌توانید کاربران، مقالات، محصولات و سفارشات را مدیریت کنید.</p>
-      </div>
+{% include '__header.html' %}
+
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Sidebar -->
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <!-- Tools & Analytics Section -->
+        {% include 'admin_dashboard/_sidebar.html' %}
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        {% block mainContent %}{% endblock %}
+      </main>
     </div>
   </div>
-</div>
+
+{% include '__footer.html' %}
 {% endblock %}
