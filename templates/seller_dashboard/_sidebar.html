@@ -1,0 +1,140 @@
+<div class="position-sticky pt-3">
+  <!-- Sidebar Title -->
+  <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mb-3 text-white text-uppercase small">
+    <span>{{ sidebar_title|default:"منوی فروشنده" }}</span>
+    <i class="fas fa-store"></i>
+  </h6>
+
+  <!-- Dashboard -->
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:dashboard' %}">
+        <i class="fas fa-tachometer-alt"></i>
+        🏠 داشبورد فروشنده
+      </a>
+    </li>
+  </ul>
+
+  <!-- Sales & Revenue Analytics -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-chart-line me-1"></i>
+    آنالیز فروش و درآمد
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:seller_summary' %}">
+        <i class="fas fa-clipboard-list"></i>
+        خلاصه فعالیت
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:revenue_time_series' %}">
+        <i class="fas fa-wallet"></i>
+        درآمد (سری زمانی)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:profit_time_series' %}">
+        <i class="fas fa-chart-pie"></i>
+        سود (سری زمانی)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:order_time_series' %}">
+        <i class="fas fa-shopping-cart"></i>
+        سفارشات (سری زمانی)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:sales_by_channel' %}">
+        <i class="fas fa-sitemap"></i>
+        فروش بر اساس کانال
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:order_funnel' %}">
+        <i class="fas fa-filter"></i>
+        تحلیل قیف سفارش
+      </a>
+    </li>
+  </ul>
+
+  <!-- Products & Inventory -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-boxes me-1"></i>
+    محصولات و موجودی
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:top_products' %}">
+        <i class="fas fa-star"></i>
+        محصولات پرفروش
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:low_stock_products' %}">
+        <i class="fas fa-exclamation-triangle text-warning"></i>
+        محصولات کم‌موجودی
+      </a>
+    </li>
+  </ul>
+
+  <!-- Orders -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-shopping-cart me-1"></i>
+    سفارشات
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:unfulfilled_orders' %}">
+        <i class="fas fa-truck-loading"></i>
+        سفارشات انجام‌نشده
+      </a>
+    </li>
+  </ul>
+
+  <!-- Geographical & Device Insights -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-globe-asia me-1"></i>
+    تحلیل جغرافیایی و دستگاه
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:geo_breakdown' %}">
+        <i class="fas fa-map-marked-alt"></i>
+        توزیع جغرافیایی
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:device_breakdown' %}">
+        <i class="fas fa-laptop-mobile"></i>
+        تحلیل بر اساس دستگاه
+      </a>
+    </li>
+  </ul>
+
+  <!-- System Health -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-heartbeat me-1"></i>
+    سلامت سیستم
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'seller:system_health' %}">
+        <i class="fas fa-shield-alt"></i>
+        وضعیت سلامت سیستم
+      </a>
+    </li>
+  </ul>
+
+  <!-- Logout -->
+  <hr class="my-3 border-light opacity-25">
+  <ul class="nav flex-column px-3">
+    <li class="nav-item">
+      <a class="nav-link text-danger small" href="{% url 'account_logout' %}">
+        <i class="fas fa-sign-out-alt"></i>
+        خروج از حساب
+      </a>
+    </li>
+  </ul>
+</div>

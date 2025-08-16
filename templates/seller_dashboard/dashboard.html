@@ -1,9 +1,26 @@
 {% extends "__base.html" %}
+
+{% block title %}داشبورد فروشنده{% endblock %}
+{% block navBarTitle %}نام فروشنده{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <div class="text-center">
-    <h1 class="mb-3">🎉 داشبورد فروشنده</h1>
-    <p class="lead">خوش آمدید! در این صفحه می‌توانید محصولات خود را مدیریت کنید.</p>
+{% include '__header.html' %}
+
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Sidebar -->
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <!-- Tools & Analytics Section -->
+        {% include 'seller_dashboard/_sidebar.html' %}
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        {% block mainContent %}{% endblock %}
+      </main>
+    </div>
   </div>
-</div>
+
+{% include '__footer.html' %}
 {% endblock %}
