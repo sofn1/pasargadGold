@@ -50,7 +50,10 @@ def export_excel(request):
         ]
     }
 
-    return generate_excel_report(seller_data, filename="گزارش_فروشنده_" + request.user.username)
+    # ✅ Use phone_number instead of username
+    user_identifier = request.user.phone_number
+
+    return generate_excel_report(seller_data, filename="گزارش_فروشنده_" + user_identifier)
 
 
 def export_csv(request):
@@ -70,7 +73,10 @@ def export_csv(request):
         ]
     }
 
-    return generate_csv_report(seller_data, filename="گزارش_فروشنده_" + request.user.username)
+    # ✅ Use phone_number instead of username
+    user_identifier = request.user.phone_number
+
+    return generate_csv_report(seller_data, filename="گزارش_فروشنده_" + user_identifier)
 
 
 def schedule_weekly_report(request):

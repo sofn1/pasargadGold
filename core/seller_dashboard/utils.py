@@ -5,6 +5,7 @@ from openpyxl import Workbook
 from openpyxl import Workbook
 from django.http import HttpResponse
 
+
 def generate_excel_report(seller_data, filename="seller_report"):
     """
     Generate an Excel (.xlsx) file from seller data.
