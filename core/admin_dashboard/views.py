@@ -1,10 +1,13 @@
+# admin_dashboard/views.py
+
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from accounts.decorators import admin_required, writer_required, seller_required, superadmin_required
 
 
+# === Dashboard Views ===
 @superadmin_required
 def superadmin_dashboard_view(request):
     return render(request, 'superadmin_dashboard/dashboard.html')
@@ -27,6 +30,7 @@ def seller_dashboard_view(request):
     return render(request, 'seller_dashboard/dashboard.html')
 
 
+# === Admin Dashboard Pages ===
 class AdminSiteSummaryPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/summary.html"
 
@@ -51,6 +55,7 @@ class AdminFailedPaymentsPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/failed_payments.html"
 
 
+# --- Seller Management ---
 class AdminCreateSellerPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/seller_create.html"
 
@@ -59,6 +64,16 @@ class AdminUpdateSellerPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/seller_update.html"
 
 
+# --- Writer Management (NEW) ---
+class AdminCreateWriterPage(LoginRequiredMixin, TemplateView):
+    template_name = "admin_dashboard/writer_create.html"
+
+
+class AdminUpdateWriterPage(LoginRequiredMixin, TemplateView):
+    template_name = "admin_dashboard/writer_update.html"
+
+
+# --- Other Admin Pages ---
 class AdminCreateAdminPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/admin_create.html"
 
@@ -77,4 +92,3 @@ class AdminImpersonationPage(LoginRequiredMixin, TemplateView):
 
 class AdminGrowthAnalyticsPage(LoginRequiredMixin, TemplateView):
     template_name = "admin_dashboard/growth_analytics.html"
-

@@ -8,7 +8,7 @@
   <!-- Dashboard -->
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:dashboard' %}">
+      <a class="nav-link" href="{% url 'admin:admin-dashboard' %}">
         <i class="fas fa-tachometer-alt"></i>
         🏠 داشبورد مدیریت
       </a>
@@ -22,13 +22,13 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:summary' %}">
+      <a class="nav-link" href="{% url 'admin:admin_summary' %}">
         <i class="fas fa-clipboard-list"></i>
         خلاصه سیستم
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:growth_analytics' %}">
+      <a class="nav-link" href="{% url 'admin:admin_growth' %}">
         <i class="fas fa-chart-area"></i>
         آنالیز رشد
       </a>
@@ -42,19 +42,19 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:sellers' %}">
+      <a class="nav-link" href="{% url 'admin:admin_sellers' %}">
         <i class="fas fa-store"></i>
         فروشندگان
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:writers' %}">
+      <a class="nav-link" href="{% url 'admin:admin_writers' %}">
         <i class="fas fa-feather-alt"></i>
         نویسندگان
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:manage_admins' %}">
+      <a class="nav-link" href="{% url 'admin:admin_manage_admins' %}">
         <i class="fas fa-user-shield"></i>
         مدیران سیستم
       </a>
@@ -68,19 +68,19 @@
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:flagged_comments' %}">
+      <a class="nav-link" href="{% url 'admin:admin_flagged_comments' %}">
         <i class="fas fa-flag"></i>
         نظرات گزارش‌شده
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:failed_payments' %}">
+      <a class="nav-link" href="{% url 'admin:admin_failed_payments' %}">
         <i class="fas fa-times-circle"></i>
         پرداخت‌های ناموفق
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:low_stock_alerts' %}">
+      <a class="nav-link" href="{% url 'admin:admin_low_stock' %}">
         <i class="fas fa-exclamation-triangle text-warning"></i>
         هشدار موجودی کم
       </a>
@@ -93,20 +93,23 @@
     اقدامات مدیریتی
   </h6>
   <ul class="nav flex-column mb-4">
+    <!-- Create Seller -->
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:create_seller' %}">
+      <a class="nav-link" href="{% url 'admin:admin_seller_create' %}">
         <i class="fas fa-user-plus"></i>
         ایجاد فروشنده
       </a>
     </li>
+    <!-- Create Writer -->
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:create_admin' %}">
-        <i class="fas fa-user-graduate"></i>
-        ایجاد مدیر جدید
+      <a class="nav-link" href="{% url 'admin:admin_writer_create' %}">
+        <i class="fas fa-feather-alt"></i>
+        ایجاد نویسنده
       </a>
     </li>
+    <!-- Impersonate & Logs -->
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:impersonation' %}">
+      <a class="nav-link" href="{% url 'admin:admin_impersonate' %}">
         <i class="fas fa-mask"></i>
         جعل هویت کاربر
       </a>
@@ -119,16 +122,24 @@
     </li>
   </ul>
 
-  <!-- System Tools -->
+  <!-- System Tools (Edit Actions - Usually not in sidebar, but if needed) -->
   <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
     <i class="fas fa-cogs me-1"></i>
     ابزارهای سیستمی
   </h6>
   <ul class="nav flex-column mb-4">
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:update_seller' %}">
+    <!-- ⚠️ Warning: update_seller/update_writer require an ID -->
+    <!-- These can't be direct links unless you plan to fill ID dynamically -->
+    <li class="nav-item disabled">
+      <a class="nav-link text-muted small" href="#" onclick="alert('این صفحه نیازمند انتخاب فروشنده است.'); return false;">
         <i class="fas fa-user-edit"></i>
         ویرایش فروشنده
+      </a>
+    </li>
+    <li class="nav-item disabled">
+      <a class="nav-link text-muted small" href="#" onclick="alert('این صفحه نیازمند انتخاب نویسنده است.'); return false;">
+        <i class="fas fa-user-edit"></i>
+        ویرایش نویسنده
       </a>
     </li>
   </ul>
