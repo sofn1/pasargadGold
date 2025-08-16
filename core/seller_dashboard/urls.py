@@ -20,4 +20,8 @@ urlpatterns = [
     path('system-health/', views.system_health_view, name='seller_system_health'),
     path('sales-by-channel/', views.sales_by_channel_view, name='seller_sales_by_channel'),
 
+    path('export/excel/', views.export_excel, name='seller_export_excel'),
+    path('export/csv/', views.export_csv, name='seller_export_csv'),
+    path('schedule-report/', views.schedule_weekly_report, name='seller_schedule_weekly_report'),
+
 ]

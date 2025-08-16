@@ -1,5 +1,82 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .utils import generate_excel_report, generate_csv_report
 from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+def seller_summary_view(request):
+    # Dummy data - replace with real DB queries
+    seller_data = {
+        'summary': {
+            'درآمد کل': '120,000,000 تومان',
+            'تعداد کل سفارش‌ها': 245,
+            'سود خالص': '30,000,000 تومان',
+            'میانگین ارزش سفارش': '489,000 تومان',
+            'نرخ ترک سبد خرید': '38%',
+            'مشتریان جدید': 89,
+            'مشتریان بازگشتی': 156,
+        },
+        'top_products': [
+            {'name': 'گوشواره طلای ۱۸ عیار', 'quantity_sold': 45, 'revenue': 22_500_000},
+            {'name': 'انگشتر نامزدی طلا', 'quantity_sold': 38, 'revenue': 19_000_000},
+            {'name': 'دستبند زنجیری طلا', 'quantity_sold': 32, 'revenue': 16_000_000},
+        ],
+        'low_stock_products': [
+            {'name': 'گردنبند مروارید', 'current_stock': 2, 'min_stock': 5},
+            {'name': 'ساعت طلای مردانه', 'current_stock': 1, 'min_stock': 3},
+        ]
+    }
+
+    return render(request, 'seller_dashboard/summary.html', {'summary': seller_data})
+
+
+def export_excel(request):
+    seller_data = {
+        'summary': {
+            'درآمد کل': '120,000,000 تومان',
+            'تعداد کل سفارش‌ها': 245,
+            'سود خالص': '30,000,000 تومان',
+            'میانگین ارزش سفارش': '489,000 تومان',
+            'نرخ ترک سبد خرید': '38%',
+            'مشتریان جدید': 89,
+            'مشتریان بازگشتی': 156,
+        },
+        'top_products': [
+            {'name': 'گوشواره طلای ۱۸ عیار', 'quantity_sold': 45, 'revenue': 22_500_000},
+            {'name': 'انگشتر نامزدی طلا', 'quantity_sold': 38, 'revenue': 19_000_000},
+        ],
+        'low_stock_products': [
+            {'name': 'گردنبند مروارید', 'current_stock': 2, 'min_stock': 5},
+        ]
+    }
+
+    return generate_excel_report(seller_data, filename="گزارش_فروشنده_" + request.user.username)
+
+
+def export_csv(request):
+    seller_data = {
+        'summary': {
+            'درآمد کل': '120,000,000 تومان',
+            'تعداد کل سفارش‌ها': 245,
+            'سود خالص': '30,000,000 تومان',
+            'میانگین ارزش سفارش': '489,000 تومان',
+        },
+        'top_products': [
+            {'name': 'گوشواره طلای ۱۸ عیار', 'quantity_sold': 45, 'revenue': 22_500_000},
+            {'name': 'انگشتر نامزدی طلا', 'quantity_sold': 38, 'revenue': 19_000_000},
+        ],
+        'low_stock_products': [
+            {'name': 'گردنبند مروارید', 'current_stock': 2, 'min_stock': 5},
+        ]
+    }
+
+    return generate_csv_report(seller_data, filename="گزارش_فروشنده_" + request.user.username)
+
+
+def schedule_weekly_report(request):
+    if request.method == "POST":
+        messages.success(request, "گزارش هفتگی با موفقیت زمان‌بندی شد.")
+    return redirect('seller:seller_summary')
 
 
 @login_required
