@@ -20,7 +20,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('admin-dashboard/', include('admin_dashboard.urls')),
     path('writer/', include('writer_dashboard.urls')),
-    path('seller/', include('seller_dashboard.urls')),
+    path('seller/', include('seller_dashboard.urls', namespace='seller')),
     path('customer/', include('customer_dashboard.urls')),
 
     # ✅ FRONTEND PAGES
