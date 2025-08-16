@@ -12,7 +12,7 @@ def superadmin_dashboard_view(request):
 
 @admin_required
 def admin_dashboard_view(request):
-    if not request.user.is_superuser:
+    if request.user.is_superuser:
         return redirect('/superadmin-dashboard/')
     return render(request, 'admin_dashboard/dashboard.html')
 
