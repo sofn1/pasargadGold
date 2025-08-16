@@ -1,5 +1,6 @@
-{% extends "__base.html" %}
-{% block content %}
+{% extends "seller_dashboard/dashboard.html" %}
+
+{% block mainContent %}
 <div class="max-w-4xl mx-auto px-4 py-10">
   <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📈 فروش به تفکیک کانال</h2>
   <table class="w-full table-auto bg-white rounded shadow text-right">
@@ -14,7 +15,7 @@
 </div>
 
 <script>
-  fetch("{% url 'seller_sales_by_channel' %}")
+  fetch("{% url 'seller:seller_sales_by_channel' %}")
     .then(res => res.json())
     .then(data => {
       const tbody = document.getElementById("channel-body");

@@ -1,12 +1,13 @@
-{% extends "__base.html" %}
-{% block content %}
+{% extends "seller_dashboard/dashboard.html" %}
+
+{% block mainContent %}
 <div class="max-w-4xl mx-auto px-4 py-10">
   <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">🛍️ قیف فروش</h2>
   <ul id="funnel" class="bg-white shadow rounded-lg divide-y"></ul>
 </div>
 
 <script>
-  fetch("{% url 'seller_order_funnel' %}")
+  fetch("{% url 'seller:seller_order_funnel' %}")
     .then(res => res.json())
     .then(data => {
       const funnel = document.getElementById("funnel");

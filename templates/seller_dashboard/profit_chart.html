@@ -1,5 +1,6 @@
-{% extends "__base.html" %}
-{% block content %}
+{% extends "seller_dashboard/dashboard.html" %}
+
+{% block mainContent %}
 <div class="max-w-6xl mx-auto px-4 py-10">
   <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">💰 نمودار سود روزانه</h2>
   <canvas id="profitChart" height="100"></canvas>
@@ -8,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   const ctx = document.getElementById('profitChart').getContext('2d');
-  fetch("{% url 'seller_profit_chart_data' %}")
+  fetch("{% url 'seller:seller_profit_chart_data' %}")
     .then(res => res.json())
     .then(data => {
       const chart = new Chart(ctx, {

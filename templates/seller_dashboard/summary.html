@@ -1,5 +1,6 @@
-{% extends "__base.html" %}
-{% block content %}
+{% extends "seller_dashboard/dashboard.html" %}
+
+{% block mainContent %}
 <div class="max-w-6xl mx-auto px-4 py-10">
   <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">📊 خلاصه فروشنده</h2>
   <table class="table-auto w-full bg-white shadow rounded-lg text-right">
@@ -15,9 +16,9 @@
   </table>
 
   <div class="mt-6 flex gap-4">
-    <a href="{% url 'seller_export_excel' %}" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">📤 خروجی Excel</a>
-    <a href="{% url 'seller_export_csv' %}" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">📤 خروجی CSV</a>
-    <form action="{% url 'seller_schedule_weekly_report' %}" method="POST">
+    <a href="{% url 'seller:seller_export_excel' %}" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">📤 خروجی Excel</a>
+    <a href="{% url 'seller:seller_export_csv' %}" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">📤 خروجی CSV</a>
+    <form action="{% url 'seller:seller_schedule_weekly_report' %}" method="POST">
       {% csrf_token %}
       <button type="submit" class="bg-orange-500 text-white px-5 py-2 rounded hover:bg-orange-600">
         🗓️ زمانبندی گزارش هفتگی
