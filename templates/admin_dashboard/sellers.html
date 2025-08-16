@@ -9,7 +9,7 @@
     <input class="form-control me-2" type="search" name="q" placeholder="جستجوی فروشنده..." value="{{ request.GET.q }}">
     <button class="btn btn-primary" type="submit">جستجو</button>
   </form>
-  <a href="{% url 'admin-dashboard-seller-create' %}" class="btn btn-success">+ افزودن فروشنده</a>
+  <a href="{% url 'admin:admin-dashboard-seller-create' %}" class="btn btn-success">+ افزودن فروشنده</a>
 </div>
 
 <div class="card shadow-sm">
@@ -40,8 +40,8 @@
             {% endif %}
           </td>
           <td>
-            <a href="{% url 'admin-dashboard-seller-update' seller.id %}" class="btn btn-sm btn-outline-primary">ویرایش</a>
-            <a href="{% url 'admin-dashboard-seller-delete' seller.id %}" class="btn btn-sm btn-outline-danger">حذف</a>
+            <a href="{% url 'admin:admin-dashboard-seller-update' seller.id %}" class="btn btn-sm btn-outline-primary">ویرایش</a>
+            <a href="{% url 'admin:admin-dashboard-seller-delete' seller.id %}" class="btn btn-sm btn-outline-danger">حذف</a>
           </td>
         </tr>
         {% empty %}

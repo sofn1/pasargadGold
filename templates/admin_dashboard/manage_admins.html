@@ -9,7 +9,7 @@
     <input class="form-control me-2" type="search" name="q" placeholder="جستجوی مدیر..." value="{{ request.GET.q }}">
     <button class="btn btn-primary" type="submit">جستجو</button>
   </form>
-  <a href="{% url 'admin-dashboard-invite-admin' %}" class="btn btn-success">+ دعوت مدیر</a>
+  <a href="{% url 'admin:admin-dashboard-invite-admin' %}" class="btn btn-success">+ دعوت مدیر</a>
 </div>
 
 <div class="card shadow-sm">
@@ -40,9 +40,9 @@
             {% endif %}
           </td>
           <td>
-            <a href="{% url 'admin-dashboard-edit-admin' admin.id %}" class="btn btn-sm btn-outline-primary">ویرایش</a>
+            <a href="{% url 'admin:admin-dashboard-edit-admin' admin.id %}" class="btn btn-sm btn-outline-primary">ویرایش</a>
             {% if not admin.is_superuser %}
-              <a href="{% url 'admin-dashboard-delete-admin' admin.id %}" class="btn btn-sm btn-outline-danger">حذف</a>
+              <a href="{% url 'admin:admin-dashboard-delete-admin' admin.id %}" class="btn btn-sm btn-outline-danger">حذف</a>
             {% endif %}
           </td>
         </tr>
