@@ -1,0 +1,50 @@
+<!-- templates/seller_dashboard/low_stock_products.html -->
+{% extends "seller_dashboard/dashboard.html" %}
+
+{% block mainContent %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold text-[#1C39BB] mb-6">⚠️ محصولات کم‌موجودی</h2>
+  <p class="text-gray-700 mb-6">
+    لیست محصولاتی که موجودی آن‌ها به حداقل رسیده یا کمتر از حد نصاب است.
+  </p>
+
+  <!-- Low Stock Table -->
+  <table class="table-auto w-full bg-white shadow rounded-lg text-right">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="p-4 text-right text-sm font-semibold text-gray-700">نام محصول</th>
+        <th class="p-4 text-right text-sm font-semibold text-gray-700">موجودی فعلی</th>
+        <th class="p-4 text-right text-sm font-semibold text-gray-700">حداقل موجودی</th>
+        <th class="p-4 text-right text-sm font-semibold text-gray-700">وضعیت</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-t">
+        <td class="p-4 font-medium">گردنبند مروارید طبیعی</td>
+        <td class="p-4 text-orange-600">۲ عدد</td>
+        <td class="p-4 text-gray-600">۵ عدد</td>
+        <td class="p-4"><span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">کم‌موجودی</span></td>
+      </tr>
+      <tr class="border-t">
+        <td class="p-4 font-medium">ساعت طلای مردانه</td>
+        <td class="p-4 text-red-600">۱ عدد</td>
+        <td class="p-4 text-gray-600">۳ عدد</td>
+        <td class="p-4"><span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">بحرانی</span></td>
+      </tr>
+      <tr class="border-t">
+        <td class="p-4 font-medium">دستبند نقره‌ای هنری</td>
+        <td class="p-4 text-yellow-600">۴ عدد</td>
+        <td class="p-4 text-gray-600">۴ عدد</td>
+        <td class="p-4"><span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">هشدار</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Action & Export -->
+  <div class="mt-8 flex gap-4">
+    <a href="#" class="bg-purple-600 text-white px-5 py-2 rounded hover:bg-purple-700">📦 تکمیل موجودی</a>
+    <a href="{% url 'seller:seller_export_excel' %}" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">📤 خروجی Excel</a>
+    <a href="{% url 'seller:seller_export_csv' %}" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">📤 خروجی CSV</a>
+  </div>
+</div>
+{% endblock %}
