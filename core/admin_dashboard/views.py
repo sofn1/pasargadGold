@@ -1,4 +1,5 @@
 # admin_dashboard/views.py
+from bson import ObjectId  # ← Add this line
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
