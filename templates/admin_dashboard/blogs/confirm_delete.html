@@ -1,0 +1,9 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}حذف وبلاگ{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  {% include 'admin_dashboard/_confirm_delete.html' with object=blog object_type="وبلاگ" return_url="admin_dashboard:admin_blogs" %}
+</div>
+{% endblock %}

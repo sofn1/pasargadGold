@@ -1,0 +1,10 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">{{ title }}</h2>
+  {% include 'admin_dashboard/_form.html' with submit_label="ذخیره محصول" cancel_url="admin_dashboard:admin_products" %}
+</div>
+{% endblock %}

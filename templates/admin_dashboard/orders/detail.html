@@ -1,0 +1,92 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}جزئیات سفارش #{{ order.id }}{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">جزئیات سفارش #{{ order.id }}</h2>
+    <a href="{% url 'admin_dashboard:admin_orders' %}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </a>
+  </div>
+
+  <!-- Order Summary -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h6>کاربر</h6>
+          <p>{{ order.user.get_full_name|default:order.user.phone_number }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h6>مبلغ کل</h6>
+          <p class="h5">{{ order.total_price|floatformat:0 }} تومان</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h6>وضعیت</h6>
+          <form method="post" action="{% url 'admin_dashboard:admin_update_order_status' order.pk %}" class="d-flex align-items-center">
+            {% csrf_token %}
+            <select name="status" class="form-select form-select-sm me-2" onchange="this.form.submit()">
+              {% for value, display in order.STATUS_CHOICES %}
+                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ display }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping Info -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0">آدرس تحویل</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>آدرس:</strong> {{ order.address }}</p>
+      {% if order.location %}
+        <p><strong>موقعیت مکانی:</strong> <a href="{{ order.location }}" target="_blank">مشاهده روی نقشه</a></p>
+      {% endif %}
+      <p><strong>تاریخ ثبت:</strong> {{ order.created_at|date:"Y/m/d H:i" }}</p>
+    </div>
+  </div>
+
+  <!-- Order Items -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0">محصولات سفارش</h5>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-striped mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>محصول</th>
+            <th>تعداد</th>
+            <th>قیمت واحد</th>
+            <th>مجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items.all %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.product.price|floatformat:0 }} تومان</td>
+            <td>{{ item.get_total|floatformat:0 }} تومان</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

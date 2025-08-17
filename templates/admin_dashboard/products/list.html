@@ -1,0 +1,42 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}محصولات{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between mb-4">
+    <h2>محصولات</h2>
+    <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">+ جدید</a>
+  </div>
+  <form method="get" class="mb-3">
+    <input type="text" name="q" class="form-control w-25 d-inline-block" placeholder="جستجو..." value="{{ request.GET.q }}">
+    <button class="btn btn-primary">جستجو</button>
+  </form>
+  <table class="table">
+    <thead class="table-dark">
+      <tr>
+        <th>نام</th>
+        <th>برند</th>
+        <th>قیمت</th>
+        <th>ویژه</th>
+        <th>عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.brand.name|default:"-" }}</td>
+        <td>{{ p.price|floatformat:0 }} تومان</td>
+        <td>{% if p.featured %}<span class="badge bg-info">ویژه</span>{% endif %}</td>
+        <td>
+          <a href="{% url 'admin_dashboard:admin_product_edit' p.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+          <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                  data-id="{{ p.pk }}" data-name="{{ p.name }}">حذف</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include 'admin_dashboard/_pagination.html' %}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" return_url="admin_dashboard:admin_products" %}
+</div>
+{% endblock %}

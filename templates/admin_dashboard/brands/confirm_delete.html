@@ -1,0 +1,9 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}حذف برند{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  {% include 'admin_dashboard/_confirm_delete.html' with object=brand object_type="برند" return_url="admin_dashboard:admin_brands" %}
+</div>
+{% endblock %}

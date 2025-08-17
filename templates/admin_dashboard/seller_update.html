@@ -1,132 +1,0 @@
-<!-- templates/admin_dashboard/seller_update.html -->
-{% extends "admin_dashboard/dashboard.html" %}
-
-{% block title %}ویرایش فروشنده: {{ seller.shop_name }}{% endblock %}
-
-{% block mainContent %}
-<div class="container-fluid px-4">
-  <h2 class="my-4 text-white">ویرایش فروشنده: <strong>{{ seller.shop_name }}</strong></h2>
-
-  <!-- Seller Status Badge -->
-  <div class="mb-4">
-    {% if seller.is_active %}
-      <span class="badge bg-success fs-6">🟢 فعال</span>
-    {% else %}
-      <span class="badge bg-secondary fs-6">🔴 غیرفعال</span>
-    {% endif %}
-    <span class="text-white-50 ms-3">شناسه: #{{ seller.id }}</span>
-  </div>
-
-  <div class="card shadow-sm border-0">
-    <div class="card-body p-4">
-      <form method="post">
-        {% csrf_token %}
-
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label for="id_shop_name" class="form-label">نام فروشگاه</label>
-            <input type="text"
-                   class="form-control"
-                   id="id_shop_name"
-                   name="shop_name"
-                   value="{{ seller.shop_name }}"
-                   placeholder="فروشگاه طلای پارس"
-                   required>
-          </div>
-          <div class="col-md-6">
-            <label for="id_owner_name" class="form-label">نام و نام خانوادگی مالک</label>
-            <input type="text"
-                   class="form-control"
-                   id="id_owner_name"
-                   name="owner_name"
-                   value="{{ seller.owner_name }}"
-                   placeholder="محمدمهدی رضایی"
-                   required>
-          </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label for="id_phone" class="form-label">تلفن تماس</label>
-            <input type="text"
-                   class="form-control ltr-input"
-                   id="id_phone"
-                   name="phone"
-                   value="{{ seller.phone }}"
-                   placeholder="09123456789"
-                   dir="ltr"
-                   required>
-            <small class="text-muted">بدون صفر ابتدایی</small>
-          </div>
-          <div class="col-md-6">
-            <label for="id_email" class="form-label">ایمیل</label>
-            <input type="email"
-                   class="form-control ltr-input"
-                   id="id_email"
-                   name="email"
-                   value="{{ seller.email }}"
-                   placeholder="seller@example.com"
-                   dir="ltr">
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label for="id_address" class="form-label">آدرس</label>
-          <textarea class="form-control"
-                    id="id_address"
-                    name="address"
-                    rows="3"
-                    placeholder="تهران، خیابان فلان، پلاک ۱۲۳">{{ seller.address }}</textarea>
-        </div>
-
-        <div class="mb-3 form-check">
-          <input type="checkbox"
-                 class="form-check-input"
-                 id="id_is_active"
-                 name="is_active"
-                 {% if seller.is_active %}checked{% endif %}>
-          <label class="form-check-label" for="id_is_active">
-            <strong>این فروشنده فعال باشد</strong>
-          </label>
-          <small class="text-muted d-block mt-1">
-            اگر غیرفعال شود، نمی‌تواند وارد حساب خود شود یا محصول اضافه کند.
-          </small>
-        </div>
-
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-success px-4">
-            <i class="fas fa-save"></i> به‌روزرسانی فروشنده
-          </button>
-          <a href="{% url 'admin:admin_sellers' %}" class="btn btn-secondary px-4">
-            <i class="fas fa-times"></i> انصراف
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Danger Zone -->
-  <div class="mt-4">
-    <div class="card bg-dark text-white border-0 shadow-sm">
-      <div class="card-body p-4">
-        <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> منطقه خطر</h5>
-        <p class="small text-white-75">این اقدامات غیرقابل بازگشت هستند.</p>
-        <a href="{% url 'admin:admin_seller_delete' seller.id %}"
-           class="btn btn-outline-danger btn-sm"
-           onclick="return confirm('آیا از حذف این فروشنده اطمینان دارید؟ تمام محصولات و داده‌ها حذف خواهند شد.')">
-          حذف فروشنده
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-  .ltr-input {
-    font-family: 'Courier New', monospace;
-    direction: ltr;
-    text-align: left;
-  }
-</style>
-
-{% endblock %}

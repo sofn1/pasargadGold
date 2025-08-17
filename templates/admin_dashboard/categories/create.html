@@ -1,0 +1,19 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}ایجاد دسته جدید{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">ایجاد دسته‌بندی جدید</h2>
+  {% if parent %}
+  <p class="text-light">زیرمجموعه: <strong>{{ parent.name }}</strong></p>
+  {% endif %}
+
+  <form method="post" class="bg-light p-4 rounded shadow-sm">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">ایجاد دسته</button>
+    <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">انصراف</a>
+  </form>
+</div>
+{% endblock %}

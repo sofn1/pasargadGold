@@ -1,0 +1,65 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}مدیریت بنرها{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">بنرها</h2>
+    <a href="{% url 'admin_dashboard:admin_banner_create' %}" class="btn btn-success">
+      <i class="fas fa-plus"></i> افزودن بنر جدید
+    </a>
+  </div>
+
+  <!-- Table -->
+  {% if banners %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>عنوان</th>
+            <th>موقعیت</th>
+            <th>اولویت</th>
+            <th>فعال</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for banner in banners %}
+          <tr>
+            <td>{{ banner.title }}</td>
+            <td>{{ banner.get_position_display }}</td>
+            <td>{{ banner.priority }}</td>
+            <td>
+              {% if banner.is_active %}
+                <span class="badge bg-success">فعال</span>
+              {% else %}
+                <span class="badge bg-danger">غیرفعال</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group">
+                <a href="{% url 'admin_dashboard:admin_banner_edit' banner.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal" data-id="{{ banner.pk }}" data-name="{{ banner.title }}">
+                  حذف
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'admin_dashboard/_pagination.html' %}
+  {% else %}
+  <div class="alert alert-info">بنری یافت نشد.</div>
+  {% endif %}
+
+  <!-- Delete Modal -->
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="بنر" return_url="admin_dashboard:admin_banners" %}
+</div>
+{% endblock %}

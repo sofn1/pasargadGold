@@ -1,0 +1,9 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}حذف خبر{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  {% include 'admin_dashboard/_confirm_delete.html' with object=news object_type="خبر" return_url="admin_dashboard:admin_news" %}
+</div>
+{% endblock %}

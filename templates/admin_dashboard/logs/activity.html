@@ -1,0 +1,28 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}لاگ‌ها{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">فعالیت‌های مدیریتی</h2>
+  <table class="table table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>زمان</th>
+        <th>مدیر</th>
+        <th>عملیات</th>
+        <th>جزئیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+        <td>{{ log.admin.username }}</td>
+        <td>{{ log.action }}</td>
+        <td>{{ log.details|truncatechars:100 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include 'admin_dashboard/_pagination.html' %}
+</div>
+{% endblock %}

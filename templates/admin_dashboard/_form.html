@@ -1,0 +1,21 @@
+<form method="post" enctype="multipart/form-data" class="bg-light p-4 rounded shadow-sm">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="mb-3">
+    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+    {% if field.field.widget.input_type == 'file' %}
+    <input type="file" class="form-control" name="{{ field.name }}" id="{{ field.id_for_label }}">
+    {% else %}
+    {{ field }}
+    {% endif %}
+    {% if field.errors %}
+    <div class="text-danger">{{ field.errors }}</div>
+    {% endif %}
+    {% if field.help_text %}
+    <small class="text-muted">{{ field.help_text }}</small>
+    {% endif %}
+  </div>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary">{{ submit_label|default:"ذخیره" }}</button>
+  <a href="{{ cancel_url|default:'javascript:history.back()' }}" class="btn btn-secondary">لغو</a>
+</form>

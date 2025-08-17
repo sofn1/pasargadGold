@@ -1,0 +1,55 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}مدیریت برندها{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">برندها</h2>
+    <a href="{% url 'admin_dashboard:admin_brand_create' %}" class="btn btn-success">
+      <i class="fas fa-plus"></i> افزودن برند جدید
+    </a>
+  </div>
+
+  <!-- Table -->
+  {% if brands %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>نام</th>
+            <th>توضیحات</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for brand in brands %}
+          <tr>
+            <td>{{ brand.name }}</td>
+            <td>{{ brand.description|truncatechars:100 }}</td>
+            <td>
+              <div class="btn-group">
+                <a href="{% url 'admin_dashboard:admin_brand_edit' brand.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal" data-id="{{ brand.pk }}" data-name="{{ brand.name }}">
+                  حذف
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'admin_dashboard/_pagination.html' %}
+  {% else %}
+  <div class="alert alert-info">برندی یافت نشد.</div>
+  {% endif %}
+
+  <!-- Delete Modal -->
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="برند" return_url="admin_dashboard:admin_brands" %}
+</div>
+{% endblock %}

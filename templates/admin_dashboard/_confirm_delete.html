@@ -1,0 +1,14 @@
+<div class="card">
+  <div class="card-header bg-danger text-white">
+    <h5>حذف {{ object_type }}</h5>
+  </div>
+  <div class="card-body">
+    <p>آیا از حذف "<strong>{{ object.name }}</strong>" مطمئن هستید؟</p>
+    <p class="text-danger">این عمل غیرقابل بازگشت است.</p>
+    <form method="post" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">بله، حذف کن</button>
+    </form>
+    <a href="{% url return_url %}" class="btn btn-secondary">انصراف</a>
+  </div>
+</div>

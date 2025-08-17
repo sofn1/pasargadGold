@@ -1,57 +1,67 @@
 # admin_dashboard/urls.py
-
 from django.urls import path
-from .views import (
-    AdminSiteSummaryPage,
-    AdminSellersPage,
-    AdminWritersPage,
-    AdminFlaggedCommentsPage,
-    AdminLowStockAlertsPage,
-    AdminFailedPaymentsPage,
-    AdminCreateSellerPage,
-    AdminUpdateSellerPage,
-    AdminCreateWriterPage,           # NEW
-    AdminUpdateWriterPage,           # NEW
-    AdminCreateAdminPage,
-    AdminLogsPage,
-    AdminManageAdminsPage,
-    AdminImpersonationPage,
-    AdminGrowthAnalyticsPage,
-    admin_dashboard_view,
-    writer_dashboard_view,
-    seller_dashboard_view,
-    superadmin_dashboard_view,
-)
+from . import views
 
-app_name = 'admin'
+app_name = 'admin_dashboard'
 
 urlpatterns = [
-    # Dashboard Views
-    path('superadmin-dashboard/', superadmin_dashboard_view, name='superadmin-dashboard'),
-    path('', admin_dashboard_view, name='admin-dashboard'),
-    path('writer-dashboard/', writer_dashboard_view, name='writer-dashboard'),
-    path('seller-dashboard/', seller_dashboard_view, name='seller-dashboard'),
+    # Dashboard Home
+    path('', views.dashboard_home, name='admin_home'),
 
-    # Admin Pages
-    path("summary/", AdminSiteSummaryPage.as_view(), name="admin_summary"),
-    path("sellers/", AdminSellersPage.as_view(), name="admin_sellers"),
-    path("writers/", AdminWritersPage.as_view(), name="admin_writers"),
-    path("flagged-comments/", AdminFlaggedCommentsPage.as_view(), name="admin_flagged_comments"),
-    path("low-stock/", AdminLowStockAlertsPage.as_view(), name="admin_low_stock"),
-    path("failed-payments/", AdminFailedPaymentsPage.as_view(), name="admin_failed_payments"),
+    # Categories
+    path('categories/', views.category_list_view, name='admin_categories'),
+    path('categories/create/', views.category_create_view, name='admin_category_create'),
+    path('categories/<str:category_id>/edit/', views.category_edit_view, name='admin_category_edit'),
+    path('categories/<str:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
 
-    # Seller Management
-    path("sellers/create/", AdminCreateSellerPage.as_view(), name="admin_seller_create"),
-    path("sellers/<int:id>/update/", AdminUpdateSellerPage.as_view(), name="admin_seller_update"),
+    # Users
+    path('users/', views.UserListView.as_view(), name='admin_users_list'),
+    path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
 
-    # Writer Management (NEW)
-    path("writers/create/", AdminCreateWriterPage.as_view(), name="admin_writer_create"),
-    path("writers/<int:id>/update/", AdminUpdateWriterPage.as_view(), name="admin_writer_update"),
+    # Blogs - CRUD
+    path('blogs/', views.BlogListView.as_view(), name='admin_blogs'),
+    path('blogs/create/', views.blog_create_view, name='admin_blog_create'),
+    path('blogs/<int:pk>/edit/', views.blog_edit_view, name='admin_blog_edit'),
+    path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blog_delete'),
 
-    # Admin Management
-    path("admins/create/", AdminCreateAdminPage.as_view(), name="admin_create"),
-    path("admin-logs/", AdminLogsPage.as_view(), name="admin_logs"),
-    path("manage-admins/", AdminManageAdminsPage.as_view(), name="admin_manage_admins"),
-    path("impersonate/", AdminImpersonationPage.as_view(), name="admin_impersonate"),
-    path("growth/", AdminGrowthAnalyticsPage.as_view(), name="admin_growth"),
+    # News - CRUD
+    path('news/', views.NewsListView.as_view(), name='admin_news'),
+    path('news/create/', views.news_create_view, name='admin_news_create'),
+    path('news/<int:pk>/edit/', views.news_edit_view, name='admin_news_edit'),
+    path('news/<int:pk>/delete/', views.news_delete_view, name='admin_news_delete'),
+
+    # Comments
+    path('comments/', views.CommentModerationView.as_view(), name='admin_comments'),
+
+    # Orders
+    path('orders/', views.OrderListView.as_view(), name='admin_orders'),
+    path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
+    path('orders/<int:pk>/status/', views.update_order_status, name='admin_update_order_status'),
+
+    # Media & Layout
+    path('banners/', views.BannerListView.as_view(), name='admin_banners'),
+    path('banners/create/', views.banner_create_view, name='admin_banner_create'),
+    path('banners/<int:pk>/edit/', views.banner_edit_view, name='admin_banner_edit'),
+    path('banners/<int:pk>/delete/', views.banner_delete_view, name='admin_banner_delete'),
+
+    path('heroes/', views.HeroListView.as_view(), name='admin_heroes'),
+    path('heroes/create/', views.hero_create_view, name='admin_hero_create'),
+    path('heroes/<int:pk>/edit/', views.hero_edit_view, name='admin_hero_edit'),
+    path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
+
+    path('brands/', views.BrandListView.as_view(), name='admin_brands'),
+    path('brands/create/', views.brand_create_view, name='admin_brand_create'),
+    path('brands/<int:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
+    path('brands/<int:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
+
+    path('products/', views.ProductListView.as_view(), name='admin_products'),
+    path('products/create/', views.product_create_view, name='admin_product_create'),
+    path('products/<int:pk>/edit/', views.product_edit_view, name='admin_product_edit'),
+    path('products/<int:pk>/delete/', views.product_delete_view, name='admin_product_delete'),
+
+    # Logs
+    path('activity/', views.ActivityLogView.as_view(), name='admin_activity_logs'),
+
+    # API
+    path('api/stats/', views.api_stats_summary, name='admin_api_stats'),
 ]

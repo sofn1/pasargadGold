@@ -1,0 +1,18 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}دسته یافت نشد{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="card mt-4">
+    <div class="card-body text-center">
+      <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+      <h4>دسته‌بندی یافت نشد</h4>
+      <p class="text-muted">دسته‌ای با این شناسه وجود ندارد یا دسترسی به آن ممکن نیست.</p>
+      <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-right"></i> بازگشت به لیست دسته‌ها
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

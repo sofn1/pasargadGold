@@ -1,0 +1,16 @@
+{% extends "admin_dashboard/dashboard.html" %}
+
+{% block title %}ویرایش دسته{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <h2 class="my-4 text-white">ویرایش دسته: {{ category.name }}</h2>
+
+  <form method="post" class="bg-light p-4 rounded shadow-sm">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">به‌روزرسانی</button>
+    <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">انصراف</a>
+  </form>
+</div>
+{% endblock %}

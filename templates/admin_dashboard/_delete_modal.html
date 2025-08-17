@@ -1,0 +1,31 @@
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">تایید حذف</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        آیا از حذف "<span id="del-name"></span>" مطمئن هستید؟
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+        <form method="post" id="delete-form">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">حذف</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('[data-bs-target="#deleteModal"]').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const id = this.getAttribute('data-id');
+      const name = this.getAttribute('data-name');
+      document.getElementById('del-name').textContent = name;
+      document.getElementById('delete-form').action = this.closest('form')?.action || window.location.pathname.replace('/edit/', '/delete/');
+    });
+  });
+</script>
