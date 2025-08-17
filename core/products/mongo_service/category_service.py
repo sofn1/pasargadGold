@@ -53,6 +53,27 @@ class ProductCategoryService:
             }
             for cat in categories
         ]
+    
+    def get_category_tree(self, parent_id=None):
+        """
+        Returns a nested tree of active categories.
+        """
+        query = {"is_active": True}
+        if parent_id:
+            query["parent_id"] = ObjectId(parent_id)
+        else:
+            query["parent_id"] = None  # Root categories
+
+        children = list(self.collection.find(query))
+
+        for cat in children:
+            # Convert ObjectId to string
+            cat['id'] = str(cat['_id'])
+            cat['name'] = cat.get('name', 'نام ناشناخته')
+            cat['children'] = self.get_category_tree(parent_id=cat['_id'])
+
+        return children
+
 
     def delete_category(self, category_id):
         result = self.collection.delete_one({"_id": ObjectId(category_id)})

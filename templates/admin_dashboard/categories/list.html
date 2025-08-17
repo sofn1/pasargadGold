@@ -1,3 +1,4 @@
+<!-- templates/admin_dashboard/categories/list.html -->
 {% extends "admin_dashboard/dashboard.html" %}
 
 {% block title %}مدیریت دسته‌بندی‌ها{% endblock %}
@@ -6,63 +7,23 @@
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-white">دسته‌بندی‌ها</h2>
-    <a href="{% url 'admin_dashboard:admin_category_create' %}{% if parent_id %}?parent_id={{ parent_id }}{% endif %}" class="btn btn-success">
+    <a href="{% url 'admin_dashboard:admin_category_create' %}" class="btn btn-success">
       <i class="fas fa-plus"></i> افزودن دسته جدید
     </a>
   </div>
 
-  <!-- Breadcrumb -->
-  {% if parent %}
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:admin_categories' %}">همه دسته‌ها</a></li>
-      <li class="breadcrumb-item active">{{ parent.name }}</li>
-    </ol>
-  </nav>
-  {% endif %}
-
-  <!-- Table -->
-  {% if categories %}
+  {% if categories_tree %}
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <table class="table table-striped table-hover mb-0">
         <thead class="table-dark">
           <tr>
-            <th>نام</th>
-            <th>زیرمجموعه</th>
+            <th>نام دسته</th>
             <th>عملیات</th>
           </tr>
         </thead>
         <tbody>
-          {% for cat in categories %}
-          <tr>
-            <td>{{ cat.name }}</td>
-            <td>
-              {% if cat.subcategories_count > 0 %}
-                <a href="?parent_id={{ cat.id }}" class="btn btn-sm btn-outline-primary">
-                  مشاهده ({{ cat.subcategories_count }})
-                </a>
-              {% else %}
-                <span class="text-muted">ندارد</span>
-              {% endif %}
-            </td>
-            <td>
-              <div class="btn-group">
-                <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ cat.id }}" data-name="{{ cat.name }}">
-                  حذف
-                </button>
-              </div>
-            </td>
-            <td>
-              <a href="{% url 'admin_dashboard:admin_category_create' %}?parent_id={{ cat.id }}"
-                class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-plus"></i> زیرمجموعه
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
+          {% include 'admin_dashboard/categories/_category_row.html' with categories=categories_tree level=0 %}
         </tbody>
       </table>
     </div>

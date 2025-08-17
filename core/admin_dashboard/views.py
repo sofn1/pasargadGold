@@ -337,30 +337,17 @@ def get_category_service():
 
 @staff_required
 def category_list_view(request):
-    """List all root-level active categories and allow tree navigation."""
-    parent_id = request.GET.get("parent_id")
+    """List categories in a hierarchical tree."""
     service = get_category_service()
 
-    # Fetch categories
-    if parent_id:
-        try:
-            parent = service.get_category(parent_id)
-            if not parent:
-                parent_id = None
-        except Exception:
-            parent_id = None
-    else:
-        parent = None
-
-    categories = service.get_active_categories_by_parent(parent_id)
+    # Get full tree (root level)
+    categories_tree = service.get_category_tree(parent_id=None)
 
     context = {
-        "categories": categories,
-        "parent": parent,
-        "parent_id": parent_id,
-        "service": service,
+        "categories_tree": categories_tree,
     }
     return render(request, "admin_dashboard/categories/list.html", context)
+
 
 
 @staff_required
