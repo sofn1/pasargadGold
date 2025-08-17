@@ -8,138 +8,121 @@
   <!-- Dashboard -->
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin-dashboard' %}">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_home' %}">
         <i class="fas fa-tachometer-alt"></i>
-        🏠 داشبورد مدیریت
+        🏠 داشبورد اصلی
       </a>
     </li>
   </ul>
 
-  <!-- Summary & Analytics -->
+  <!-- Content Management -->
   <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
-    <i class="fas fa-chart-line me-1"></i>
-    خلاصه و آنالیز
+    <i class="fas fa-edit me-1"></i>
+    مدیریت محتوا
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_summary' %}">
-        <i class="fas fa-clipboard-list"></i>
-        خلاصه سیستم
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_blogs' %}">
+        <i class="fas fa-pen"></i>
+        مدیریت وبلاگ‌ها
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_growth' %}">
-        <i class="fas fa-chart-area"></i>
-        آنالیز رشد
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_news' %}">
+        <i class="fas fa-newspaper"></i>
+        مدیریت اخبار
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_comments' %}">
+        <i class="fas fa-comments"></i>
+        نظارت بر نظرات
+      </a>
+    </li>
+  </ul>
+
+  <!-- E-Commerce -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-shopping-cart me-1"></i>
+    فروش و محصولات
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_products' %}">
+        <i class="fas fa-box"></i>
+        مدیریت محصولات
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_brands' %}">
+        <i class="fas fa-tags"></i>
+        برند‌ها
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_orders' %}">
+        <i class="fas fa-receipt"></i>
+        سفارشات
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_categories' %}">
+        <i class="fas fa-sitemap"></i>
+        دسته‌بندی‌ها
+      </a>
+    </li>
+  </ul>
+
+  <!-- Layout & Media -->
+  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
+    <i class="fas fa-photo-video me-1"></i>
+    طرح و رسانه
+  </h6>
+  <ul class="nav flex-column mb-4">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_banners' %}">
+        <i class="fas fa-ad"></i>
+        بنرها
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_heroes' %}">
+        <i class="fas fa-crown"></i>
+        هیروها
       </a>
     </li>
   </ul>
 
   <!-- User Management -->
   <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
-    <i class="fas fa-users-cog me-1"></i>
+    <i class="fas fa-users me-1"></i>
     مدیریت کاربران
   </h6>
   <ul class="nav flex-column mb-4">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_sellers' %}">
-        <i class="fas fa-store"></i>
-        فروشندگان
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_writers' %}">
-        <i class="fas fa-feather-alt"></i>
-        نویسندگان
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_manage_admins' %}">
-        <i class="fas fa-user-shield"></i>
-        مدیران سیستم
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_users_list' %}">
+        <i class="fas fa-user-friends"></i>
+        لیست کاربران
       </a>
     </li>
   </ul>
 
-  <!-- Content & Moderation -->
-  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
-    <i class="fas fa-gavel me-1"></i>
-    محتوا و نظارت
-  </h6>
-  <ul class="nav flex-column mb-4">
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_flagged_comments' %}">
-        <i class="fas fa-flag"></i>
-        نظرات گزارش‌شده
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_failed_payments' %}">
-        <i class="fas fa-times-circle"></i>
-        پرداخت‌های ناموفق
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_low_stock' %}">
-        <i class="fas fa-exclamation-triangle text-warning"></i>
-        هشدار موجودی کم
-      </a>
-    </li>
-  </ul>
-
-  <!-- Admin Actions -->
-  <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
-    <i class="fas fa-tools me-1"></i>
-    اقدامات مدیریتی
-  </h6>
-  <ul class="nav flex-column mb-4">
-    <!-- Create Seller -->
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_seller_create' %}">
-        <i class="fas fa-user-plus"></i>
-        ایجاد فروشنده
-      </a>
-    </li>
-    <!-- Create Writer -->
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_writer_create' %}">
-        <i class="fas fa-feather-alt"></i>
-        ایجاد نویسنده
-      </a>
-    </li>
-    <!-- Impersonate & Logs -->
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_impersonate' %}">
-        <i class="fas fa-mask"></i>
-        جعل هویت کاربر
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'admin:admin_logs' %}">
-        <i class="fas fa-clipboard"></i>
-        لاگ‌های سیستم
-      </a>
-    </li>
-  </ul>
-
-  <!-- System Tools (Edit Actions - Usually not in sidebar, but if needed) -->
+  <!-- System Tools -->
   <h6 class="sidebar-subheading px-3 small text-white opacity-75 mb-2">
     <i class="fas fa-cogs me-1"></i>
     ابزارهای سیستمی
   </h6>
   <ul class="nav flex-column mb-4">
-    <!-- ⚠️ Warning: update_seller/update_writer require an ID -->
-    <!-- These can't be direct links unless you plan to fill ID dynamically -->
-    <li class="nav-item disabled">
-      <a class="nav-link text-muted small" href="#" onclick="alert('این صفحه نیازمند انتخاب فروشنده است.'); return false;">
-        <i class="fas fa-user-edit"></i>
-        ویرایش فروشنده
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_activity_logs' %}">
+        <i class="fas fa-history"></i>
+        لاگ‌های مدیریتی
       </a>
     </li>
-    <li class="nav-item disabled">
-      <a class="nav-link text-muted small" href="#" onclick="alert('این صفحه نیازمند انتخاب نویسنده است.'); return false;">
-        <i class="fas fa-user-edit"></i>
-        ویرایش نویسنده
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_api_stats' %}" target="_blank">
+        <i class="fas fa-chart-bar"></i>
+        API آمار (تست)
       </a>
     </li>
   </ul>
