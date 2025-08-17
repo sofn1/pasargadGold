@@ -130,13 +130,21 @@ class CategoryForm(forms.Form):
     english_name = forms.CharField(max_length=255, label="نام انگلیسی (اختیاری)", required=False)
     parent_id = forms.ChoiceField(label="دسته والد (اختیاری)", choices=[], required=False)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, exclude_id=None, **kwargs):
         super().__init__(*args, **kwargs)
         service = ProductCategoryService()
-        categories = service.get_active_categories_by_parent()  # Root-level categories
-        # Build choices: [("", "بدون والد"), ("id1", "نام دسته"), ...]
+        # Get full tree to build flat list with indentation
+        categories = service.get_category_tree(parent_id=None)
         choices = [("", "بدون والد")]
-        for cat in categories:
-            choices.append((cat["id"], cat["name"]))
+
+        def add_choices(nodes, level=0):
+            for node in nodes:
+                if exclude_id and str(node['id']) == exclude_id:
+                    continue  # Skip self
+                prefix = "├─ " * level if level > 0 else ""
+                choices.append((node['id'], f"{prefix}{node['name']}"))
+                add_choices(node.get('children', []), level + 1)
+
+        add_choices(categories)
         self.fields['parent_id'].choices = choices
 

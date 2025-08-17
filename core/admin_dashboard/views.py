@@ -404,7 +404,6 @@ def category_create_view(request):
 
 @staff_required
 def category_edit_view(request, category_id):
-    """Edit an existing category."""
     service = get_category_service()
 
     try:
@@ -415,17 +414,42 @@ def category_edit_view(request, category_id):
         return render(request, "admin_dashboard/categories/not_found.html", status=404)
 
     if request.method == "POST":
-        form = CategoryForm(request.POST)
+        form = CategoryForm(request.POST, exclude_id=category_id)
         if form.is_valid():
             name = form.cleaned_data["name"]
             english_name = form.cleaned_data.get("english_name", "")
+            new_parent_id = form.cleaned_data.get("parent_id")  # Can be empty
 
             try:
+                # Update category
                 service.update_category(
                     category_id=category_id,
                     name=name,
                     english_name=english_name
                 )
+
+                # Handle parent change
+                old_parent_id = str(category.get("parent_id")) if category.get("parent_id") else None
+                if new_parent_id != old_parent_id:
+                    # Remove from old parent
+                    if old_parent_id:
+                        service.collection.update_one(
+                            {"_id": ObjectId(old_parent_id)},
+                            {"$pull": {"subCategories": ObjectId(category_id)}}
+                        )
+                    # Add to new parent
+                    if new_parent_id:
+                        service.collection.update_one(
+                            {"_id": ObjectId(new_parent_id)},
+                            {"$push": {"subCategories": ObjectId(category_id)}}
+                        )
+                    # Update child's parent_id field
+                    update_data = {"parent_id": ObjectId(new_parent_id)} if new_parent_id else {"$unset": {"parent_id": ""}}
+                    service.collection.update_one(
+                        {"_id": ObjectId(category_id)},
+                        update_data
+                    )
+
                 AdminActionLog.objects.create(
                     admin=request.user,
                     action="Update Category",
@@ -433,12 +457,15 @@ def category_edit_view(request, category_id):
                 )
                 return redirect('admin_dashboard:admin_categories')
             except Exception as e:
-                form.add_error(None, f"Update failed: {str(e)}")
+                form.add_error(None, f"خطا در بروزرسانی: {str(e)}")
     else:
+        # Pre-select current parent
+        current_parent = str(category.get("parent_id")) if category.get("parent_id") else ""
         form = CategoryForm(initial={
             "name": category.get("name", ""),
-            "english_name": category.get("englishName", "")
-        })
+            "english_name": category.get("englishName", ""),
+            "parent_id": current_parent
+        }, exclude_id=category_id)
 
     context = {
         "form": form,
