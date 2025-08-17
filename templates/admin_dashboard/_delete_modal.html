@@ -1,12 +1,13 @@
+<!-- Reusable Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title">تایید حذف</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        آیا از حذف "<span id="del-name"></span>" مطمئن هستید؟
+        آیا از حذف "<strong id="del-name"></strong>" مطمئن هستید؟
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
@@ -20,12 +21,58 @@
 </div>
 
 <script>
-  document.querySelectorAll('[data-bs-target="#deleteModal"]').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const id = this.getAttribute('data-id');
-      const name = this.getAttribute('data-name');
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('deleteModal');
+
+    // Listen when modal is opened
+    modal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget; // Button that triggered the modal
+      const id = button.getAttribute('data-id');
+      const name = button.getAttribute('data-name');
+      const form = document.getElementById('delete-form');
+
+      // Update modal content
       document.getElementById('del-name').textContent = name;
-      document.getElementById('delete-form').action = this.closest('form')?.action || window.location.pathname.replace('/edit/', '/delete/');
+
+      // Set correct delete URL (e.g., /admin-panel/categories/<id>/delete/)
+      form.action = `/admin-panel/categories/${id}/delete/`;
+
+      // Prevent default form submission and use AJAX
+      form.onsubmit = function (e) {
+        e.preventDefault(); // Stop normal submit
+
+        const formData = new FormData(this);
+
+        fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Network error');
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(modal).hide();
+            // Remove the table row
+            const row = button.closest('tr');
+            if (row) row.remove();
+            // Optional: show success message
+            alert('آیتم با موفقیت حذف شد.');
+          } else {
+            alert('خطا: ' + (data.error || 'عملیات ناموفق بود.'));
+          }
+        })
+        .catch(err => {
+          alert('خطایی رخ داد. لطفاً دوباره تلاش کنید.');
+          console.error(err);
+        });
+      };
     });
   });
 </script>

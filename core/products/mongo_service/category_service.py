@@ -55,8 +55,11 @@ class ProductCategoryService:
         ]
 
     def delete_category(self, category_id):
-        self.collection.delete_one({"_id": ObjectId(category_id)})
-        self.collection.update_many({}, {"$pull": {"subCategories": ObjectId(category_id)}})
+        result = self.collection.delete_one({"_id": ObjectId(category_id)})
+        print(f"Deleted {result.deleted_count} category(s)")  # Debug
+
+        pull_result = self.collection.update_many({}, {"$pull": {"subCategories": ObjectId(category_id)}})
+        print(f"Updated {pull_result.modified_count} parent(s)")  # Debug
 
     def update_category(self, category_id, name=None, english_name=None):
         updates = {}

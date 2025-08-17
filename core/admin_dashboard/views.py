@@ -464,7 +464,7 @@ def category_delete_view(request, category_id):
     if request.method == "POST":
         try:
             name = category.get("name", "Unknown")
-            service.delete_category(category_id)
+            service.delete_category(category_id)  # This should delete from MongoDB
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Delete Category",
@@ -475,7 +475,6 @@ def category_delete_view(request, category_id):
             return JsonResponse({"error": str(e)}, status=500)
 
     return render(request, "admin_dashboard/categories/confirm_delete.html", {"category": category})
-
 
 
 
