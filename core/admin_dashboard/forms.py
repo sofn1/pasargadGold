@@ -5,8 +5,8 @@ from products.models.brand import Brand
 from products.models.product import Product
 from banners.models import Banner
 from heroes.models import Hero
-from blogs.models import Blog
-from news.models import News
+from blogs.models.blog import Blog
+from news.models.news import News
 
 # --- Shared Widgets ---
 class RichTextarea(forms.Textarea):
