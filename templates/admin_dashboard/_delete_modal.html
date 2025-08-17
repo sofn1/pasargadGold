@@ -35,7 +35,7 @@
       document.getElementById('del-name').textContent = name;
 
       // Set correct delete URL (e.g., /admin-panel/categories/<id>/delete/)
-      form.action = `/admin-panel/categories/${id}/delete/`;
+      form.action = `/admin-dashboard/categories/${id}/delete/`;
 
       // Prevent default form submission and use AJAX
       form.onsubmit = function (e) {
