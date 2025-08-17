@@ -386,7 +386,7 @@ def category_create_view(request):
                     action="Create Category",
                     details=f"Created category '{name}' with ID {category_id}. Parent: {parent_id or 'Root'}"
                 )
-                return redirect('admin_dashboard:categories')  # Redirect to list
+                return redirect('admin_dashboard:admin_categories')  # Redirect to list
             except Exception as e:
                 form.add_error(None, f"Database error: {str(e)}")
     else:
@@ -433,7 +433,7 @@ def category_edit_view(request, category_id):
                     action="Update Category",
                     details=f"Updated category '{name}' (ID: {category_id})"
                 )
-                return redirect('admin_dashboard:categories')
+                return redirect('admin_dashboard:admin_categories')
             except Exception as e:
                 form.add_error(None, f"Update failed: {str(e)}")
     else:
