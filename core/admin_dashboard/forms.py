@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from products.models.brand import Brand
 from products.models.product import Product
 from banners.models import Banner
-from heros.models import Hero
+from heroes.models import Hero
 from blogs.models import Blog
 from news.models import News
 
