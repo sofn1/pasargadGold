@@ -27,7 +27,7 @@ from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, Brand
 
 # Shortcut to check if user is staff
 staff_required = user_passes_test(lambda u: u.is_staff, login_url='/accounts/login/')
-method_staff_required = method_decorator(staff_required)
+method_staff_required = method_decorator(staff_required, name='dispatch')
 
 User = get_user_model()
 
@@ -486,9 +486,19 @@ def category_delete_view(request, category_id):
 # =====================================
 
 # --- BLOG CRUD ---
-
-@method_staff_required
 class BlogListView(ListView):
+    model = Blog
+    template_name = 'admin_dashboard/content/blogs.html'
+    context_object_name = 'blogs'
+    paginate_by = 15
+
+    @method_staff_required
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+
+@method_decorator(staff_required, name='dispatch')
+class AdminBlogListView(ListView):
     model = Blog
     template_name = 'admin_dashboard/blogs/list.html'
     context_object_name = 'blogs'
@@ -500,7 +510,7 @@ class BlogListView(ListView):
         if q:
             qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
         return qs
-
+    
 
 @staff_required
 def blog_create_view(request):
@@ -553,9 +563,23 @@ def blog_delete_view(request, pk):
 
 
 # --- NEWS CRUD ---
-
-@method_staff_required
 class NewsListView(ListView):
+    model = News
+    template_name = 'admin_dashboard/content/news.html'
+    context_object_name = 'news_list'
+    paginate_by = 15
+
+    @method_staff_required
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        # Optional: Order by publish time, newest first
+        return News.objects.all().order_by('-publish_time')
+
+
+@method_decorator(staff_required, name='dispatch')
+class AdminNewsListView(ListView):
     model = News
     template_name = 'admin_dashboard/news/list.html'
     context_object_name = 'news_list'

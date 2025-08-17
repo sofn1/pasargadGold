@@ -19,13 +19,13 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
 
     # Blogs - CRUD
-    path('blogs/', views.BlogListView.as_view(), name='admin_blogs'),
+    path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs'),
     path('blogs/create/', views.blog_create_view, name='admin_blog_create'),
     path('blogs/<int:pk>/edit/', views.blog_edit_view, name='admin_blog_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blog_delete'),
 
     # News - CRUD
-    path('news/', views.NewsListView.as_view(), name='admin_news'),
+    path('news/', views.AdminNewsListView.as_view(), name='admin_news'),
     path('news/create/', views.news_create_view, name='admin_news_create'),
     path('news/<int:pk>/edit/', views.news_edit_view, name='admin_news_edit'),
     path('news/<int:pk>/delete/', views.news_delete_view, name='admin_news_delete'),
