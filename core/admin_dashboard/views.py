@@ -134,28 +134,6 @@ class UserDetailView(DetailView):
 # CONTENT MODERATION
 # =====================================
 
-class BlogListView(ListView):
-    model = Blog
-    template_name = 'admin_dashboard/content/blogs.html'
-    context_object_name = 'blogs'
-    paginate_by = 15
-
-    @method_staff_required
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
-
-class NewsListView(ListView):
-    model = News
-    template_name = 'admin_dashboard/content/news.html'
-    context_object_name = 'news_list'
-    paginate_by = 15
-
-    @method_staff_required
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
-
 class CommentModerationView(ListView):
     model = Comment
     template_name = 'admin_dashboard/content/comments.html'
