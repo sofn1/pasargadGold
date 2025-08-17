@@ -105,7 +105,8 @@ class UserListView(ListView):
 
     def get_queryset(self):
         query = self.request.GET.get('q')
-        qs = User.objects.all().order_by('-date_joined')
+        # Use last_login instead of date_joined
+        qs = User.objects.all().order_by('-last_login')
         if query:
             qs = qs.filter(phone_number__icontains=query) | qs.filter(full_name__icontains=query)
         return qs
