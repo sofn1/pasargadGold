@@ -1,27 +1,54 @@
 <!-- templates/admin_dashboard/categories/_category_row.html -->
 {% for cat in categories %}
 <tr>
-  <td style="padding-left: {{ level|add:1 }}rem;">
+  <!-- Category Name (with indentation) -->
+  <td style="padding-right: {{ level|add:1 }}rem;">
     <span>{{ cat.name }}</span>
   </td>
+
+  <!-- Parent Category -->
   <td>
-    <div class="btn-group">
-      <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}" class="btn btn-sm btn-warning">ویرایش</a>
+    {% if cat.parent_id %}
+      {{ cat.parent_name }}
+    {% else %}
+      <span class="text-muted">ندارد</span>
+    {% endif %}
+  </td>
+
+  <!-- Has Subcategories (Binary: دارد / ندارد) -->
+  <td>
+    {% if cat.children %}
+      <span class="badge bg-success">دارد</span>
+    {% else %}
+      <span class="badge bg-secondary">ندارد</span>
+    {% endif %}
+  </td>
+
+  <!-- Actions -->
+  <td>
+    <div class="btn-group" role="group">
+      <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}" class="btn btn-sm btn-outline-primary" title="ویرایش">
+        <i class="fas fa-edit"></i>
+      </a>
       <button type="button"
-              class="btn btn-sm btn-danger"
+              class="btn btn-sm btn-outline-danger"
               data-bs-toggle="modal"
               data-bs-target="#deleteModal"
               data-id="{{ cat.id }}"
-              data-name="{{ cat.name }}">
-        حذف
+              data-name="{{ cat.name }}"
+              title="حذف">
+        <i class="fas fa-trash"></i>
       </button>
       <a href="{% url 'admin_dashboard:admin_category_create' %}?parent_id={{ cat.id }}"
-         class="btn btn-sm btn-outline-primary">
-        زیرمجموعه +
+         class="btn btn-sm btn-outline-success"
+         title="افزودن زیرمجموعه">
+        <i class="fas fa-plus"></i>
       </a>
     </div>
   </td>
 </tr>
+
+<!-- Recursively render children -->
 {% if cat.children %}
   {% include 'admin_dashboard/categories/_category_row.html' with categories=cat.children level=level|add:2 %}
 {% endif %}

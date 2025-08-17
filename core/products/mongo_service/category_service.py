@@ -56,23 +56,43 @@ class ProductCategoryService:
     
     def get_category_tree(self, parent_id=None):
         """
-        Returns a nested tree of active categories.
+        Returns a nested tree of active categories with parent info.
         """
         query = {"is_active": True}
         if parent_id:
             query["parent_id"] = ObjectId(parent_id)
         else:
-            query["parent_id"] = None  # Root categories
+            query["parent_id"] = None
 
-        children = list(self.collection.find(query))
+        # Fetch all matching categories
+        categories_cursor = self.collection.find(query)
+        categories = []
 
-        for cat in children:
-            # Convert ObjectId to string
-            cat['id'] = str(cat['_id'])
-            cat['name'] = cat.get('name', 'نام ناشناخته')
-            cat['children'] = self.get_category_tree(parent_id=cat['_id'])
+        for cat in categories_cursor:
+            cat_id = str(cat['_id'])
+            parent_id = str(cat.get("parent_id")) if cat.get("parent_id") else None
 
-        return children
+            # Fetch parent name if exists
+            parent_name = None
+            if parent_id:
+                parent_doc = self.collection.find_one({"_id": ObjectId(parent_id)})
+                parent_name = parent_doc.get("name", "ناشناس") if parent_doc else "حذف شده"
+
+            # Build node
+            node = {
+                "id": cat_id,
+                "name": cat.get("name", "نام ناشناخته"),
+                "englishName": cat.get("englishName", ""),
+                "parent_id": parent_id,
+                "parent_name": parent_name,
+                "children": []
+            }
+
+            # Recursively get children
+            node["children"] = self.get_category_tree(parent_id=cat['_id'])
+            categories.append(node)
+
+        return categories
 
 
     def delete_category(self, category_id):

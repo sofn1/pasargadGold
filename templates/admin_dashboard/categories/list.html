@@ -6,20 +6,25 @@
 {% block mainContent %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-white">دسته‌بندی‌ها</h2>
+    <h2 class="text-white">
+      <i class="fas fa-sitemap"></i>
+      مدیریت دسته‌بندی‌ها
+    </h2>
     <a href="{% url 'admin_dashboard:admin_category_create' %}" class="btn btn-success">
       <i class="fas fa-plus"></i> افزودن دسته جدید
     </a>
   </div>
 
   {% if categories_tree %}
-  <div class="card shadow-sm">
+  <div class="card shadow-sm border-0">
     <div class="card-body p-0">
       <table class="table table-striped table-hover mb-0">
         <thead class="table-dark">
           <tr>
-            <th>نام دسته</th>
-            <th>عملیات</th>
+            <th style="width: 40%">نام دسته</th>
+            <th style="width: 30%">والد</th>
+            <th style="width: 15%">زیرمجموعه‌ها</th>
+            <th style="width: 15%">عملیات</th>
           </tr>
         </thead>
         <tbody>
@@ -29,7 +34,10 @@
     </div>
   </div>
   {% else %}
-  <div class="alert alert-info">دسته‌ای یافت نشد.</div>
+  <div class="alert alert-info text-center">
+    <i class="fas fa-folder-open fa-lg"></i>
+    هیچ دسته‌بندی‌ای یافت نشد.
+  </div>
   {% endif %}
 
   <!-- Delete Modal -->
