@@ -7,6 +7,8 @@ from banners.models import Banner
 from heroes.models import Hero
 from blogs.models.blog import Blog
 from news.models.news import News
+from products.mongo_service.category_service import ProductCategoryService
+
 
 # --- Shared Widgets ---
 class RichTextarea(forms.Textarea):
@@ -124,5 +126,17 @@ class ProductForm(forms.ModelForm):
 
 
 class CategoryForm(forms.Form):
-    name = forms.CharField(max_length=255, label="Category Name (Persian)")
-    english_name = forms.CharField(max_length=255, label="Category Name (English)", required=False)
+    name = forms.CharField(max_length=255, label="نام دسته")
+    english_name = forms.CharField(max_length=255, label="نام انگلیسی (اختیاری)", required=False)
+    parent_id = forms.ChoiceField(label="دسته والد (اختیاری)", choices=[], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        service = ProductCategoryService()
+        categories = service.get_active_categories_by_parent()  # Root-level categories
+        # Build choices: [("", "بدون والد"), ("id1", "نام دسته"), ...]
+        choices = [("", "بدون والد")]
+        for cat in categories:
+            choices.append((cat["id"], cat["name"]))
+        self.fields['parent_id'].choices = choices
+

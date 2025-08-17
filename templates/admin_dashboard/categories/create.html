@@ -1,3 +1,4 @@
+<!-- templates/admin_dashboard/categories/create.html -->
 {% extends "admin_dashboard/dashboard.html" %}
 
 {% block title %}ایجاد دسته جدید{% endblock %}
@@ -5,13 +6,30 @@
 {% block mainContent %}
 <div class="container-fluid px-4">
   <h2 class="my-4 text-white">ایجاد دسته‌بندی جدید</h2>
+
   {% if parent %}
-  <p class="text-light">زیرمجموعه: <strong>{{ parent.name }}</strong></p>
+  <div class="alert alert-info">
+    در حال ایجاد زیرمجموعه برای: <strong>{{ parent.name }}</strong>
+  </div>
   {% endif %}
 
   <form method="post" class="bg-light p-4 rounded shadow-sm">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.non_field_errors }}
+
+    {% for field in form %}
+    <div class="mb-3">
+      <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}
+      <div class="text-danger">{{ field.errors }}</div>
+      {% endif %}
+      {% if field.help_text %}
+      <small class="text-muted">{{ field.help_text }}</small>
+      {% endif %}
+    </div>
+    {% endfor %}
+
     <button type="submit" class="btn btn-success">ایجاد دسته</button>
     <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">انصراف</a>
   </form>
