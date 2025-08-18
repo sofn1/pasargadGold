@@ -351,48 +351,64 @@ def category_list_view(request):
 
 
 
+# admin_dashboard/views.py
+
 @staff_required
 def category_create_view(request):
     service = get_category_service()
-    parent_id = request.GET.get("parent_id")  # e.g., when clicking "Add Subcategory"
+    # Get parent_id from URL (e.g., "Add Subcategory" button)
+    url_parent_id = request.GET.get("parent_id")
 
     if request.method == "POST":
         form = CategoryForm(request.POST)
         if form.is_valid():
             name = form.cleaned_data["name"]
             english_name = form.cleaned_data.get("english_name", "")
-            selected_parent_id = form.cleaned_data.get("parent_id")  # May override URL
+            # ✅ Use parent_id from form (not just URL)
+            selected_parent_id = form.cleaned_data.get("parent_id")  # Can be empty
 
             try:
-                # Use form's parent_id if selected, otherwise from URL
-                final_parent_id = selected_parent_id or parent_id
+                # Use form's selection over URL
+                final_parent_id = selected_parent_id or url_parent_id
 
-                category_id = service.create_category(
-                    name=name,
-                    english_name=english_name,
-                    parent_id=final_parent_id  # Can be None
-                )
+                # Create category in MongoDB
+                result = service.collection.insert_one({
+                    "name": name,
+                    "englishName": english_name,
+                    "subCategories": [],
+                    "is_active": True,
+                    **({"parent_id": ObjectId(final_parent_id)} if final_parent_id else {})
+                })
+                category_id = str(result.inserted_id)
+
+                # Update parent's subCategories array
+                if final_parent_id:
+                    service.collection.update_one(
+                        {"_id": ObjectId(final_parent_id)},
+                        {"$push": {"subCategories": ObjectId(category_id)}}
+                    )
+
+                # Log success
                 AdminActionLog.objects.create(
                     admin=request.user,
                     action="Create Category",
-                    details=f"Created category '{name}' with ID {category_id}. Parent: {final_parent_id or 'Root'}"
+                    details=f"Created category '{name}' (ID: {category_id}) with parent: {final_parent_id or 'Root'}"
                 )
+
                 return redirect('admin_dashboard:admin_categories')
+
             except Exception as e:
-                form.add_error(None, f"خطای پایگاه داده: {str(e)}")
+                form.add_error(None, f"خطا در ایجاد دسته: {str(e)}")
+        else:
+            print("Form errors:", form.errors)  # Debug
     else:
+        # Pre-fill parent only if from URL, not from form
         form = CategoryForm()
 
-        # Pre-select parent if passed in URL
-        if parent_id:
-            # We can't set ChoiceField easily via initial, so we rely on __init__ to handle choices
-            # But we can pass initial to form if we adjust __init__
-            pass
-
     parent = None
-    if parent_id:
+    if url_parent_id:
         try:
-            parent = service.get_category(parent_id)
+            parent = service.get_category(url_parent_id)
         except:
             pass
 
