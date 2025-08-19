@@ -106,4 +106,23 @@
     </div>
   </div>
 </div>
+
+<script>
+  $(document).ready(function () {
+    $('#{{ form.parent_id.id_for_label }}').select2({
+      placeholder: "جستجو و انتخاب دسته والد...",
+      allowClear: true,
+      width: '100%',
+      language: {
+        noResults: function () {
+          return "هیچ دسته‌ای یافت نشد";
+        },
+        searching: function () {
+          return "در حال جستجو...";
+        }
+      }
+    });
+  });
+</script>
+
 {% endblock %}
