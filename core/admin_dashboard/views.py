@@ -393,78 +393,46 @@ class category_list_view(View):
         return render(request, self.template_name, {"rows": rows, "categories": rows})
 
 
-# admin_dashboard/views.py
+@method_decorator(login_required, name="dispatch")
+class CategoryListView(View):
+    template_name = "admin_dashboard/categories/list.html"
 
-@staff_required
-def category_create_view(request):
-    service = get_category_service()
-    # Get parent_id from URL (e.g., "Add Subcategory" button)
-    url_parent_id = request.GET.get("parent_id")
+    def get(self, request, *args, **kwargs):
+        col = _get_db()[CATEGORIES_COLLECTION]
+        docs = list(col.find({}, {"name":1, "slug":1, "parentId":1, "subCategories":1}))
 
-    if request.method == "POST":
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            english_name = form.cleaned_data.get("english_name", "")
-            # ✅ Use parent_id from form (not just URL)
-            selected_parent_id = form.cleaned_data.get("parent_id")  # Can be empty
+        id_to_doc = {d["_id"]: d for d in docs}
 
-            try:
-                # Use form's selection over URL
-                final_parent_id = selected_parent_id or url_parent_id
+        rows = []
+        for d in docs:
+            pid = d.get("parentId")
+            parent_name = None
+            if pid:
+                try:
+                    if isinstance(pid, str):
+                        pid = ObjectId(pid)
+                    parent = id_to_doc.get(pid)
+                    if not parent:
+                        parent = col.find_one({"_id": pid}, {"name":1})
+                    if parent:
+                        parent_name = parent.get("name")
+                except Exception:
+                    parent_name = None
 
-                # Create category in MongoDB
-                # result = service.collection.insert_one({
-                #     "name": name,
-                #     "englishName": english_name,
-                #     "subCategories": [],
-                #     "is_active": True,
-                #     **({"parent_id": ObjectId(final_parent_id)} if final_parent_id else {})
-                # })
-                # category_id = str(result.inserted_id)
-                # new
-                category_id = str(
-                    service.create_category(
-                        name=name,
-                        english_name=english_name,
-                        parent_id=final_parent_id))
+            children_ids = d.get("subCategories") or []
+            children_count = len(children_ids) if isinstance(children_ids, list) else 0
 
-                # Update parent's subCategories array
-                if final_parent_id:
-                    service.collection.update_one(
-                        {"_id": ObjectId(final_parent_id)},
-                        {"$push": {"subCategories": ObjectId(category_id)}}
-                    )
+            rows.append({
+                "id": str(d["_id"]),
+                "name": d.get("name"),
+                "slug": d.get("slug"),
+                "parent_name": parent_name,
+                "children_count": children_count,
+            })
 
-                # Log success
-                AdminActionLog.objects.create(
-                    admin=request.user,
-                    action="Create Category",
-                    details=f"Created category '{name}' (ID: {category_id}) with parent: {final_parent_id or 'Root'}"
-                )
+        rows.sort(key=lambda r: (r["parent_name"] is not None, r["name"] or ""))
 
-                return redirect('admin_dashboard:admin_categories')
-
-            except Exception as e:
-                form.add_error(None, f"خطا در ایجاد دسته: {str(e)}")
-        else:
-            print("Form errors:", form.errors)  # Debug
-    else:
-        # Pre-fill parent only if from URL, not from form
-        form = CategoryForm()
-
-    parent = None
-    if url_parent_id:
-        try:
-            parent = service.get_category(url_parent_id)
-        except:
-            pass
-
-    context = {
-        "form": form,
-        "parent": parent,
-    }
-    return render(request, "admin_dashboard/categories/create.html", context)
+        return render(request, self.template_name, {"rows": rows, "categories": rows})
 
 
 @staff_required

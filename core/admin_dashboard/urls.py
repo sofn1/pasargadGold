@@ -9,7 +9,7 @@ urlpatterns = [
     path('', views.dashboard_home, name='admin_home'),
 
     # Categories
-    path('categories/', views.category_list_view, name='admin_categories'),
+    path('categories/', views.CategoryListView.as_view(), name='admin_categories'),
     path('categories/create/', views.category_create_view, name='admin_category_create'),
     path('categories/<str:category_id>/edit/', views.category_edit_view, name='admin_category_edit'),
     path('categories/<str:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
