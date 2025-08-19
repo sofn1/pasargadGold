@@ -22,7 +22,7 @@
   </div>
 
   <!-- Category Table -->
-  {% if categories_tree %}
+  {% if categories %}
   <div class="card shadow-sm border-0">
     <div class="card-body p-0">
       <table class="table table-striped table-hover mb-0">
@@ -35,7 +35,7 @@
           </tr>
         </thead>
         <tbody>
-          {% include 'admin_dashboard/categories/_category_row.html' with categories=categories_tree level=0 %}
+          {% include 'admin_dashboard/categories/_category_row.html' with categories=categories level=0 %}
         </tbody>
       </table>
     </div>
