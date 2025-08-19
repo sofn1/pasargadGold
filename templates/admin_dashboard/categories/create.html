@@ -107,6 +107,7 @@
   </div>
 </div>
 
+{% block extra_js %}
 <script>
   $(document).ready(function () {
     $('#{{ form.parent_id.id_for_label }}').select2({
@@ -124,5 +125,6 @@
     });
   });
 </script>
+{% endblock %}
 
 {% endblock %}
