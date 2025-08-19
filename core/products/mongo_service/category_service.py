@@ -56,32 +56,39 @@ class ProductCategoryService:
 
 
     def get_category_tree(self, parent_id=None):
+        """
+        Returns a nested tree of active categories.
+        Recursively builds children under their parents.
+        """
         query = {"is_active": True}
-        if parent_id:
-            query["parent_id"] = ObjectId(parent_id)
+        if parent_id is not None:
+            # Handle both string and ObjectId
+            if isinstance(parent_id, str):
+                parent_id = ObjectId(parent_id)
+            query["parent_id"] = parent_id
         else:
-            query["parent_id"] = None
+            query["parent_id"] = None  # Root categories
 
-        # Sort by name (or add a "sort_order" field later)
         cursor = self.collection.find(query).sort("name", 1)
         categories = []
 
         for cat in cursor:
-            cat_id = str(cat['_id'])
-            parent_id = str(cat.get("parent_id")) if cat.get("parent_id") else None
+            cat_id = str(cat["_id"])
+            name = cat.get("name", "نام ناشناخته")
+            english_name = cat.get("englishName", "")
 
-            parent_name = None
-            if parent_id:
-                parent_doc = self.collection.find_one({"_id": ObjectId(parent_id)})
-                parent_name = parent_doc.get("name", "ناشناس") if parent_doc else "حذف شده"
+            # Fetch children recursively
+            children = self.get_category_tree(parent_id=cat["_id"])
+
+            # Add parent info for display
+            parent_id_val = str(cat.get("parent_id")) if cat.get("parent_id") else None
 
             node = {
                 "id": cat_id,
-                "name": cat.get("name", "نام ناشناخته"),
-                "englishName": cat.get("englishName", ""),
-                "parent_id": parent_id,
-                "parent_name": parent_name,
-                "children": self.get_category_tree(parent_id=cat['_id'])  # Recurse
+                "name": name,
+                "englishName": english_name,
+                "parent_id": parent_id_val,
+                "children": children,
             }
             categories.append(node)
 
