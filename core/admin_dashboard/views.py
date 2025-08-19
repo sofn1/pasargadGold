@@ -384,6 +384,7 @@ class CategoryListView(View):
             })
 
         rows.sort(key=lambda r: (r["parent_name"] is not None, r["name"] or ""))
+        print("rows :  ", rows)
 
         return render(request, self.template_name, {"rows": rows, "categories": rows})
 
