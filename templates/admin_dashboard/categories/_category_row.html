@@ -1,11 +1,9 @@
 {% for cat in categories %}
 <tr>
-  <!-- Category Name (indent optional; level may be undefined with flat list) -->
   <td style="padding-right: {{ level|default:0 }}rem;">
     <span>{{ cat.name }}</span>
   </td>
 
-  <!-- Parent Category -->
   <td>
     {% if cat.parent_name %}
       {{ cat.parent_name }}
@@ -14,19 +12,14 @@
     {% endif %}
   </td>
 
-  <!-- Subcategories (show count or binary) -->
   <td>
     {% if cat.children_count %}
       {{ cat.children_count }} مورد
-      {# Or, if you prefer binary:
-      <span class="badge bg-success">دارد</span>
-      #}
     {% else %}
       <span class="badge bg-secondary">ندارد</span>
     {% endif %}
   </td>
 
-  <!-- Actions -->
   <td>
     <div class="btn-group" role="group">
       <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}" class="btn btn-sm btn-outline-primary" title="ویرایش">
@@ -49,5 +42,4 @@
     </div>
   </td>
 </tr>
-{# Flat list => no recursion #}
 {% endfor %}
