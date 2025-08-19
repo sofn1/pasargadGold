@@ -231,27 +231,51 @@ class Command(BaseCommand):
         # Pass 1: upsert all categories without parentId first (collect _ids by slug)
         slug_to_id = {}
         ops = []
-        for fa, en, slug, parent_slug in data:
-            doc_filter = {"slug": slug}
-            base_doc = {
-                "name": fa,
-                "englishName": en,
-                "slug": slug,
-                "is_active": True,
-            }
-            # Do not set parentId yet (second pass), ensure subCategories exists
-            set_on_insert = {**base_doc, "subCategories": []}
+        # for fa, en, slug, parent_slug in data:
+        #     doc_filter = {"slug": slug}
+        #     base_doc = {
+        #         "name": fa,
+        #         "englishName": en,
+        #         "slug": slug,
+        #         "is_active": True,
+        #     }
+        #     # Do not set parentId yet (second pass), ensure subCategories exists
+        #     set_on_insert = {**base_doc, "subCategories": []}
 
-            ops.append(
-                UpdateOne(
-                    doc_filter,
-                    {
-                        "$set": base_doc,
-                        "$setOnInsert": set_on_insert
-                    },
-                    upsert=True
-                )
+        #     ops.append(
+        #         UpdateOne(
+        #             doc_filter,
+        #             {
+        #                 "$set": base_doc,
+        #                 "$setOnInsert": set_on_insert
+        #             },
+        #             upsert=True
+        #         )
+        #     )
+
+        # base_doc is fine:
+        base_doc = {
+            "name": fa,
+            "englishName": en,
+            "slug": slug,
+            "is_active": True,
+        }
+
+        # only insert-time fields go here:
+        set_on_insert = {
+            "subCategories": []
+        }
+
+        ops.append(
+            UpdateOne(
+                {"slug": slug},
+                {
+                    "$set": base_doc,
+                    "$setOnInsert": set_on_insert
+                },
+                upsert=True
             )
+        )
 
         if dry:
             self.stdout.write(self.style.WARNING("[DRY-RUN] Would upsert base categories (without parentId)"))
