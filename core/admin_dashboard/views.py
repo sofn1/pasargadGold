@@ -347,6 +347,7 @@ def _get_db():
 
 
 
+
 @method_decorator(login_required, name="dispatch")
 class CategoryListView(View):
     template_name = "admin_dashboard/categories/list.html"
@@ -354,28 +355,25 @@ class CategoryListView(View):
     def get(self, request, *args, **kwargs):
         col = _get_db()[CATEGORIES_COLLECTION]
 
-        # Pull minimal fields
+        # 1) Fetch minimal fields
         docs = list(col.find({}, {"name": 1, "slug": 1, "parentId": 1}))
 
-        # First pass: create node objects
+        # 2) Build nodes (with children list)
         nodes = {}
         for d in docs:
             nodes[d["_id"]] = {
                 "id": str(d["_id"]),
                 "name": d.get("name"),
                 "slug": d.get("slug"),
-                "parent_name": None,   # fill in pass 2
-                "children": [],        # required for recursion
+                "parentId": d.get("parentId"),
+                "children": [],
             }
 
-        # Second pass: wire up parents and children
+        # 3) Wire up parents/children and collect roots
         roots = []
-        for d in docs:
-            nid = d["_id"]
-            pid = d.get("parentId")
-            node = nodes[nid]
-
-            # normalize pid
+        for _id, node in nodes.items():
+            pid = node["parentId"]
+            # normalize ObjectId
             if isinstance(pid, str):
                 try:
                     pid = ObjectId(pid)
@@ -383,27 +381,40 @@ class CategoryListView(View):
                     pid = None
 
             if pid and pid in nodes:
-                parent = nodes[pid]
-                node["parent_name"] = parent["name"]
-                parent["children"].append(node)
+                nodes[pid]["children"].append(node)
             else:
-                # No parent: it's a root
                 roots.append(node)
 
-        # Sort roots and each subtree by name
+        # 4) Sort tree by name (roots and every subtree)
         def sort_tree(items):
             items.sort(key=lambda n: (n["name"] or ""))
             for n in items:
                 if n["children"]:
                     sort_tree(n["children"])
-
         sort_tree(roots)
 
-        # Send the tree into template under the keys your templates might use
+        # 5) DFS to produce a flat list with 'level', 'parent_name', 'children_count'
+        flat_rows = []
+        def dfs(node, level, parent_name=None):
+            flat_rows.append({
+                "id": node["id"],
+                "name": node["name"],
+                "slug": node["slug"],
+                "parent_name": parent_name,
+                "children_count": len(node["children"]),
+                "level": level,  # for indentation in template
+            })
+            for child in node["children"]:
+                dfs(child, level + 2, parent_name=node["name"])  # +2 = visual indent step
+
+        for r in roots:
+            dfs(r, level=0, parent_name=None)
+
+        # 6) Render using a flat loop (no recursion needed)
         return render(request, self.template_name, {
-            "categories": roots,         # preferred
-            "categories_tree": roots,    # in case template expects this
-            "rows": roots,               # safe fallback
+            "flat_rows": flat_rows,   # preferred
+            "categories": flat_rows,  # alias so partials using 'categories' still work
+            "rows": flat_rows,        # extra alias if needed
         })
 
 

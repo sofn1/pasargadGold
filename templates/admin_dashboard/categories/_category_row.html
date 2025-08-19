@@ -1,11 +1,11 @@
 {% for cat in categories %}
 <tr>
-  <!-- Indent to show hierarchy (RTL => padding-right) -->
-  <td style="padding-right: {{ level|default:0 }}rem;">
+  <!-- Indentation for hierarchy (RTL => padding-right) -->
+  <td style="padding-right: {{ cat.level|default:0 }}rem;">
     <span>{{ cat.name }}</span>
   </td>
 
-  <!-- Parent name column -->
+  <!-- Parent -->
   <td>
     {% if cat.parent_name %}
       {{ cat.parent_name }}
@@ -14,10 +14,10 @@
     {% endif %}
   </td>
 
-  <!-- Has subcategories -->
+  <!-- Children count -->
   <td>
-    {% if cat.children and cat.children|length %}
-      {{ cat.children|length }} مورد
+    {% if cat.children_count %}
+      {{ cat.children_count }} مورد
     {% else %}
       <span class="badge bg-secondary">ندارد</span>
     {% endif %}
@@ -47,10 +47,4 @@
     </div>
   </td>
 </tr>
-
-{# Recursively render children, indented #}
-{% if cat.children and cat.children|length %}
-  {% include 'admin_dashboard/categories/_category_row.html'
-     with categories=cat.children level=level|add:2 %}
-{% endif %}
 {% endfor %}
