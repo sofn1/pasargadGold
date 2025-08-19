@@ -70,14 +70,13 @@
 
         <!-- Parent -->
         <div class="col-12">
-          <label for="{{ form.parent_id.id_for_label }}" class="form-label">دسته والد</label>
+          <label for="{{ form.parent_id.id_for_label }}" class="form-label">دسته والد (اختیاری)</label>
           {{ form.parent_id }}
           {% if form.parent_id.errors %}
           <div class="text-danger">{{ form.parent_id.errors }}</div>
           {% endif %}
           <small class="text-muted">
-            <i class="fas fa-info-circle"></i>
-            نمی‌توانید دسته را زیرمجموعه خودش یا فرزندانش قرار دهید.
+            اگر این دسته زیرمجموعه دسته دیگری است، والد را انتخاب کنید.
           </small>
         </div>
 
@@ -116,4 +115,24 @@
 
 <!-- Include Delete Modal -->
 {% include 'admin_dashboard/_delete_modal.html' with object_type="دسته" return_url="admin_dashboard:admin_categories" %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#{{ form.parent_id.id_for_label }}').select2({
+      placeholder: "جستجو و انتخاب دسته والد...",
+      allowClear: true,
+      width: '100%',
+      language: {
+        noResults: function () {
+          return "هیچ دسته‌ای یافت نشد";
+        },
+        searching: function () {
+          return "در حال جستجو...";
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}
