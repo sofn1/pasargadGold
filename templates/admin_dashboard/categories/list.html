@@ -5,6 +5,7 @@
 
 {% block mainContent %}
 <div class="container-fluid px-4">
+  <!-- Header: Title + Create Button -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-white">
       <i class="fas fa-sitemap"></i>
@@ -15,6 +16,12 @@
     </a>
   </div>
 
+  <!-- 🔍 Search Box -->
+  <div class="mb-4">
+    <input type="text" id="categorySearch" class="form-control" placeholder="جستجو در دسته‌ها..." />
+  </div>
+
+  <!-- Category Table -->
   {% if categories_tree %}
   <div class="card shadow-sm border-0">
     <div class="card-body p-0">
@@ -43,4 +50,16 @@
   <!-- Delete Modal -->
   {% include 'admin_dashboard/_delete_modal.html' with object_type="دسته" return_url="admin_dashboard:admin_categories" %}
 </div>
+
+<!-- ✅ Add the search script at the end of mainContent -->
+<script>
+  document.getElementById('categorySearch').addEventListener('keyup', function () {
+    const term = this.value.toLowerCase();
+    document.querySelectorAll('tbody tr').forEach(tr => {
+      const text = tr.textContent.toLowerCase();
+      tr.style.display = text.includes(term) ? '' : 'none';
+    });
+  });
+</script>
+
 {% endblock %}

@@ -5,33 +5,105 @@
 
 {% block mainContent %}
 <div class="container-fluid px-4">
-  <h2 class="my-4 text-white">ایجاد دسته‌بندی جدید</h2>
-
-  {% if parent %}
-  <div class="alert alert-info">
-    در حال ایجاد زیرمجموعه برای: <strong>{{ parent.name }}</strong>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">
+      <i class="fas fa-folder-plus"></i>
+      ایجاد دسته‌بندی جدید
+    </h2>
+    <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </a>
   </div>
+
+  <!-- Breadcrumb if coming from parent -->
+  {% if parent %}
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:admin_categories' %}">همه دسته‌ها</a></li>
+      <li class="breadcrumb-item active">ایجاد زیرمجموعه برای "{{ parent.name }}"</li>
+    </ol>
+  </nav>
   {% endif %}
 
-  <form method="post" class="bg-light p-4 rounded shadow-sm">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    {% for field in form %}
-    <div class="mb-3">
-      <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-      {{ field }}
-      {% if field.errors %}
-      <div class="text-danger">{{ field.errors }}</div>
-      {% endif %}
-      {% if field.help_text %}
-      <small class="text-muted">{{ field.help_text }}</small>
-      {% endif %}
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-edit"></i>
+        فرم ایجاد دسته
+      </h5>
     </div>
-    {% endfor %}
+    <div class="card-body">
+      <!-- Show errors -->
+      {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>خطاهای فرم:</strong>
+        <ul class="mb-0">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ field|capfirst }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
 
-    <button type="submit" class="btn btn-success">ایجاد دسته</button>
-    <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">انصراف</a>
-  </form>
+      <form method="post" class="row g-4">
+        {% csrf_token %}
+
+        <!-- Name -->
+        <div class="col-md-6">
+          <label for="{{ form.name.id_for_label }}" class="form-label">نام دسته</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <div class="text-danger">{{ form.name.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- English Name -->
+        <div class="col-md-6">
+          <label for="{{ form.english_name.id_for_label }}" class="form-label">نام انگلیسی (اختیاری)</label>
+          {{ form.english_name }}
+          {% if form.english_name.errors %}
+          <div class="text-danger">{{ form.english_name.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Parent -->
+        <div class="col-12">
+          <label for="{{ form.parent_id.id_for_label }}" class="form-label">دسته والد (اختیاری)</label>
+          {{ form.parent_id }}
+          {% if form.parent_id.errors %}
+          <div class="text-danger">{{ form.parent_id.errors }}</div>
+          {% endif %}
+          <small class="text-muted">
+            اگر این دسته زیرمجموعه دسته دیگری است، والد را انتخاب کنید.
+          </small>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 mt-4">
+          <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save"></i> ایجاد دسته
+          </button>
+          <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-outline-secondary btn-lg ms-2">
+            انصراف
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Card -->
+  <div class="card shadow-sm mt-4 border-info">
+    <div class="card-body">
+      <h6 class="text-info">
+        <i class="fas fa-lightbulb"></i>
+        نکته
+      </h6>
+      <p class="mb-0">
+        بعد از ایجاد، می‌توانید دسته را ویرایش کنید تا تصویر یا توضیحات اضافه کنید (در صورت پشتیبانی از این فیلدها در آینده).
+      </p>
+    </div>
+  </div>
 </div>
 {% endblock %}

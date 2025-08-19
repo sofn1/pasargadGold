@@ -53,43 +53,36 @@ class ProductCategoryService:
             }
             for cat in categories
         ]
-    
+
+
     def get_category_tree(self, parent_id=None):
-        """
-        Returns a nested tree of active categories with parent info.
-        """
         query = {"is_active": True}
         if parent_id:
             query["parent_id"] = ObjectId(parent_id)
         else:
             query["parent_id"] = None
 
-        # Fetch all matching categories
-        categories_cursor = self.collection.find(query)
+        # Sort by name (or add a "sort_order" field later)
+        cursor = self.collection.find(query).sort("name", 1)
         categories = []
 
-        for cat in categories_cursor:
+        for cat in cursor:
             cat_id = str(cat['_id'])
             parent_id = str(cat.get("parent_id")) if cat.get("parent_id") else None
 
-            # Fetch parent name if exists
             parent_name = None
             if parent_id:
                 parent_doc = self.collection.find_one({"_id": ObjectId(parent_id)})
                 parent_name = parent_doc.get("name", "ناشناس") if parent_doc else "حذف شده"
 
-            # Build node
             node = {
                 "id": cat_id,
                 "name": cat.get("name", "نام ناشناخته"),
                 "englishName": cat.get("englishName", ""),
                 "parent_id": parent_id,
                 "parent_name": parent_name,
-                "children": []
+                "children": self.get_category_tree(parent_id=cat['_id'])  # Recurse
             }
-
-            # Recursively get children
-            node["children"] = self.get_category_tree(parent_id=cat['_id'])
             categories.append(node)
 
         return categories
