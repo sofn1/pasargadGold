@@ -1,24 +1,26 @@
-<!-- templates/admin_dashboard/categories/_category_row.html -->
 {% for cat in categories %}
 <tr>
-  <!-- Category Name (with indentation) -->
-  <td style="padding-right: {{ level|add:1 }}rem;">
+  <!-- Category Name (indent optional; level may be undefined with flat list) -->
+  <td style="padding-right: {{ level|default:0 }}rem;">
     <span>{{ cat.name }}</span>
   </td>
 
   <!-- Parent Category -->
   <td>
-    {% if cat.parent_id %}
+    {% if cat.parent_name %}
       {{ cat.parent_name }}
     {% else %}
       <span class="text-muted">ندارد</span>
     {% endif %}
   </td>
 
-  <!-- Has Subcategories (Binary: دارد / ندارد) -->
+  <!-- Subcategories (show count or binary) -->
   <td>
-    {% if cat.children %}
+    {% if cat.children_count %}
+      {{ cat.children_count }} مورد
+      {# Or, if you prefer binary:
       <span class="badge bg-success">دارد</span>
+      #}
     {% else %}
       <span class="badge bg-secondary">ندارد</span>
     {% endif %}
@@ -47,9 +49,5 @@
     </div>
   </td>
 </tr>
-
-<!-- Recursively render children -->
-{% if cat.children %}
-  {% include 'admin_dashboard/categories/_category_row.html' with categories=cat.children level=level|add:2 %}
-{% endif %}
+{# Flat list => no recursion #}
 {% endfor %}

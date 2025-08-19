@@ -25,6 +25,12 @@ from accounts.models import User  # Assuming custom user model
 from products.mongo_service.category_service import ProductCategoryService
 from datetime import timedelta
 from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm
+from django.conf import settings
+from pymongo import MongoClient
+
+MONGO_URI = getattr(settings, "MONGO_URI", "mongodb://admin:securepassword@127.0.0.1:27017/goldsite?authSource=admin")
+MONGO_DB_NAME = getattr(settings, "MONGO_DB_NAME", "goldsite")
+CATEGORIES_COLLECTION = getattr(settings, "MONGODB_CATEGORIES_COLLECTION", "product_categories")
 
 # Shortcut to check if user is staff
 staff_required = user_passes_test(lambda u: u.is_staff, login_url='/accounts/login/')
@@ -336,19 +342,54 @@ def get_category_service():
     return ProductCategoryService()
 
 
+def _get_db():
+    return MongoClient(MONGO_URI)[MONGO_DB_NAME]
+
 @staff_required
-def category_list_view(request):
-    """List categories in a hierarchical tree."""
-    service = get_category_service()
+class CategoryListView(View):
+    template_name = "admin_dashboard/categories/list.html"
 
-    # Get full tree (root level)
-    categories_tree = service.get_category_tree(parent_id=None)
+    def get(self, request, *args, **kwargs):
+        col = _get_db()[CATEGORIES_COLLECTION]
 
-    context = {
-        "categories_tree": categories_tree,
-    }
-    return render(request, "admin_dashboard/categories/list.html", context)
+        # Pull minimal fields we need
+        docs = list(col.find({}, {"name": 1, "slug": 1, "parentId": 1, "subCategories": 1}))
 
+        # Build a quick lookup for parent names
+        id_to_doc = {d["_id"]: d for d in docs}
+
+        rows = []
+        for d in docs:
+            pid = d.get("parentId")
+            parent_name = None
+            if pid:
+                try:
+                    # Be robust if somehow stored as string
+                    if isinstance(pid, str):
+                        pid = ObjectId(pid)
+                    parent = id_to_doc.get(pid) or col.find_one({"_id": pid}, {"name": 1})
+                    if parent:
+                        parent_name = parent.get("name")
+                except Exception:
+                    parent_name = None
+
+            # Children are ObjectIds in subCategories
+            children_ids = d.get("subCategories") or []
+            children_count = len(children_ids) if isinstance(children_ids, list) else 0
+
+            rows.append({
+                "id": str(d["_id"]),
+                "name": d.get("name"),
+                "slug": d.get("slug"),
+                "parent_name": parent_name,     # None => "ندارد" in template
+                "children_count": children_count,  # 0 => "ندارد" in template
+            })
+
+        # Optional: roots first, then alphabetical
+        rows.sort(key=lambda r: (r["parent_name"] is not None, r["name"] or ""))
+
+        # Keep old context key if your template expects 'categories'
+        return render(request, self.template_name, {"rows": rows, "categories": rows})
 
 
 # admin_dashboard/views.py
