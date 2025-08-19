@@ -28,8 +28,8 @@ from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, Brand
 from django.conf import settings
 from pymongo import MongoClient
 
-MONGO_URI = getattr(settings, "MONGO_URI", "mongodb://admin:securepassword@127.0.0.1:27017/goldsite?authSource=admin")
-MONGO_DB_NAME = getattr(settings, "MONGO_DB_NAME", "goldsite")
+MONGO_URI = settings.MONGO_URI
+MONGO_DB_NAME = settings.MONGO_DB_NAME
 CATEGORIES_COLLECTION = getattr(settings, "MONGODB_CATEGORIES_COLLECTION", "product_categories")
 
 # Shortcut to check if user is staff
