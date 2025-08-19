@@ -228,101 +228,82 @@ class Command(BaseCommand):
             ("راهنمای سایز", "Size Guide", "size-guide", "shopping-guide"),
         ]
 
-        # Pass 1: upsert all categories without parentId first (collect _ids by slug)
+        # --------------------------
+        # Pass 1: upsert all categories (no parentId yet)
+        # --------------------------
         slug_to_id = {}
         ops = []
-        # for fa, en, slug, parent_slug in data:
-        #     doc_filter = {"slug": slug}
-        #     base_doc = {
-        #         "name": fa,
-        #         "englishName": en,
-        #         "slug": slug,
-        #         "is_active": True,
-        #     }
-        #     # Do not set parentId yet (second pass), ensure subCategories exists
-        #     set_on_insert = {**base_doc, "subCategories": []}
 
-        #     ops.append(
-        #         UpdateOne(
-        #             doc_filter,
-        #             {
-        #                 "$set": base_doc,
-        #                 "$setOnInsert": set_on_insert
-        #             },
-        #             upsert=True
-        #         )
-        #     )
+        for fa, en, slug, parent_slug in data:
+            # fields we always want to set/update
+            base_doc = {
+                "name": fa,
+                "englishName": en,
+                "slug": slug,
+                "is_active": True,
+            }
+            # fields only on first insert
+            set_on_insert = {
+                "subCategories": []
+            }
 
-        # base_doc is fine:
-        base_doc = {
-            "name": fa,
-            "englishName": en,
-            "slug": slug,
-            "is_active": True,
-        }
-
-        # only insert-time fields go here:
-        set_on_insert = {
-            "subCategories": []
-        }
-
-        ops.append(
-            UpdateOne(
-                {"slug": slug},
-                {
-                    "$set": base_doc,
-                    "$setOnInsert": set_on_insert
-                },
-                upsert=True
+            ops.append(
+                UpdateOne(
+                    {"slug": slug},
+                    {
+                        "$set": base_doc,
+                        "$setOnInsert": set_on_insert
+                    },
+                    upsert=True
+                )
             )
-        )
 
         if dry:
             self.stdout.write(self.style.WARNING("[DRY-RUN] Would upsert base categories (without parentId)"))
         else:
             res = col.bulk_write(ops, ordered=False)
-            self.stdout.write(self.style.SUCCESS(f"Upserted {res.upserted_count} (inserted) / matched {res.matched_count} categories."))
+            self.stdout.write(self.style.SUCCESS(
+                f"Upserted {res.upserted_count} (inserted) / matched {res.matched_count} categories."
+            ))
 
+        # If DRY-RUN, stop before wiring relations to avoid noisy 'missing parent' logs
+        if dry:
+            planned_links = sum(1 for _, _, _, parent_slug in data if parent_slug)
+            self.stdout.write(self.style.WARNING(f"[DRY-RUN] Would set ~{planned_links} parent/child relationships"))
+            self.stdout.write(self.style.SUCCESS("✅ Dry-run complete (no DB writes)."))
+            return
+
+        # --------------------------
         # Load IDs after upsert
+        # --------------------------
         for doc in col.find({}, {"slug": 1}):
             slug_to_id[doc["slug"]] = doc["_id"]
 
+        # --------------------------
         # Pass 2: set parentId and maintain subCategories
+        # --------------------------
         updates = []
         for fa, en, slug, parent_slug in data:
             if parent_slug:
                 child_id = slug_to_id.get(slug)
                 parent_id = slug_to_id.get(parent_slug)
                 if not child_id or not parent_id:
-                    self.stdout.write(self.style.ERROR(f"Missing parent/child for slug='{slug}', parent='{parent_slug}'"))
-                    continue
-
-                updates.append(
-                    UpdateOne(
-                        {"_id": child_id},
-                        {"$set": {"parentId": parent_id}}
-                    )
-                )
-                # push child into parent's subCategories if not already there
-                updates.append(
-                    UpdateOne(
-                        {"_id": parent_id},
-                        {"$addToSet": {"subCategories": child_id}}
-                    )
-                )
+                    self.stdout.write(self.style.ERROR(
+                        f"Missing parent/child for slug='{slug}', parent='{parent_slug}'"
+                    ))
+                else:
+                    # link child -> parent
+                    updates.append(UpdateOne({"_id": child_id}, {"$set": {"parentId": parent_id}}))
+                    # add child into parent's subCategories (no duplicates)
+                    updates.append(UpdateOne({"_id": parent_id}, {"$addToSet": {"subCategories": child_id}}))
             else:
-                # ensure roots have no parentId (or explicitly set to None)
+                # ensure roots have no parentId
                 cat_id = slug_to_id.get(slug)
                 if cat_id:
-                    updates.append(
-                        UpdateOne({"_id": cat_id}, {"$unset": {"parentId": ""}})
-                    )
+                    updates.append(UpdateOne({"_id": cat_id}, {"$unset": {"parentId": ""}}))
 
-        if dry:
-            self.stdout.write(self.style.WARNING("[DRY-RUN] Would set parentId and subCategories relationships"))
-        else:
-            if updates:
-                res2 = col.bulk_write(updates, ordered=False)
-                self.stdout.write(self.style.SUCCESS("Parent/child relationships updated."))
+        if updates:
+            res2 = col.bulk_write(updates, ordered=False)
+            self.stdout.write(self.style.SUCCESS("Parent/child relationships updated."))
 
         self.stdout.write(self.style.SUCCESS("✅ Category seeding complete."))
