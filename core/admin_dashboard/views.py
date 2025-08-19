@@ -346,47 +346,65 @@ def _get_db():
     return MongoClient(MONGO_URI)[MONGO_DB_NAME]
 
 
+
 @method_decorator(login_required, name="dispatch")
 class CategoryListView(View):
     template_name = "admin_dashboard/categories/list.html"
 
     def get(self, request, *args, **kwargs):
         col = _get_db()[CATEGORIES_COLLECTION]
-        docs = list(col.find({}, {"name":1, "slug":1, "parentId":1, "subCategories":1}))
 
-        id_to_doc = {d["_id"]: d for d in docs}
+        # Pull minimal fields
+        docs = list(col.find({}, {"name": 1, "slug": 1, "parentId": 1}))
 
-        rows = []
+        # First pass: create node objects
+        nodes = {}
         for d in docs:
-            pid = d.get("parentId")
-            parent_name = None
-            if pid:
-                try:
-                    if isinstance(pid, str):
-                        pid = ObjectId(pid)
-                    parent = id_to_doc.get(pid)
-                    if not parent:
-                        parent = col.find_one({"_id": pid}, {"name":1})
-                    if parent:
-                        parent_name = parent.get("name")
-                except Exception:
-                    parent_name = None
-
-            children_ids = d.get("subCategories") or []
-            children_count = len(children_ids) if isinstance(children_ids, list) else 0
-
-            rows.append({
+            nodes[d["_id"]] = {
                 "id": str(d["_id"]),
                 "name": d.get("name"),
                 "slug": d.get("slug"),
-                "parent_name": parent_name,
-                "children_count": children_count,
-            })
+                "parent_name": None,   # fill in pass 2
+                "children": [],        # required for recursion
+            }
 
-        rows.sort(key=lambda r: (r["parent_name"] is not None, r["name"] or ""))
-        print("rows :  ", rows)
+        # Second pass: wire up parents and children
+        roots = []
+        for d in docs:
+            nid = d["_id"]
+            pid = d.get("parentId")
+            node = nodes[nid]
 
-        return render(request, self.template_name, {"rows": rows, "categories": rows})
+            # normalize pid
+            if isinstance(pid, str):
+                try:
+                    pid = ObjectId(pid)
+                except Exception:
+                    pid = None
+
+            if pid and pid in nodes:
+                parent = nodes[pid]
+                node["parent_name"] = parent["name"]
+                parent["children"].append(node)
+            else:
+                # No parent: it's a root
+                roots.append(node)
+
+        # Sort roots and each subtree by name
+        def sort_tree(items):
+            items.sort(key=lambda n: (n["name"] or ""))
+            for n in items:
+                if n["children"]:
+                    sort_tree(n["children"])
+
+        sort_tree(roots)
+
+        # Send the tree into template under the keys your templates might use
+        return render(request, self.template_name, {
+            "categories": roots,         # preferred
+            "categories_tree": roots,    # in case template expects this
+            "rows": roots,               # safe fallback
+        })
 
 
 # admin_dashboard/views.py

@@ -1,9 +1,11 @@
 {% for cat in categories %}
 <tr>
+  <!-- Indent to show hierarchy (RTL => padding-right) -->
   <td style="padding-right: {{ level|default:0 }}rem;">
     <span>{{ cat.name }}</span>
   </td>
 
+  <!-- Parent name column -->
   <td>
     {% if cat.parent_name %}
       {{ cat.parent_name }}
@@ -12,17 +14,20 @@
     {% endif %}
   </td>
 
+  <!-- Has subcategories -->
   <td>
-    {% if cat.children_count %}
-      {{ cat.children_count }} مورد
+    {% if cat.children and cat.children|length %}
+      {{ cat.children|length }} مورد
     {% else %}
       <span class="badge bg-secondary">ندارد</span>
     {% endif %}
   </td>
 
+  <!-- Actions -->
   <td>
     <div class="btn-group" role="group">
-      <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}" class="btn btn-sm btn-outline-primary" title="ویرایش">
+      <a href="{% url 'admin_dashboard:admin_category_edit' cat.id %}"
+         class="btn btn-sm btn-outline-primary" title="ویرایش">
         <i class="fas fa-edit"></i>
       </a>
       <button type="button"
@@ -42,4 +47,10 @@
     </div>
   </td>
 </tr>
+
+{# Recursively render children, indented #}
+{% if cat.children and cat.children|length %}
+  {% include 'admin_dashboard/categories/_category_row.html'
+     with categories=cat.children level=level|add:2 %}
+{% endif %}
 {% endfor %}

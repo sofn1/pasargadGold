@@ -22,30 +22,26 @@
   </div>
 
   <!-- Category Table -->
-  {% if categories %}
-  <div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0">
-        <thead class="table-dark">
+  {% with cats=categories|default:rows|default:categories_tree %}
+    {% if cats %}
+      <table class="table">
+        <thead>
           <tr>
-            <th style="width: 40%">نام دسته</th>
-            <th style="width: 30%">والد</th>
-            <th style="width: 15%">زیرمجموعه‌ها</th>
-            <th style="width: 15%">عملیات</th>
+            <th>نام دسته</th>
+            <th>والد</th>
+            <th>زیرمجموعه‌ها</th>
+            <th>عملیات</th>
           </tr>
         </thead>
         <tbody>
-          {% include 'admin_dashboard/categories/_category_row.html' with categories=categories level=0 %}
+          {% include "admin_dashboard/categories/_category_row.html" with categories=cats level=0 %}
         </tbody>
       </table>
-    </div>
-  </div>
-  {% else %}
-  <div class="alert alert-info text-center">
-    <i class="fas fa-folder-open fa-lg"></i>
-    هیچ دسته‌بندی‌ای یافت نشد.
-  </div>
-  {% endif %}
+    {% else %}
+      <div class="alert alert-info">هیچ دسته‌ای برای نمایش وجود ندارد.</div>
+    {% endif %}
+  {% endwith %}
+
 
   <!-- Delete Modal -->
   {% include 'admin_dashboard/_delete_modal.html' with object_type="دسته" return_url="admin_dashboard:admin_categories" %}
