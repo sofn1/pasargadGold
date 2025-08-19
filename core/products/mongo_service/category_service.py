@@ -10,21 +10,25 @@ class ProductCategoryService:
         self.collection = self.db.product_categories
 
     def create_category(self, name, english_name, parent_id=None):
-        category = {
+        doc = {
             "name": name,
             "englishName": english_name,
             "subCategories": [],
-            "is_active": True
+            "is_active": True,
         }
-        result = self.collection.insert_one(category)
+        if parent_id:
+            doc["parentId"] = ObjectId(parent_id)
 
+        res = self.collection.insert_one(doc)
+
+        # also push into parent's subCategories if parent provided
         if parent_id:
             self.collection.update_one(
                 {"_id": ObjectId(parent_id)},
-                {"$push": {"subCategories": result.inserted_id}}
+                {"$push": {"subCategories": res.inserted_id}}
             )
 
-        return str(result.inserted_id)
+        return res.inserted_id
 
     def get_category(self, category_id):
         return self.collection.find_one({"_id": ObjectId(category_id)})

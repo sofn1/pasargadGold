@@ -372,14 +372,20 @@ def category_create_view(request):
                 final_parent_id = selected_parent_id or url_parent_id
 
                 # Create category in MongoDB
-                result = service.collection.insert_one({
-                    "name": name,
-                    "englishName": english_name,
-                    "subCategories": [],
-                    "is_active": True,
-                    **({"parent_id": ObjectId(final_parent_id)} if final_parent_id else {})
-                })
-                category_id = str(result.inserted_id)
+                # result = service.collection.insert_one({
+                #     "name": name,
+                #     "englishName": english_name,
+                #     "subCategories": [],
+                #     "is_active": True,
+                #     **({"parent_id": ObjectId(final_parent_id)} if final_parent_id else {})
+                # })
+                # category_id = str(result.inserted_id)
+                # new
+                category_id = str(
+                    service.create_category(
+                        name=name,
+                        english_name=english_name,
+                        parent_id=final_parent_id))
 
                 # Update parent's subCategories array
                 if final_parent_id:
