@@ -345,8 +345,9 @@ def get_category_service():
 def _get_db():
     return MongoClient(MONGO_URI)[MONGO_DB_NAME]
 
+
 @staff_required
-class CategoryListView(View):
+class category_list_view(View):
     template_name = "admin_dashboard/categories/list.html"
 
     def get(self, request, *args, **kwargs):
