@@ -1,34 +1,27 @@
-# core/products/management/commands/seed_categories.py
+# -*- coding: utf-8 -*-
 from django.core.management import BaseCommand
-from bson import ObjectId
-from django.conf import settings
+from django.db import transaction
+from categories.models import Category
 
-# If you already have a Mongo client factory, import and use it instead.
-from pymongo import MongoClient, UpdateOne, ASCENDING
-
-# ====== CONFIGURE THIS IF NEEDED ======
-MONGODB_URI = getattr(settings, "MONGO_URI", "mongodb://admin:securepassword@127.0.0.1:27017/goldsite?authSource=admin")
-MONGODB_DB = getattr(settings, "MONGO_DB_NAME", "goldsite")
-CATEGORIES_COLLECTION = getattr(settings, "MONGODB_CATEGORIES_COLLECTION", "product_categories")
-# =============================================
-
-def get_db():
-    client = MongoClient(MONGODB_URI)
-    return client[MONGODB_DB]
 
 class Command(BaseCommand):
-    help = "Seeds MongoDB product categories with hierarchy, parentId, and subCategories."
+    help = "Seeds Category rows in Postgres with hierarchy (parent) based on a flat list (fa, en, slug, parent_slug)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--dry-run", action="store_true", help="Show what would be written without committing changes.")
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Show what would be written without committing changes.",
+        )
+        parser.add_argument(
+            "--update-names",
+            action="store_true",
+            help="Also update existing categories' name/english_name/is_active=True if they differ.",
+        )
 
     def handle(self, *args, **opts):
         dry = opts["dry_run"]
-        db = get_db()
-        col = db[CATEGORIES_COLLECTION]
-
-        # Ensure unique index on slug (so admin mistakes can’t create dupes)
-        col.create_index([("slug", ASCENDING)], unique=True)
+        update_names = opts["update_names"]
 
         # --------------------------
         # Category data (flattened)
@@ -228,82 +221,76 @@ class Command(BaseCommand):
             ("راهنمای سایز", "Size Guide", "size-guide", "shopping-guide"),
         ]
 
-        # --------------------------
-        # Pass 1: upsert all categories (no parentId yet)
-        # --------------------------
-        slug_to_id = {}
-        ops = []
-
+        # ---------- Plan / Lookups ----------
+        all_existing = {c.slug: c for c in Category.objects.all()}
+        to_create = []
+        will_update = []
         for fa, en, slug, parent_slug in data:
-            # fields we always want to set/update
-            base_doc = {
-                "name": fa,
-                "englishName": en,
-                "slug": slug,
-                "is_active": True,
-            }
-            # fields only on first insert
-            set_on_insert = {
-                "subCategories": []
-            }
+            obj = all_existing.get(slug)
+            if obj is None:
+                to_create.append(Category(name=fa, english_name=en, slug=slug, is_active=True))
+            else:
+                if update_names:
+                    changed = False
+                    if obj.name != fa:
+                        obj.name = fa
+                        changed = True
+                    if obj.english_name != en:
+                        obj.english_name = en
+                        changed = True
+                    if not obj.is_active:
+                        obj.is_active = True
+                        changed = True
+                    if changed:
+                        will_update.append(obj)
 
-            ops.append(
-                UpdateOne(
-                    {"slug": slug},
-                    {
-                        "$set": base_doc,
-                        "$setOnInsert": set_on_insert
-                    },
-                    upsert=True
-                )
-            )
-
+        # ---------- DRY RUN ----------
         if dry:
-            self.stdout.write(self.style.WARNING("[DRY-RUN] Would upsert base categories (without parentId)"))
-        else:
-            res = col.bulk_write(ops, ordered=False)
-            self.stdout.write(self.style.SUCCESS(
-                f"Upserted {res.upserted_count} (inserted) / matched {res.matched_count} categories."
-            ))
+            created_count = len(to_create)
+            updated_count = len(will_update) if update_names else 0
 
-        # If DRY-RUN, stop before wiring relations to avoid noisy 'missing parent' logs
-        if dry:
-            planned_links = sum(1 for _, _, _, parent_slug in data if parent_slug)
-            self.stdout.write(self.style.WARNING(f"[DRY-RUN] Would set ~{planned_links} parent/child relationships"))
+            # Parent link plan
+            parent_fix = 0
+            for fa, en, slug, parent_slug in data:
+                child_exists = slug in all_existing or any(x.slug == slug for x in to_create)
+                if not child_exists:
+                    continue
+                if parent_slug:
+                    parent_exists = parent_slug in all_existing or any(x.slug == parent_slug for x in to_create)
+                    if not parent_exists:
+                        self.stdout.write(self.style.ERROR(f"[DRY] Missing parent for slug='{slug}', parent='{parent_slug}'"))
+                    else:
+                        parent_fix += 1
+                else:
+                    parent_fix += 1  # ensure root
+
+            self.stdout.write(self.style.WARNING(f"[DRY-RUN] Would create: {created_count}, update: {updated_count}, set parent links: ~{parent_fix}"))
             self.stdout.write(self.style.SUCCESS("✅ Dry-run complete (no DB writes)."))
             return
 
-        # --------------------------
-        # Load IDs after upsert
-        # --------------------------
-        for doc in col.find({}, {"slug": 1}):
-            slug_to_id[doc["slug"]] = doc["_id"]
+        # ---------- WRITE ----------
+        with transaction.atomic():
+            # Pass 1: create + update names (if requested)
+            if to_create:
+                Category.objects.bulk_create(to_create, ignore_conflicts=True)
+            if will_update:
+                Category.objects.bulk_update(will_update, ["name", "english_name", "is_active"])
 
-        # --------------------------
-        # Pass 2: set parentId and maintain subCategories
-        # --------------------------
-        updates = []
-        for fa, en, slug, parent_slug in data:
-            if parent_slug:
-                child_id = slug_to_id.get(slug)
-                parent_id = slug_to_id.get(parent_slug)
-                if not child_id or not parent_id:
-                    self.stdout.write(self.style.ERROR(
-                        f"Missing parent/child for slug='{slug}', parent='{parent_slug}'"
-                    ))
-                else:
-                    # link child -> parent
-                    updates.append(UpdateOne({"_id": child_id}, {"$set": {"parentId": parent_id}}))
-                    # add child into parent's subCategories (no duplicates)
-                    updates.append(UpdateOne({"_id": parent_id}, {"$addToSet": {"subCategories": child_id}}))
-            else:
-                # ensure roots have no parentId
-                cat_id = slug_to_id.get(slug)
-                if cat_id:
-                    updates.append(UpdateOne({"_id": cat_id}, {"$unset": {"parentId": ""}}))
+            # Refresh map after writes
+            all_existing = {c.slug: c for c in Category.objects.all()}
 
-        if updates:
-            res2 = col.bulk_write(updates, ordered=False)
-            self.stdout.write(self.style.SUCCESS("Parent/child relationships updated."))
+            # Pass 2: set parents
+            to_link = []
+            for fa, en, slug, parent_slug in data:
+                child = all_existing.get(slug)
+                if not child:
+                    continue
+                desired_parent = all_existing.get(parent_slug) if parent_slug else None
+                desired_parent_id = desired_parent.id if desired_parent else None
+                if child.parent_id != desired_parent_id:
+                    child.parent = desired_parent
+                    to_link.append(child)
+            if to_link:
+                Category.objects.bulk_update(to_link, ["parent"])
 
         self.stdout.write(self.style.SUCCESS("✅ Category seeding complete."))
