@@ -41,10 +41,19 @@
     </label>
 
     {% if form.instance.pk and form.instance.image %}
-      <div class="mb-2">
-        <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" style="max-height: 96px; border-radius: .5rem;">
-      </div>
+      {% with img_url=form.instance.image.url|default:form.instance.image.name|default:'' %}
+        {% if img_url %}
+          <div class="mb-2">
+            <img
+              src="{% if img_url|slice:':1' == '/' %}{{ img_url }}{% else %}{{ MEDIA_URL }}{{ img_url }}{% endif %}"
+              alt="{{ form.instance.name }}"
+              style="max-height:96px;border-radius:.5rem;"
+            >
+          </div>
+        {% endif %}
+      {% endwith %}
     {% endif %}
+
 
     <input
       type="file"
