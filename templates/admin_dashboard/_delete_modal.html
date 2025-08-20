@@ -1,4 +1,4 @@
-<!-- Reusable Delete Modal (GLOBAL, UUID-safe) -->
+<!-- Reusable Delete Modal (GLOBAL, UUID/int safe) -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -31,21 +31,23 @@
     var nameEl = document.getElementById('del-name');
     var form   = document.getElementById('delete-form');
 
-    // Use a VALID dummy UUID that satisfies Django's <uuid:...> converter.
-    // We'll reverse with this value, then replace it with the real id in JS.
-    var DUMMY_UUID = "00000000-0000-0000-0000-000000000000";
-
-    // You MUST pass delete_url_name from the including template:
-    // e.g. delete_url_name='admin_dashboard:admin_category_delete'
-    var urlTemplate = "{% url delete_url_name DUMMY_UUID %}".replace("DUMMY_UUID", DUMMY_UUID);
+    // --- Build a URL template at render-time with a VALID dummy PK ---
+    // If the including template passes delete_dummy_pk (e.g., 0 for int routes), use it.
+    // Otherwise default to a zero-UUID for <uuid:...> routes.
+    {% if delete_dummy_pk %}
+      var DUMMY_PK = "{{ delete_dummy_pk }}";
+      var urlTemplate = "{% url delete_url_name delete_dummy_pk %}";
+    {% else %}
+      var DUMMY_PK = "00000000-0000-0000-0000-000000000000";
+      var urlTemplate = "{% url delete_url_name '00000000-0000-0000-0000-000000000000' %}";
+    {% endif %}
 
     function buildDeleteUrl(id) {
-      // Works for UUIDs or integers (if your route uses int)
-      return urlTemplate.replace(DUMMY_UUID, id);
+      return urlTemplate.replace(DUMMY_PK, id);
     }
 
     modal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget; // the trigger button in the row
+      var button = event.relatedTarget; // trigger button in row
       if (!button) return;
 
       var id   = button.getAttribute('data-id');
@@ -76,7 +78,7 @@
         .then(function(result) {
           if (!result.ok) throw new Error('Delete failed');
 
-          // If your view returns JSON {success: true} for AJAX, remove the row. Else reload.
+          // If your view returns JSON {success: true} for AJAX, remove row; else reload.
           if (result.data && result.data.success) {
             var bsModal = bootstrap.Modal.getInstance(modal);
             if (bsModal) bsModal.hide();
