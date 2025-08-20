@@ -13,36 +13,65 @@
 
   <!-- Table -->
   {% if brands %}
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0">
-        <thead class="table-dark">
-          <tr>
-            <th>نام</th>
-            <th>توضیحات</th>
-            <th>عملیات</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for brand in brands %}
-          <tr>
-            <td>{{ brand.name }}</td>
-            <td>{{ brand.description|truncatechars:100 }}</td>
-            <td>
-              <div class="btn-group">
-                <a href="{% url 'admin_dashboard:admin_brand_edit' brand.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ brand.pk }}" data-name="{{ brand.name }}">
-                  حذف
-                </button>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0 align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th style="width:64px;">تصویر</th>
+              <th>نام</th>
+              <th>توضیحات</th>
+              <th style="width:180px;">عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for brand in brands %}
+            <tr>
+              <td>
+                {% if brand.image %}
+                  {# build a robust URL even if only a relative name is stored #}
+                  {% with img_url=brand.image.url|default:brand.image.name|default:'' %}
+                    {% if img_url %}
+                      <img
+                        src="{% if img_url|slice:':1' == '/' %}{{ img_url }}{% else %}{{ MEDIA_URL }}{{ img_url }}{% endif %}"
+                        alt="{{ brand.name }}"
+                        class="img-thumbnail"
+                        loading="lazy"
+                        style="width:48px;height:48px;object-fit:cover;border-radius:.5rem;"
+                      >
+                    {% else %}
+                      <span class="badge bg-secondary">بدون تصویر</span>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <span class="badge bg-secondary">بدون تصویر</span>
+                {% endif %}
+              </td>
+
+              <td>{{ brand.name }}</td>
+              <td>{{ brand.description|default:"—"|truncatechars:100 }}</td>
+
+              <td>
+                <div class="btn-group">
+                  <a href="{% url 'admin_dashboard:admin_brand_edit' brand.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                  <button type="button" class="btn btn-sm btn-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteModal"
+                          data-id="{{ brand.pk }}"
+                          data-name="{{ brand.name }}">
+                    حذف
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+
+
 
   {% include 'admin_dashboard/_pagination.html' %}
   {% else %}
