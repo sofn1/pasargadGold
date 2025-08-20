@@ -434,26 +434,15 @@ def category_edit_view(request, category_id):
 @staff_required
 def category_delete_view(request, category_id):
     cat = get_object_or_404(Category, id=category_id)
-
     if request.method == "POST":
-        try:
-            name = cat.name
-            cat.delete()
-            AdminActionLog.objects.create(
-                admin=request.user,
-                action="Delete Category",
-                details=f"Deleted category '{name}' (ID: {category_id})"
-            )
-            messages.success(request, f"دسته «{name}» حذف شد.")
-            return redirect('admin_dashboard:admin_categories')
-        except ProtectedError:
-            messages.error(request, "امکان حذف این دسته وجود ندارد؛ ابتدا زیردسته‌ها را حذف یا جابجا کنید.")
-            return redirect('admin_dashboard:admin_categories')
-
-    return render(request, "admin_dashboard/categories/confirm_delete.html", {
-        "category": cat,
-        "children_count": cat.children.count(),
-    })
+        name = cat.name
+        cat.delete()
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True})
+        messages.success(request, f"دسته «{name}» حذف شد.")
+        return redirect('admin_dashboard:admin_categories')
+    return render(request, "admin_dashboard/categories/confirm_delete.html",
+                  {"category": cat, "children_count": cat.children.count()})
 
 
 # =====================================

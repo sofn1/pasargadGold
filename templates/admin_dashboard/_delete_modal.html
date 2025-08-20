@@ -1,4 +1,4 @@
-<!-- Reusable Delete Modal (GLOBAL) -->
+<!-- Reusable Delete Modal (GLOBAL, UUID-safe) -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -31,58 +31,44 @@
     var nameEl = document.getElementById('del-name');
     var form   = document.getElementById('delete-form');
 
-    // Build a URL template with an explicit placeholder that's easy to replace.
-    // The delete view must accept exactly one pk/uuid parameter.
-    // Example usage from including template:
-    //   delete_url_name='admin_dashboard:category_delete'
-    // We reverse with a placeholder "__ID__" then replace it at runtime.
-    var urlTemplate = "{% url delete_url_name '__ID__' %}";
+    // Use a VALID dummy UUID that satisfies Django's <uuid:...> converter.
+    // We'll reverse with this value, then replace it with the real id in JS.
+    var DUMMY_UUID = "00000000-0000-0000-0000-000000000000";
 
-    // Fallback if someone forgets to pass delete_url_name
-    if (!urlTemplate || urlTemplate.indexOf('__ID__') === -1) {
-      console.warn('Delete modal: delete_url_name not provided or URL cannot be reversed.');
-    }
+    // You MUST pass delete_url_name from the including template:
+    // e.g. delete_url_name='admin_dashboard:admin_category_delete'
+    var urlTemplate = "{% url delete_url_name DUMMY_UUID %}".replace("DUMMY_UUID", DUMMY_UUID);
 
     function buildDeleteUrl(id) {
-      // Replace the placeholder with raw id (supports UUIDs and ints)
-      return urlTemplate.replace('__ID__', id);
+      // Works for UUIDs or integers (if your route uses int)
+      return urlTemplate.replace(DUMMY_UUID, id);
     }
 
     modal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget; // the trigger button
+      var button = event.relatedTarget; // the trigger button in the row
       if (!button) return;
 
       var id   = button.getAttribute('data-id');
       var name = button.getAttribute('data-name') || '';
 
-      if (nameEl) nameEl.textContent = name || '';
-      if (form && id) {
-        form.action = buildDeleteUrl(id);
-      }
+      if (nameEl) nameEl.textContent = name;
+      if (form && id) form.action = buildDeleteUrl(id);
 
-      // Ensure only one submit handler is active
       form.onsubmit = function (e) {
         e.preventDefault();
 
-        // If you want non-AJAX behavior globally, comment this fetch block
-        // and just call: form.submit();
         var formData = new FormData(form);
-
         fetch(form.action, {
           method: 'POST',
           body: formData,
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            // CSRF from hidden input rendered by {% csrf_token %}
             'X-CSRFToken': (form.querySelector('[name=csrfmiddlewaretoken]') || {}).value
           }
         })
         .then(function(res) {
-          // If your delete views return JsonResponse on AJAX:
-          //   return Json with {success: true}
-          // Otherwise fall back to full reload on non-JSON.
-          var contentType = res.headers.get('content-type') || '';
-          if (contentType.indexOf('application/json') > -1) {
+          var ct = res.headers.get('content-type') || '';
+          if (ct.indexOf('application/json') > -1) {
             return res.json().then(function(data){ return { ok: res.ok, data: data }; });
           }
           return { ok: res.ok, data: null };
@@ -90,20 +76,13 @@
         .then(function(result) {
           if (!result.ok) throw new Error('Delete failed');
 
+          // If your view returns JSON {success: true} for AJAX, remove the row. Else reload.
           if (result.data && result.data.success) {
-            // Close modal
             var bsModal = bootstrap.Modal.getInstance(modal);
             if (bsModal) bsModal.hide();
-
-            // Remove the row if present; fallback reload
             var row = (event.relatedTarget && event.relatedTarget.closest('tr')) || null;
-            if (row) {
-              row.remove();
-            } else {
-              window.location.reload();
-            }
+            if (row) { row.remove(); } else { window.location.reload(); }
           } else {
-            // If server didn’t return JSON success, reload to reflect changes or show messages
             window.location.reload();
           }
         })
