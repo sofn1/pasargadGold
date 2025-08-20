@@ -15,7 +15,6 @@
     </a>
   </div>
 
-  <!-- Breadcrumb if coming from parent -->
   {% if parent %}
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
@@ -33,55 +32,70 @@
       </h5>
     </div>
     <div class="card-body">
-      <!-- Show errors -->
-      {% if form.errors %}
+
+      {% if form.errors or form.non_field_errors %}
       <div class="alert alert-danger">
         <strong>خطاهای فرم:</strong>
         <ul class="mb-0">
-          {% for field, errors in form.errors.items %}
-            {% for error in errors %}
-              <li>{{ field|capfirst }}: {{ error }}</li>
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in form.visible_fields %}
+            {% for error in field.errors %}
+              <li>{{ field.label }}: {{ error }}</li>
             {% endfor %}
           {% endfor %}
         </ul>
       </div>
       {% endif %}
 
-      <form method="post" class="row g-4">
+      <form method="post" enctype="multipart/form-data" class="row g-4">
         {% csrf_token %}
 
         <!-- Name -->
         <div class="col-md-6">
-          <label for="{{ form.name.id_for_label }}" class="form-label">نام دسته</label>
+          <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
           {{ form.name }}
-          {% if form.name.errors %}
-          <div class="text-danger">{{ form.name.errors }}</div>
-          {% endif %}
+          {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
         </div>
 
         <!-- English Name -->
         <div class="col-md-6">
-          <label for="{{ form.english_name.id_for_label }}" class="form-label">نام انگلیسی (اختیاری)</label>
+          <label for="{{ form.english_name.id_for_label }}" class="form-label">{{ form.english_name.label }}</label>
           {{ form.english_name }}
-          {% if form.english_name.errors %}
-          <div class="text-danger">{{ form.english_name.errors }}</div>
-          {% endif %}
+          {% if form.english_name.errors %}<div class="text-danger small mt-1">{{ form.english_name.errors }}</div>{% endif %}
         </div>
 
         <!-- Parent -->
-        <div class="col-12">
-          <label for="{{ form.parent_id.id_for_label }}" class="form-label">دسته والد (اختیاری)</label>
-          {{ form.parent_id }}
-          {% if form.parent_id.errors %}
-          <div class="text-danger">{{ form.parent_id.errors }}</div>
-          {% endif %}
-          <small class="text-muted">
+        <div class="col-md-6">
+          <label for="{{ form.parent.id_for_label }}" class="form-label">{{ form.parent.label }}</label>
+          {{ form.parent }}
+          {% if form.parent.errors %}<div class="text-danger small mt-1">{{ form.parent.errors }}</div>{% endif %}
+          <small class="text-muted d-block mt-1">
             اگر این دسته زیرمجموعه دسته دیگری است، والد را انتخاب کنید.
           </small>
         </div>
 
+        <!-- Image (اختیاری، اگر در فرم هست) -->
+        {% if form.image %}
+        <div class="col-md-6">
+          <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+          {{ form.image }}
+          {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors }}</div>{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Is Active -->
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.is_active }}
+            <label class="form-check-label ms-2" for="{{ form.is_active.id_for_label }}">
+              {{ form.is_active.label }}
+            </label>
+          </div>
+          {% if form.is_active.errors %}<div class="text-danger small mt-1">{{ form.is_active.errors }}</div>{% endif %}
+        </div>
+
         <!-- Submit -->
-        <div class="col-12 mt-4">
+        <div class="col-12 mt-2">
           <button type="submit" class="btn btn-success btn-lg px-5">
             <i class="fas fa-save"></i> ایجاد دسته
           </button>
@@ -93,15 +107,14 @@
     </div>
   </div>
 
-  <!-- Info Card -->
   <div class="card shadow-sm mt-4 border-info">
     <div class="card-body">
-      <h6 class="text-info">
+      <h6 class="text-info mb-2">
         <i class="fas fa-lightbulb"></i>
         نکته
       </h6>
       <p class="mb-0">
-        بعد از ایجاد، می‌توانید دسته را ویرایش کنید تا تصویر یا توضیحات اضافه کنید (در صورت پشتیبانی از این فیلدها در آینده).
+        بعد از ایجاد می‌توانید دسته را ویرایش کرده و تصویر اضافه کنید.
       </p>
     </div>
   </div>
@@ -110,20 +123,20 @@
 
 {% block extra_js %}
 <script>
-  $(document).ready(function () {
-    $('#{{ form.parent_id.id_for_label }}').select2({
-      placeholder: "جستجو و انتخاب دسته والد...",
-      allowClear: true,
-      width: '100%',
-      language: {
-        noResults: function () {
-          return "هیچ دسته‌ای یافت نشد";
-        },
-        searching: function () {
-          return "در حال جستجو...";
+  document.addEventListener("DOMContentLoaded", function () {
+    // If you use select2, initialize it on the new 'parent' field id.
+    const parentSelect = document.getElementById("{{ form.parent.id_for_label }}");
+    if (parentSelect && typeof $ !== "undefined" && $.fn.select2) {
+      $(parentSelect).select2({
+        placeholder: "جستجو و انتخاب دسته والد...",
+        allowClear: true,
+        width: '100%',
+        language: {
+          noResults: function () { return "هیچ دسته‌ای یافت نشد"; },
+          searching: function () { return "در حال جستجو..."; }
         }
-      }
-    });
+      });
+    }
   });
 </script>
 {% endblock %}

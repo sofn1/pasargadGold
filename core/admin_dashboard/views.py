@@ -373,7 +373,7 @@ class CategoryCreateView(View):
 
     def get(self, request, *args, **kwargs):
         parent_id = request.GET.get("parent_id")
-        initial = {}
+        initial = {"is_active": True}
         if parent_id:
             initial["parent"] = Category.objects.filter(id=parent_id).first()
         form = CategoryCreateForm(initial=initial)
