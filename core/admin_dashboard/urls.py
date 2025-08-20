@@ -11,8 +11,8 @@ urlpatterns = [
     # Categories
     path('categories/', views.CategoryListView.as_view(), name='admin_categories'),
     path('categories/create/', views.CategoryCreateView.as_view(), name='admin_category_create'),
-    path('categories/<str:category_id>/edit/', views.category_edit_view, name='admin_category_edit'),
-    path('categories/<str:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
+    path('categories/<uuid:category_id>/edit/', views.category_edit_view, name='admin_category_edit'),
+    path('categories/<uuid:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
 
     # Users
     path('users/', views.UserListView.as_view(), name='admin_users_list'),
@@ -51,8 +51,8 @@ urlpatterns = [
 
     path('brands/', views.BrandListView.as_view(), name='admin_brands'),
     path('brands/create/', views.brand_create_view, name='admin_brand_create'),
-    path('brands/<int:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
-    path('brands/<int:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
+    path('brands/<uuid:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
+    path('brands/<uuid:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
 
     path('products/', views.ProductListView.as_view(), name='admin_products'),
     path('products/create/', views.product_create_view, name='admin_product_create'),

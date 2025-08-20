@@ -4,7 +4,7 @@
   Required:
     - object: the instance (must have .name or will fallback to string)
     - object_type: human label (e.g., "دسته", "برند", "محصول")
-    - return_url: (optional if return_href is provided) URL pattern name with no args
+    - return_url: (optional if return_href is provided) URL pattern name (no args)
     - return_href: (optional) full/relative href to return; overrides return_url
 
   Optional:
@@ -56,10 +56,7 @@
       {% endif %}
 
     {% else %}
-      <p>آیا از حذف
-        "<strong>{{ object.name|default:object }}</strong>"
-        مطمئن هستید؟
-      </p>
+      <p>آیا از حذف "<strong>{{ object.name|default:object }}</strong>" مطمئن هستید؟</p>
       <p class="text-danger mb-3">این عمل غیرقابل بازگشت است.</p>
 
       <form method="post" class="d-inline" {% if post_action %}action="{{ post_action }}"{% endif %}>

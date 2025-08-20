@@ -1,19 +1,21 @@
-<!-- Reusable Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel">
+<!-- Reusable Delete Modal (GLOBAL) -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="deleteModalLabel">تایید حذف</h5>
+        <h5 class="modal-title" id="deleteModalLabel">تایید حذف {{ object_type|default:"آیتم" }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body">
         آیا از حذف "<strong id="del-name"></strong>" مطمئن هستید؟
       </div>
+
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌</button>
         <form method="post" id="delete-form">
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger">حذف</button>
+          <button type="submit" class="btn btn-danger">🗑️</button>
         </form>
       </div>
     </div>
@@ -21,67 +23,96 @@
 </div>
 
 <script>
+(function() {
   document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('deleteModal');
-    const nameEl = document.getElementById('del-name');
-    const form = document.getElementById('delete-form');
+    var modal = document.getElementById('deleteModal');
+    if (!modal) return;
 
-    // A reversed URL with a dummy pk we can replace safely:
-    // e.g. "/admin-dashboard/brands/0/delete/"
-    const urlTemplate = "{% url 'admin_dashboard:admin_brand_delete' 0 %}";
+    var nameEl = document.getElementById('del-name');
+    var form   = document.getElementById('delete-form');
 
-    // Robustly replace the "/0/" path segment with "/<id>/"
+    // Build a URL template with an explicit placeholder that's easy to replace.
+    // The delete view must accept exactly one pk/uuid parameter.
+    // Example usage from including template:
+    //   delete_url_name='admin_dashboard:category_delete'
+    // We reverse with a placeholder "__ID__" then replace it at runtime.
+    var urlTemplate = "{% url delete_url_name '__ID__' %}";
+
+    // Fallback if someone forgets to pass delete_url_name
+    if (!urlTemplate || urlTemplate.indexOf('__ID__') === -1) {
+      console.warn('Delete modal: delete_url_name not provided or URL cannot be reversed.');
+    }
+
     function buildDeleteUrl(id) {
-      return urlTemplate.replace(/\/\d+\//, `/${id}/`);
+      // Replace the placeholder with raw id (supports UUIDs and ints)
+      return urlTemplate.replace('__ID__', id);
     }
 
     modal.addEventListener('show.bs.modal', function (event) {
-      const button = event.relatedTarget;
-      const id = button.getAttribute('data-id');
-      const name = button.getAttribute('data-name') || '';
+      var button = event.relatedTarget; // the trigger button
+      if (!button) return;
 
-      nameEl.textContent = name;
-      form.action = buildDeleteUrl(id);
+      var id   = button.getAttribute('data-id');
+      var name = button.getAttribute('data-name') || '';
 
-      // Reset any previous handler to avoid stacking
+      if (nameEl) nameEl.textContent = name || '';
+      if (form && id) {
+        form.action = buildDeleteUrl(id);
+      }
+
+      // Ensure only one submit handler is active
       form.onsubmit = function (e) {
         e.preventDefault();
 
-        const formData = new FormData(form);
+        // If you want non-AJAX behavior globally, comment this fetch block
+        // and just call: form.submit();
+        var formData = new FormData(form);
+
         fetch(form.action, {
           method: 'POST',
           body: formData,
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            // CSRF from hidden input rendered by {% csrf_token %}
+            'X-CSRFToken': (form.querySelector('[name=csrfmiddlewaretoken]') || {}).value
           }
         })
-        .then(res => {
-          if (!res.ok) throw new Error('Network error');
-          return res.json();
+        .then(function(res) {
+          // If your delete views return JsonResponse on AJAX:
+          //   return Json with {success: true}
+          // Otherwise fall back to full reload on non-JSON.
+          var contentType = res.headers.get('content-type') || '';
+          if (contentType.indexOf('application/json') > -1) {
+            return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+          }
+          return { ok: res.ok, data: null };
         })
-        .then(data => {
-          if (data.success) {
+        .then(function(result) {
+          if (!result.ok) throw new Error('Delete failed');
+
+          if (result.data && result.data.success) {
             // Close modal
-            const bsModal = bootstrap.Modal.getInstance(modal);
+            var bsModal = bootstrap.Modal.getInstance(modal);
             if (bsModal) bsModal.hide();
 
-            // Remove the row if present, otherwise reload
-            const row = button.closest('tr');
+            // Remove the row if present; fallback reload
+            var row = (event.relatedTarget && event.relatedTarget.closest('tr')) || null;
             if (row) {
               row.remove();
             } else {
               window.location.reload();
             }
           } else {
-            alert('خطا: ' + (data.error || 'عملیات ناموفق بود.'));
+            // If server didn’t return JSON success, reload to reflect changes or show messages
+            window.location.reload();
           }
         })
-        .catch(err => {
+        .catch(function(err) {
           console.error(err);
           alert('خطایی رخ داد. لطفاً دوباره تلاش کنید.');
         });
       };
     });
   });
+})();
 </script>
