@@ -1,39 +1,32 @@
 # admin_dashboard/views.py
-from bson import ObjectId  # ← Add this line
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.db.models import Count, Sum
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.views import View
-from django.views.generic import ListView, DetailView, TemplateView
-from django.contrib.contenttypes.models import ContentType
+from django.views.generic import ListView, DetailView
 from django.utils.decorators import method_decorator
+from django.db.models.deletion import ProtectedError
 
-from banners.models import Banner
-from blogs.models.blog import Blog
-from comments.models import Comment, CommentLike
 from heroes.models import Hero
-from logs.models import AdminActionLog
+from datetime import timedelta
+from django.urls import reverse
+from accounts.models import User
+from banners.models import Banner
 from news.models.news import News
+from blogs.models.blog import Blog
+from django.contrib import messages
+from comments.models import Comment
+from logs.models import AdminActionLog
+from categories.models import Category
+from products.models.brand import Brand
 from orders.models import Order, CartItem
 from payments.models import FailedPayment
 from products.models.product import Product
-from products.models.brand import Brand
-from accounts.models import User  # Assuming custom user model
 from products.mongo_service.category_service import ProductCategoryService
-from datetime import timedelta
-from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm, CategoryCreateForm
-from django.conf import settings
-from pymongo import MongoClient
-from django.contrib import messages
-from django.urls import reverse
-import re
-
-MONGO_URI = settings.MONGO_URI
-MONGO_DB_NAME = settings.MONGO_DB_NAME
-CATEGORIES_COLLECTION = getattr(settings, "MONGODB_CATEGORIES_COLLECTION", "product_categories")
+from .forms import BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm, CategoryCreateForm
 
 # Shortcut to check if user is staff
 staff_required = user_passes_test(lambda u: u.is_staff, login_url='/accounts/login/')
@@ -345,152 +338,33 @@ def get_category_service():
     return ProductCategoryService()
 
 
-def _get_db():
-    return MongoClient(MONGO_URI)[MONGO_DB_NAME]
-
-
-
-
 @method_decorator(login_required, name="dispatch")
 class CategoryListView(View):
     template_name = "admin_dashboard/categories/list.html"
 
     def get(self, request, *args, **kwargs):
-        col = _get_db()[CATEGORIES_COLLECTION]
-
-        # 1) Fetch minimal fields
-        docs = list(col.find({}, {"name": 1, "slug": 1, "parentId": 1}))
-
-        # 2) Build nodes (with children list)
-        nodes = {}
-        for d in docs:
-            nodes[d["_id"]] = {
-                "id": str(d["_id"]),
-                "name": d.get("name"),
-                "slug": d.get("slug"),
-                "parentId": d.get("parentId"),
-                "children": [],
-            }
-
-        # 3) Wire up parents/children and collect roots
-        roots = []
-        for _id, node in nodes.items():
-            pid = node["parentId"]
-            # normalize ObjectId
-            if isinstance(pid, str):
-                try:
-                    pid = ObjectId(pid)
-                except Exception:
-                    pid = None
-
-            if pid and pid in nodes:
-                nodes[pid]["children"].append(node)
-            else:
-                roots.append(node)
-
-        # 4) Sort tree by name (roots and every subtree)
-        def sort_tree(items):
-            items.sort(key=lambda n: (n["name"] or ""))
-            for n in items:
-                if n["children"]:
-                    sort_tree(n["children"])
-        sort_tree(roots)
-
-        # 5) DFS to produce a flat list with 'level', 'parent_name', 'children_count'
-        flat_rows = []
-        def dfs(node, level, parent_name=None):
-            flat_rows.append({
-                "id": node["id"],
-                "name": node["name"],
-                "slug": node["slug"],
+        def dfs(node: Category, level: int, parent_name: str | None):
+            rows.append({
+                "id": str(node.id),
+                "name": node.name,
+                "slug": node.slug,
                 "parent_name": parent_name,
-                "children_count": len(node["children"]),
-                "level": level,  # for indentation in template
+                "children_count": node.children.filter(is_active=True).count(),
+                "level": level,
             })
-            for child in node["children"]:
-                dfs(child, level + 2, parent_name=node["name"])  # +2 = visual indent step
+            for child in node.children.filter(is_active=True).order_by("name"):
+                dfs(child, level + 2, node.name)
 
+        roots = Category.objects.filter(is_active=True, parent__isnull=True).order_by("name")
+        rows: list[dict] = []
         for r in roots:
             dfs(r, level=0, parent_name=None)
 
-        # 6) Render using a flat loop (no recursion needed)
         return render(request, self.template_name, {
-            "flat_rows": flat_rows,   # preferred
-            "categories": flat_rows,  # alias so partials using 'categories' still work
-            "rows": flat_rows,        # extra alias if needed
+            "flat_rows": rows,
+            "categories": rows,
+            "rows": rows,
         })
-
-
-#   create category
-
-def _slugify_for_en(name: str) -> str:
-    if not name:
-        return ""
-    s = name.strip().lower()
-    s = re.sub(r"\s+", "-", s)
-    s = re.sub(r"[^a-z0-9\-]", "", s)
-    s = re.sub(r"-{2,}", "-", s).strip("-")
-    return s
-
-
-def _ensure_unique_slug(col, base_slug: str) -> str:
-    if not base_slug:
-        base_slug = "category"
-    candidate = base_slug
-    n = 2
-    while col.count_documents({"slug": candidate}, limit=1):
-        candidate = f"{base_slug}-{n}"
-        n += 1
-    return candidate
-
-
-def _build_parent_choices():
-    """Return a flat list of (id, indented_name) for the parent select."""
-    col = _get_db()[CATEGORIES_COLLECTION]
-    docs = list(col.find({}, {"name": 1, "parentId": 1}).sort("name", 1))
-
-    # build tree in-memory
-    nodes = {}
-    for d in docs:
-        nodes[d["_id"]] = {"_id": d["_id"], "name": d.get("name") or "", "pid": d.get("parentId"), "children": []}
-    roots = []
-    for _id, n in nodes.items():
-        pid = n["pid"]
-        if isinstance(pid, str):
-            try: pid = ObjectId(pid)
-            except Exception: pid = None
-        if pid and pid in nodes:
-            nodes[pid]["children"].append(n)
-        else:
-            roots.append(n)
-
-    def sort_tree(items):
-        items.sort(key=lambda x: x["name"])
-        for it in items:
-            sort_tree(it["children"])
-    sort_tree(roots)
-
-    choices = []
-    def dfs(node, level):
-        pad = "—" * level
-        label = f"{pad} {node['name']}" if pad else node["name"]
-        choices.append((str(node["_id"]), label))
-        for ch in node["children"]:
-            dfs(ch, level + 1)
-    for r in roots:
-        dfs(r, 0)
-    return choices
-
-
-def _get_parent_doc(parent_id_str):
-    if not parent_id_str:
-        return None
-    try:
-        pid = ObjectId(parent_id_str)
-    except Exception:
-        return None
-    col = _get_db()[CATEGORIES_COLLECTION]
-    return col.find_one({"_id": pid}, {"name": 1})
 
 
 @method_decorator(login_required, name="dispatch")
@@ -498,177 +372,91 @@ class CategoryCreateView(View):
     template_name = "admin_dashboard/categories/create.html"
 
     def get(self, request, *args, **kwargs):
-        parent_id = request.GET.get("parent_id") or ""
-        choices = _build_parent_choices()
-        form = CategoryCreateForm(
-            initial={"parent_id": parent_id},
-            parent_choices=choices
-        )
-        parent = _get_parent_doc(parent_id)
+        parent_id = request.GET.get("parent_id")
+        initial = {}
+        if parent_id:
+            initial["parent"] = Category.objects.filter(id=parent_id).first()
+        form = CategoryCreateForm(initial=initial)
+        parent = Category.objects.filter(id=parent_id).first() if parent_id else None
         return render(request, self.template_name, {"form": form, "parent": parent})
 
     def post(self, request, *args, **kwargs):
-        col = _get_db()[CATEGORIES_COLLECTION]
-        choices = _build_parent_choices()
-        form = CategoryCreateForm(request.POST, parent_choices=choices)
+        form = CategoryCreateForm(request.POST, request.FILES)
         if not form.is_valid():
-            return render(request, self.template_name, {"form": form, "parent": _get_parent_doc(form.data.get("parent_id"))})
+            parent = form.cleaned_data.get("parent") if "parent" in form.cleaned_data else None
+            return render(request, self.template_name, {"form": form, "parent": parent})
 
-        name_fa = form.cleaned_data["name"].strip()
-        name_en = form.cleaned_data["english_name"].strip() if form.cleaned_data["english_name"] else ""
-        parent_id_str = form.cleaned_data["parent_id"]
-
-        base_slug = _slugify_for_en(name_en) or _slugify_for_en(name_fa)
-        slug = _ensure_unique_slug(col, base_slug)
-
-        parent_id = None
-        if parent_id_str:
-            try:
-                parent_id = ObjectId(parent_id_str)
-            except Exception:
-                parent_id = None
-
-        try:
-            doc = {
-                "name": name_fa,
-                "englishName": name_en,
-                "slug": slug,
-                "is_active": True,
-                "subCategories": [],
-            }
-            if parent_id:
-                doc["parentId"] = parent_id
-
-            res = col.insert_one(doc)
-            if parent_id:
-                col.update_one({"_id": parent_id}, {"$addToSet": {"subCategories": res.inserted_id}})
-
-            messages.success(request, "دسته با موفقیت ایجاد شد.")
-            return redirect(reverse("admin_dashboard:admin_categories"))  # keep your url name
-
-        except Exception as e:
-            form.add_error(None, f"خطا در ایجاد دسته: {e}")
-            return render(request, self.template_name, {"form": form, "parent": _get_parent_doc(parent_id_str)})
-
+        obj = form.save()  # slug is auto-managed in model.save()
+        AdminActionLog.objects.create(
+            admin=request.user,
+            action="Create Category",
+            details=f"Created category '{obj.name}' (ID: {obj.id})"
+        )
+        messages.success(request, "دسته با موفقیت ایجاد شد.")
+        return redirect(reverse("admin_dashboard:admin_categories"))
 
 
 @staff_required
 def category_edit_view(request, category_id):
-    service = get_category_service()
-
-    try:
-        category = service.get_category(category_id)
-        if not category:
-            return render(request, "admin_dashboard/categories/not_found.html", status=404)
-    except Exception as e:
-        print("Category not found:", e)  # Debug
-        return render(request, "admin_dashboard/categories/not_found.html", status=404)
+    cat = get_object_or_404(Category, id=category_id)
 
     if request.method == "POST":
-        form = CategoryForm(request.POST, exclude_id=category_id)
+        form = CategoryForm(request.POST, request.FILES, instance=cat)
         if form.is_valid():
-            name = form.cleaned_data["name"]
-            english_name = form.cleaned_data.get("english_name", "")
-            new_parent_id = form.cleaned_data.get("parent_id")  # Can be empty string
-
-            try:
-                # Update basic fields
-                service.update_category(
-                    category_id=category_id,
-                    name=name,
-                    english_name=english_name
-                )
-
-                # --- Handle Parent Change Logic ---
-                current_parent_id = str(category.get("parent_id")) if category.get("parent_id") else None
-
-                # Only proceed if parent has changed
-                if new_parent_id != current_parent_id:
-                    # Remove from old parent's subCategories
-                    if current_parent_id:
-                        service.collection.update_one(
-                            {"_id": ObjectId(current_parent_id)},
-                            {"$pull": {"subCategories": ObjectId(category_id)}}
-                        )
-
-                    # Add to new parent's subCategories
-                    if new_parent_id:
-                        service.collection.update_one(
-                            {"_id": ObjectId(new_parent_id)},
-                            {"$push": {"subCategories": ObjectId(category_id)}}
-                        )
-
-                    # Update the category's parent_id field
-                    if new_parent_id:
-                        service.collection.update_one(
-                            {"_id": ObjectId(category_id)},
-                            {"$set": {"parent_id": ObjectId(new_parent_id)}}
-                        )
-                    else:
-                        service.collection.update_one(
-                            {"_id": ObjectId(category_id)},
-                            {"$unset": {"parent_id": ""}}
-                        )
-
-                # ✅ Log and Redirect
-                AdminActionLog.objects.create(
-                    admin=request.user,
-                    action="Update Category",
-                    details=f"Updated category '{name}' (ID: {category_id}). Parent changed: {current_parent_id} → {new_parent_id}"
-                )
-
-                return redirect('admin_dashboard:admin_categories')  # ✅ Critical!
-
-            except Exception as e:
-                print("Error updating category:", str(e))  # Debug
-                form.add_error(None, f"خطا در بروزرسانی دسته: {str(e)}")
-        else:
-            print("Form errors:", form.errors)  # Debug
+            old_parent = cat.parent_id
+            obj = form.save()
+            AdminActionLog.objects.create(
+                admin=request.user,
+                action="Update Category",
+                details=f"Updated category '{obj.name}' (ID: {obj.id}). Parent changed: {old_parent} → {obj.parent_id}"
+            )
+            messages.success(request, "دسته با موفقیت بروزرسانی شد.")
+            return redirect('admin_dashboard:admin_categories')
     else:
-        current_parent = str(category.get("parent_id")) if category.get("parent_id") else ""
-        form = CategoryForm(initial={
-            "name": category.get("name", ""),
-            "english_name": category.get("englishName", ""),
-            "parent_id": current_parent
-        }, exclude_id=category_id)
+        form = CategoryForm(instance=cat)
 
-    context = {
-        "form": form,
-        "category": category,
+    # For your template that expects a dict-like category:
+    category_ctx = {
+        "id": str(cat.id),
+        "name": cat.name,
+        "englishName": cat.english_name,
+        "parent_id": str(cat.parent_id) if cat.parent_id else "",
+        "slug": cat.slug,
     }
-    return render(request, "admin_dashboard/categories/edit.html", context)
+    return render(request, "admin_dashboard/categories/edit.html", {
+        "form": form,
+        "category": category_ctx,
+    })
 
 
 @staff_required
 def category_delete_view(request, category_id):
-    """Delete a category (with confirmation)."""
-    service = get_category_service()
-
-    try:
-        category = service.get_category(category_id)
-        if not category:
-            return JsonResponse({"error": "Category not found"}, status=404)
-    except Exception:
-        return JsonResponse({"error": "Invalid category ID"}, status=400)
+    cat = get_object_or_404(Category, id=category_id)
 
     if request.method == "POST":
         try:
-            name = category.get("name", "Unknown")
-            service.delete_category(category_id)  # This should delete from MongoDB
+            name = cat.name
+            cat.delete()
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Delete Category",
                 details=f"Deleted category '{name}' (ID: {category_id})"
             )
             return JsonResponse({"success": True})
+        except ProtectedError:
+            return JsonResponse({"error": "امکان حذف این دسته وجود ندارد؛ ابتدا زیردسته‌ها را حذف یا جابجا کنید."}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-    return render(request, "admin_dashboard/categories/confirm_delete.html", {"category": category})
-
-
-
-
+    # context for confirm page
+    category_ctx = {
+        "id": str(cat.id),
+        "name": cat.name,
+        "englishName": cat.english_name,
+        "parent_id": str(cat.parent_id) if cat.parent_id else "",
+        "slug": cat.slug,
+    }
+    return render(request, "admin_dashboard/categories/confirm_delete.html", {"category": category_ctx})
 
 
 # =====================================

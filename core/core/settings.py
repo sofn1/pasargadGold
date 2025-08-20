@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Local apps
+    'core.categories',
     'accounts',
     'products',
     'payments',
