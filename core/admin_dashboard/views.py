@@ -970,14 +970,16 @@ def brand_create_view(request):
         if form.is_valid():
             brand = form.save()
             AdminActionLog.objects.create(
-                admin=request.user,
-                action="Create Brand",
+                admin=request.user, action="Create Brand",
                 details=f"Brand '{brand.name}' created"
             )
+            messages.success(request, "برند با موفقیت ایجاد شد.")
             return redirect('admin_dashboard:admin_brands')
     else:
         form = BrandForm()
-    return render(request, 'admin_dashboard/brands/form.html', {'form': form, 'title': 'Create Brand'})
+    # pass brand=None so the partial knows it's create mode
+    return render(request, 'admin_dashboard/brands/form.html',
+                  {'form': form, 'title': 'ایجاد برند', 'brand': None})
 
 
 @staff_required
@@ -986,16 +988,20 @@ def brand_edit_view(request, pk):
     if request.method == "POST":
         form = BrandForm(request.POST, request.FILES, instance=brand)
         if form.is_valid():
+            # image is optional on edit (form handles required=False)
+            # If the user didn't upload, Django keeps the existing file automatically.
             brand = form.save()
             AdminActionLog.objects.create(
-                admin=request.user,
-                action="Update Brand",
+                admin=request.user, action="Update Brand",
                 details=f"Updated brand '{brand.name}'"
             )
+            messages.success(request, "برند با موفقیت ویرایش شد.")
             return redirect('admin_dashboard:admin_brands')
     else:
         form = BrandForm(instance=brand)
-    return render(request, 'admin_dashboard/brands/form.html', {'form': form, 'title': f'Edit Brand: {brand.name}'})
+
+    return render(request, 'admin_dashboard/brands/form.html',
+                  {'form': form, 'title': f'ویرایش برند: {brand.name}', 'brand': brand})
 
 
 @staff_required
@@ -1005,12 +1011,19 @@ def brand_delete_view(request, pk):
         name = brand.name
         brand.delete()
         AdminActionLog.objects.create(
-            admin=request.user,
-            action="Delete Brand",
+            admin=request.user, action="Delete Brand",
             details=f"Deleted brand '{name}'"
         )
-        return JsonResponse({'success': True})
+        # For modal-ajax deletion:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True})
+        # Fallback full redirect (if someone submits a normal form):
+        messages.success(request, "برند حذف شد.")
+        return redirect("admin_dashboard:admin_brands")
+
+    # GET → full page confirm (your confirm_delete.html)
     return render(request, 'admin_dashboard/brands/confirm_delete.html', {'brand': brand})
+
 
 
 # --- PRODUCT CRUD ---

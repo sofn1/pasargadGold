@@ -72,12 +72,6 @@ class HeroForm(forms.ModelForm):
 
 
 # --- BRAND & PRODUCT ---
-class BrandForm(forms.ModelForm):
-    class Meta:
-        model = Brand
-        fields = ['name', 'description', 'image']
-
-
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
@@ -172,4 +166,53 @@ class CategoryCreateForm(forms.Form):
         parent_choices = kwargs.pop("parent_choices", [])
         super().__init__(*args, **kwargs)
         self.fields["parent_id"].choices = [("", "— بدون والد —")] + parent_choices
+
+
+class BrandForm(forms.ModelForm):
+    """
+    Reused for both create/edit.
+    - On CREATE: name, description, image are required.
+    - On EDIT: name, description required; image optional.
+    """
+    image = forms.ImageField(required=False)
+
+    class Meta:
+        model = Brand
+        fields = ["name", "description", "image"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        is_edit = bool(self.instance and self.instance.pk)
+        # image must be required only when creating
+        self.fields["image"].required = not is_edit
+        # name/description should be required in both modes
+        self.fields["name"].required = True
+        self.fields["description"].required = True
+
+
+class BrandCreateForm(forms.ModelForm):
+    class Meta:
+        model = Brand
+        fields = ["name", "description", "image"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        }
+
+
+class BrandUpdateForm(forms.ModelForm):
+    # image is optional on edit:
+    image = forms.ImageField(required=False)
+
+    class Meta:
+        model = Brand
+        fields = ["name", "description", "image"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        }
 

@@ -1,21 +1,78 @@
+{# templates/admin_dashboard/_form.html #}
 <form method="post" enctype="multipart/form-data" class="bg-light p-4 rounded shadow-sm">
   {% csrf_token %}
-  {% for field in form %}
+
+  {# Non-field errors (e.g., from clean()) #}
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+    </div>
+  {% endif %}
+
+  {# Name #}
   <div class="mb-3">
-    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-    {% if field.field.widget.input_type == 'file' %}
-    <input type="file" class="form-control" name="{{ field.name }}" id="{{ field.id_for_label }}">
+    <label for="{{ form.name.id_for_label }}" class="form-label">نام برند</label>
+    {{ form.name }}
+    {% if form.name.errors %}
+      <div class="text-danger small">
+        {% for e in form.name.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+      </div>
+    {% endif %}
+    {% if form.name.help_text %}<small class="text-muted">{{ form.name.help_text }}</small>{% endif %}
+  </div>
+
+  {# Description #}
+  <div class="mb-3">
+    <label for="{{ form.description.id_for_label }}" class="form-label">توضیحات</label>
+    {{ form.description }}
+    {% if form.description.errors %}
+      <div class="text-danger small">
+        {% for e in form.description.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+      </div>
+    {% endif %}
+    {% if form.description.help_text %}<small class="text-muted">{{ form.description.help_text }}</small>{% endif %}
+  </div>
+
+  {# Image (required on create, optional on edit) #}
+  <div class="mb-3">
+    <label for="{{ form.image.id_for_label }}" class="form-label">
+      تصویر
+      {% if form.instance.pk and form.instance.image %}<span class="text-muted">(اختیاری)</span>{% else %}<span class="text-danger">*</span>{% endif %}
+    </label>
+
+    {% if form.instance.pk and form.instance.image %}
+      <div class="mb-2">
+        <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" style="max-height: 96px; border-radius: .5rem;">
+      </div>
+    {% endif %}
+
+    <input
+      type="file"
+      class="form-control"
+      name="{{ form.image.html_name }}"
+      id="{{ form.image.id_for_label }}"
+      accept="image/*"
+      {% if not form.instance.pk or not form.instance.image %}required{% endif %}
+    >
+
+    {% if form.image.errors %}
+      <div class="text-danger small">
+        {% for e in form.image.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+      </div>
+    {% endif %}
+    {% if form.image.help_text %}<small class="text-muted d-block mt-1">{{ form.image.help_text }}</small>{% endif %}
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">
+      {{ submit_label|default:"ذخیره" }}
+    </button>
+
+    {# If cancel_url is a named URL like "admin_dashboard:admin_brands", reverse it. Otherwise fall back. #}
+    {% if cancel_url %}
+      <a href="{% url cancel_url %}" class="btn btn-secondary">لغو</a>
     {% else %}
-    {{ field }}
-    {% endif %}
-    {% if field.errors %}
-    <div class="text-danger">{{ field.errors }}</div>
-    {% endif %}
-    {% if field.help_text %}
-    <small class="text-muted">{{ field.help_text }}</small>
+      <a href="javascript:history.back()" class="btn btn-secondary">لغو</a>
     {% endif %}
   </div>
-  {% endfor %}
-  <button type="submit" class="btn btn-primary">{{ submit_label|default:"ذخیره" }}</button>
-  <a href="{{ cancel_url|default:'javascript:history.back()' }}" class="btn btn-secondary">لغو</a>
 </form>

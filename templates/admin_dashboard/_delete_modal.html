@@ -1,10 +1,10 @@
 <!-- Reusable Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title">تایید حذف</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="deleteModalLabel">تایید حذف</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         آیا از حذف "<strong id="del-name"></strong>" مطمئن هستید؟
@@ -23,23 +23,25 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('deleteModal');
+    const urlTemplate = "{% url 'admin_dashboard:admin_brand_delete' 0 %}"; // /admin-dashboard/brands/0/delete/
 
-    // Listen when modal is opened
     modal.addEventListener('show.bs.modal', function (event) {
       const button = event.relatedTarget; // Button that triggered the modal
       const id = button.getAttribute('data-id');
-      const name = button.getAttribute('data-name');
+      const name = button.getAttribute('data-name') || '';
       const form = document.getElementById('delete-form');
 
       // Update modal content
       document.getElementById('del-name').textContent = name;
 
-      // Set correct delete URL (e.g., /admin-panel/categories/<id>/delete/)
-      form.action = `/admin-dashboard/categories/${id}/delete/`;
+      // Build the correct delete URL from the reversed template
+      // Replace trailing "0" (or "0/") with the real id + "/"
+      const action = urlTemplate.replace(/0\/?$/, id + "/");
+      form.action = action;
 
-      // Prevent default form submission and use AJAX
+      // AJAX submit
       form.onsubmit = function (e) {
-        e.preventDefault(); // Stop normal submit
+        e.preventDefault();
 
         const formData = new FormData(this);
 
@@ -61,9 +63,12 @@
             bootstrap.Modal.getInstance(modal).hide();
             // Remove the table row
             const row = button.closest('tr');
-            if (row) row.remove();
-            // Optional: show success message
-            alert('آیتم با موفقیت حذف شد.');
+            if (row) {
+              row.remove();
+            } else {
+              // Fallback: reload if we can't find the row
+              window.location.reload();
+            }
           } else {
             alert('خطا: ' + (data.error || 'عملیات ناموفق بود.'));
           }
