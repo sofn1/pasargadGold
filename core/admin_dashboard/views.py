@@ -974,7 +974,7 @@ def brand_create_view(request):
                 action="Create Brand",
                 details=f"Brand '{brand.name}' created"
             )
-            return redirect('admin_dashboard:brands')
+            return redirect('admin_dashboard:admin_brands')
     else:
         form = BrandForm()
     return render(request, 'admin_dashboard/brands/form.html', {'form': form, 'title': 'Create Brand'})
@@ -992,7 +992,7 @@ def brand_edit_view(request, pk):
                 action="Update Brand",
                 details=f"Updated brand '{brand.name}'"
             )
-            return redirect('admin_dashboard:brands')
+            return redirect('admin_dashboard:admin_brands')
     else:
         form = BrandForm(instance=brand)
     return render(request, 'admin_dashboard/brands/form.html', {'form': form, 'title': f'Edit Brand: {brand.name}'})
