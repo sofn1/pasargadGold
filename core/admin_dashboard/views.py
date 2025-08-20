@@ -27,6 +27,9 @@ from datetime import timedelta
 from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm
 from django.conf import settings
 from pymongo import MongoClient
+from django.contrib import messages
+from django.urls import reverse
+import re
 
 MONGO_URI = settings.MONGO_URI
 MONGO_DB_NAME = settings.MONGO_DB_NAME
@@ -418,78 +421,93 @@ class CategoryListView(View):
         })
 
 
-# admin_dashboard/views.py
+#   create category
 
-@staff_required
-def category_create_view(request):
-    service = get_category_service()
-    # Get parent_id from URL (e.g., "Add Subcategory" button)
-    url_parent_id = request.GET.get("parent_id")
+def _slugify_for_en(name: str) -> str:
+    if not name:
+        return ""
+    slug = name.strip().lower()
+    slug = re.sub(r"\s+", "-", slug)
+    slug = re.sub(r"[^a-z0-9\-]", "", slug)   # english-only slug (your seeds use english slugs)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-")
+    return slug
 
-    if request.method == "POST":
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            english_name = form.cleaned_data.get("english_name", "")
-            # ✅ Use parent_id from form (not just URL)
-            selected_parent_id = form.cleaned_data.get("parent_id")  # Can be empty
 
+def _ensure_unique_slug(col, base_slug: str) -> str:
+    """
+    Returns a slug that doesn't exist in col.
+    If base exists, append -2, -3, ...
+    """
+    if not base_slug:
+        base_slug = "category"
+    candidate = base_slug
+    i = 2
+    while col.count_documents({"slug": candidate}, limit=1):
+        candidate = f"{base_slug}-{i}"
+        i += 1
+    return candidate
+
+
+class CategoryCreateView(View):
+    template_name = "admin_dashboard/categories/create.html"
+
+    def get(self, request, *args, **kwargs):
+        parent_id = request.GET.get("parent_id")
+        return render(request, self.template_name, {"parent_id": parent_id})
+
+    def post(self, request, *args, **kwargs):
+        col = _get_db()[CATEGORIES_COLLECTION]
+
+        name_fa = (request.POST.get("name") or "").strip()
+        name_en = (request.POST.get("englishName") or "").strip()
+        slug_in = (request.POST.get("slug") or "").strip()  # optional input
+        parent_id_str = request.POST.get("parent_id") or request.GET.get("parent_id")
+
+        # 1) build slug from englishName (preferred) or from name fa if user left it blank
+        base_slug = slug_in or _slugify_for_en(name_en) or _slugify_for_en(name_fa)
+        slug = _ensure_unique_slug(col, base_slug)
+
+        # 2) normalize parentId
+        parent_id = None
+        if parent_id_str:
             try:
-                # Use form's selection over URL
-                final_parent_id = selected_parent_id or url_parent_id
+                parent_id = ObjectId(parent_id_str)
+            except Exception:
+                parent_id = None
 
-                # Create category in MongoDB
-                # result = service.collection.insert_one({
-                #     "name": name,
-                #     "englishName": english_name,
-                #     "subCategories": [],
-                #     "is_active": True,
-                #     **({"parent_id": ObjectId(final_parent_id)} if final_parent_id else {})
-                # })
-                # category_id = str(result.inserted_id)
-                # new
-                category_id = str(
-                    service.create_category(
-                        name=name,
-                        english_name=english_name,
-                        parent_id=final_parent_id))
+        # 3) insert the category
+        try:
+            doc = {
+                "name": name_fa,
+                "englishName": name_en,
+                "slug": slug,                 # NEVER null
+                "is_active": True,
+                "subCategories": [],
+            }
+            if parent_id:
+                doc["parentId"] = parent_id
 
-                # Update parent's subCategories array
-                if final_parent_id:
-                    service.collection.update_one(
-                        {"_id": ObjectId(final_parent_id)},
-                        {"$push": {"subCategories": ObjectId(category_id)}}
-                    )
+            res = col.insert_one(doc)
+            new_id = res.inserted_id
 
-                # Log success
-                AdminActionLog.objects.create(
-                    admin=request.user,
-                    action="Create Category",
-                    details=f"Created category '{name}' (ID: {category_id}) with parent: {final_parent_id or 'Root'}"
+            # 4) if parent exists, add the child to its subCategories
+            if parent_id:
+                col.update_one(
+                    {"_id": parent_id},
+                    {"$addToSet": {"subCategories": new_id}}
                 )
 
-                return redirect('admin_dashboard:admin_categories')
+            messages.success(request, "دسته با موفقیت ایجاد شد.")
+            return redirect(reverse("admin_dashboard:admin_category_list"))
 
-            except Exception as e:
-                form.add_error(None, f"خطا در ایجاد دسته: {str(e)}")
-        else:
-            print("Form errors:", form.errors)  # Debug
-    else:
-        # Pre-fill parent only if from URL, not from form
-        form = CategoryForm()
-
-    parent = None
-    if url_parent_id:
-        try:
-            parent = service.get_category(url_parent_id)
-        except:
-            pass
-
-    context = {
-        "form": form,
-        "parent": parent,
-    }
-    return render(request, "admin_dashboard/categories/create.html", context)
+        except Exception as e:
+            messages.error(request, f"خطا در ایجاد دسته: {e}")
+            return render(request, self.template_name, {
+                "parent_id": parent_id_str,
+                "name": name_fa,
+                "englishName": name_en,
+                "slug": slug_in,
+            })
 
 
 @staff_required
