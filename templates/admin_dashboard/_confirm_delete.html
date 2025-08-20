@@ -1,14 +1,82 @@
+{#
+  GLOBAL delete confirmation partial.
+
+  Required:
+    - object: the instance (must have .name or will fallback to string)
+    - object_type: human label (e.g., "دسته", "برند", "محصول")
+    - return_url: (optional if return_href is provided) URL pattern name with no args
+    - return_href: (optional) full/relative href to return; overrides return_url
+
+  Optional:
+    - can_delete: explicit boolean to allow/deny deletion (overrides block_on_related)
+    - block_on_related: boolean; if true and related_count > 0, block deletion
+    - related_count: int; number of dependent/child objects
+    - disabled_reason: string shown when deletion is blocked
+    - danger_note: extra info note above content
+    - confirm_text: button label (default: "بله، حذف کن")
+    - post_action: form action (default: current URL)
+    - extra_fields: HTML-safe string for extra hidden inputs, etc. (optional)
+#}
+
 <div class="card">
-  <div class="card-header bg-danger text-white">
-    <h5>حذف {{ object_type }}</h5>
+  <div class="card-header bg-danger text-white d-flex align-items-center justify-content-between">
+    <h5 class="mb-0">حذف {{ object_type }}</h5>
   </div>
+
   <div class="card-body">
-    <p>آیا از حذف "<strong>{{ object.name }}</strong>" مطمئن هستید؟</p>
-    <p class="text-danger">این عمل غیرقابل بازگشت است.</p>
-    <form method="post" class="d-inline">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-danger">بله، حذف کن</button>
-    </form>
-    <a href="{% url return_url %}" class="btn btn-secondary">انصراف</a>
+
+    {% if danger_note %}
+      <div class="alert alert-info mb-3">{{ danger_note }}</div>
+    {% endif %}
+
+    {# Decide if deletion is blocked #}
+    {% if can_delete is not None and not can_delete %}
+      <div class="alert alert-warning">
+        {{ disabled_reason|default:"حذف این مورد در حال حاضر امکان‌پذیر نیست." }}
+      </div>
+      {% if return_href %}
+        <a href="{{ return_href }}" class="btn btn-secondary">بازگشت</a>
+      {% elif return_url %}
+        <a href="{% url return_url %}" class="btn btn-secondary">بازگشت</a>
+      {% else %}
+        <a href="javascript:history.back()" class="btn btn-secondary">بازگشت</a>
+      {% endif %}
+
+    {% elif block_on_related and related_count|default:0|add:0 > 0 %}
+      <div class="alert alert-warning">
+        {{ disabled_reason|default:"این مورد دارای وابستگی است و قابل حذف نیست." }}
+        {% if related_count %} ({{ related_count }}){% endif %}
+      </div>
+      {% if return_href %}
+        <a href="{{ return_href }}" class="btn btn-secondary">بازگشت</a>
+      {% elif return_url %}
+        <a href="{% url return_url %}" class="btn btn-secondary">بازگشت</a>
+      {% else %}
+        <a href="javascript:history.back()" class="btn btn-secondary">بازگشت</a>
+      {% endif %}
+
+    {% else %}
+      <p>آیا از حذف
+        "<strong>{{ object.name|default:object }}</strong>"
+        مطمئن هستید؟
+      </p>
+      <p class="text-danger mb-3">این عمل غیرقابل بازگشت است.</p>
+
+      <form method="post" class="d-inline" {% if post_action %}action="{{ post_action }}"{% endif %}>
+        {% csrf_token %}
+        {% if extra_fields %}{{ extra_fields|safe }}{% endif %}
+        <button type="submit" class="btn btn-danger">
+          {{ confirm_text|default:"بله، حذف کن" }}
+        </button>
+      </form>
+
+      {% if return_href %}
+        <a href="{{ return_href }}" class="btn btn-outline-secondary ms-2">انصراف</a>
+      {% elif return_url %}
+        <a href="{% url return_url %}" class="btn btn-outline-secondary ms-2">انصراف</a>
+      {% else %}
+        <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">انصراف</a>
+      {% endif %}
+    {% endif %}
   </div>
 </div>

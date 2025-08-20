@@ -1,138 +1,80 @@
 <!-- templates/admin_dashboard/categories/edit.html -->
 {% extends "admin_dashboard/dashboard.html" %}
-
-{% block title %}ویرایش دسته: {{ category.name }}{% endblock %}
+{% block title %}ویرایش دسته{% endblock %}
 
 {% block mainContent %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-white">
-      <i class="fas fa-sitemap"></i>
-      ویرایش دسته‌بندی
+      <i class="fas fa-edit"></i>
+      ویرایش دسته: {{ category.name }}
     </h2>
     <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-secondary">
       <i class="fas fa-arrow-right"></i> بازگشت
     </a>
   </div>
 
-  <!-- After opening form -->
-  {% if form.errors %}
-  <div class="alert alert-danger">
-    <strong>خطاهای فرم:</strong>
-    <ul>
-      {% for field, errors in form.errors.items %}
-        {% for error in errors %}
-          <li>{{ field|capfirst }}: {{ error }}</li>
-        {% endfor %}
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  <!-- Breadcrumb -->
-  {% if category.parent_id %}
-  <nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:admin_categories' %}">همه دسته‌ها</a></li>
-      <li class="breadcrumb-item active">{{ category.name }}</li>
-    </ol>
-  </nav>
-  {% endif %}
-
   <div class="card shadow-sm border-0">
     <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">
-        <i class="fas fa-edit"></i>
-        ویرایش "{{ category.name }}"
-      </h5>
+      <h5 class="mb-0">فرم ویرایش دسته</h5>
     </div>
     <div class="card-body">
-      <form method="post" class="row g-4">
+      {% if form.errors or form.non_field_errors %}
+      <div class="alert alert-danger">
+        <strong>خطاهای فرم:</strong>
+        <ul class="mb-0">
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in form.visible_fields %}
+            {% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="row g-4">
         {% csrf_token %}
 
-        <!-- Name -->
         <div class="col-md-6">
-          <label for="{{ form.name.id_for_label }}" class="form-label">نام دسته</label>
+          <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
           {{ form.name }}
-          {% if form.name.errors %}
-          <div class="text-danger">{{ form.name.errors }}</div>
-          {% endif %}
         </div>
 
-        <!-- English Name -->
         <div class="col-md-6">
-          <label for="{{ form.english_name.id_for_label }}" class="form-label">نام انگلیسی (اختیاری)</label>
+          <label for="{{ form.english_name.id_for_label }}" class="form-label">{{ form.english_name.label }}</label>
           {{ form.english_name }}
-          {% if form.english_name.errors %}
-          <div class="text-danger">{{ form.english_name.errors }}</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="{{ form.parent.id_for_label }}" class="form-label">{{ form.parent.label }}</label>
+          {{ form.parent }}
+          <small class="text-muted d-block mt-1">در صورت نیاز، والد را تغییر دهید.</small>
+        </div>
+
+        <div class="col-md-6">
+          <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+          {{ form.image }}
+          {% if category.image_url %}
+            <div class="mt-2">
+              <img src="{{ category.image_url }}" style="height:48px;width:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;" alt="">
+            </div>
           {% endif %}
         </div>
 
-        <!-- Parent -->
         <div class="col-12">
-          <label for="{{ form.parent_id.id_for_label }}" class="form-label">دسته والد (اختیاری)</label>
-          {{ form.parent_id }}
-          {% if form.parent_id.errors %}
-          <div class="text-danger">{{ form.parent_id.errors }}</div>
-          {% endif %}
-          <small class="text-muted">
-            اگر این دسته زیرمجموعه دسته دیگری است، والد را انتخاب کنید.
-          </small>
+          <div class="form-check">
+            {{ form.is_active }}
+            <label class="form-check-label ms-2" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+          </div>
         </div>
 
-        <!-- Submit -->
-        <div class="col-12 mt-4">
-          <button type="submit" class="btn btn-success px-4">
+        <div class="col-12">
+          <button class="btn btn-primary px-4" type="submit">
             <i class="fas fa-save"></i> ذخیره تغییرات
           </button>
-          <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-outline-secondary ms-2">
-            انصراف
-          </a>
+          <a href="{% url 'admin_dashboard:admin_categories' %}" class="btn btn-outline-secondary ms-2">انصراف</a>
         </div>
       </form>
     </div>
   </div>
-
-  <!-- Danger Zone -->
-  <div class="card shadow-sm border-danger mt-4">
-    <div class="card-body">
-      <h5 class="text-danger">
-        <i class="fas fa-exclamation-triangle"></i>
-        منطقه خطر
-      </h5>
-      <p class="text-muted">حذف این دسته، آن را از سیستم می‌زداید. این عمل غیرقابل بازگشت است.</p>
-      <a href="#" 
-         class="btn btn-danger"
-         data-bs-toggle="modal"
-         data-bs-target="#deleteModal"
-         data-id="{{ category.id }}"
-         data-name="{{ category.name }}">
-        <i class="fas fa-trash"></i> حذف دسته
-      </a>
-    </div>
-  </div>
 </div>
-
-<!-- Include Delete Modal -->
-{% include 'admin_dashboard/_delete_modal.html' with object_type="دسته" return_url="admin_dashboard:admin_categories" %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  $(document).ready(function () {
-    $('#{{ form.parent_id.id_for_label }}').select2({
-      placeholder: "جستجو و انتخاب دسته والد...",
-      allowClear: true,
-      width: '100%',
-      language: {
-        noResults: function () {
-          return "هیچ دسته‌ای یافت نشد";
-        },
-        searching: function () {
-          return "در حال جستجو...";
-        }
-      }
-    });
-  });
-</script>
 {% endblock %}

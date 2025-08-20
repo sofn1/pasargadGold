@@ -404,7 +404,7 @@ def category_edit_view(request, category_id):
         form = CategoryForm(request.POST, request.FILES, instance=cat)
         if form.is_valid():
             old_parent = cat.parent_id
-            obj = form.save()
+            obj = form.save()  # saves image + is_active correctly
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Update Category",
@@ -415,13 +415,15 @@ def category_edit_view(request, category_id):
     else:
         form = CategoryForm(instance=cat)
 
-    # For your template that expects a dict-like category:
+    # For templates expecting dict-like `category`
     category_ctx = {
         "id": str(cat.id),
         "name": cat.name,
         "englishName": cat.english_name,
         "parent_id": str(cat.parent_id) if cat.parent_id else "",
         "slug": cat.slug,
+        "image_url": cat.image.url if cat.image else "",
+        "is_active": cat.is_active,
     }
     return render(request, "admin_dashboard/categories/edit.html", {
         "form": form,
@@ -442,21 +444,16 @@ def category_delete_view(request, category_id):
                 action="Delete Category",
                 details=f"Deleted category '{name}' (ID: {category_id})"
             )
-            return JsonResponse({"success": True})
+            messages.success(request, f"دسته «{name}» حذف شد.")
+            return redirect('admin_dashboard:admin_categories')
         except ProtectedError:
-            return JsonResponse({"error": "امکان حذف این دسته وجود ندارد؛ ابتدا زیردسته‌ها را حذف یا جابجا کنید."}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            messages.error(request, "امکان حذف این دسته وجود ندارد؛ ابتدا زیردسته‌ها را حذف یا جابجا کنید.")
+            return redirect('admin_dashboard:admin_categories')
 
-    # context for confirm page
-    category_ctx = {
-        "id": str(cat.id),
-        "name": cat.name,
-        "englishName": cat.english_name,
-        "parent_id": str(cat.parent_id) if cat.parent_id else "",
-        "slug": cat.slug,
-    }
-    return render(request, "admin_dashboard/categories/confirm_delete.html", {"category": category_ctx})
+    return render(request, "admin_dashboard/categories/confirm_delete.html", {
+        "category": cat,
+        "children_count": cat.children.count(),
+    })
 
 
 # =====================================

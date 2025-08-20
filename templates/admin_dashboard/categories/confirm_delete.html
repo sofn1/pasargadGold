@@ -4,6 +4,23 @@
 
 {% block mainContent %}
 <div class="container-fluid px-4">
-  {% include 'admin_dashboard/_confirm_delete.html' with object=category object_type="دسته" return_url="admin_dashboard:admin_categories" %}
+  {#
+    Pass generic flags:
+    - related_count: number of dependent objects (for categories, children_count)
+    - block_on_related: if True and related_count > 0, block deletion
+    - disabled_reason: message shown when blocked
+    - return_url OR return_href: where to go back (href wins if provided)
+    - confirm_text: customize button label (optional)
+    - post_action: optional form action (defaults to current URL)
+  #}
+  {% include 'admin_dashboard/_confirm_delete.html' with
+      object=category
+      object_type="دسته"
+      related_count=children_count
+      block_on_related=True
+      disabled_reason="این دسته دارای زیردسته است و قابل حذف نیست. ابتدا زیردسته‌ها را حذف یا جابجا کنید."
+      return_url="admin_dashboard:admin_categories"
+      confirm_text="بله، حذف دسته"
+  %}
 </div>
 {% endblock %}

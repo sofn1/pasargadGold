@@ -120,6 +120,13 @@ class ProductForm(forms.ModelForm):
 
 
 class CategoryForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        label="دسته والد",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
     class Meta:
         model = Category
         fields = ["name", "english_name", "image", "parent", "is_active"]
@@ -133,15 +140,14 @@ class CategoryForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "english_name": forms.TextInput(attrs={"class": "form-control", "dir": "ltr"}),
-            "parent": forms.Select(attrs={"class": "form-select"}),
         }
 
 
 class CategoryCreateForm(CategoryForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Default active on create
         if not self.instance or not self.instance.pk:
-            # default active on create
             self.fields["is_active"].initial = True
 
 
