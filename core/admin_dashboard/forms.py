@@ -148,3 +148,28 @@ class CategoryForm(forms.Form):
         add_choices(categories)
         self.fields['parent_id'].choices = choices
 
+
+class CategoryCreateForm(forms.Form):
+    name = forms.CharField(
+        label="نام دسته",
+        max_length=200,
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+    english_name = forms.CharField(
+        label="نام انگلیسی",
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "dir": "ltr"})
+    )
+    parent_id = forms.ChoiceField(
+        label="دسته والد",
+        required=False,
+        choices=[],  # set in __init__
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        parent_choices = kwargs.pop("parent_choices", [])
+        super().__init__(*args, **kwargs)
+        self.fields["parent_id"].choices = [("", "— بدون والد —")] + parent_choices
+

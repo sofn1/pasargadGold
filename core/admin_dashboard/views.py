@@ -24,7 +24,7 @@ from products.models.brand import Brand
 from accounts.models import User  # Assuming custom user model
 from products.mongo_service.category_service import ProductCategoryService
 from datetime import timedelta
-from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm
+from .forms import CategoryForm, BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm, CategoryCreateForm
 from django.conf import settings
 from pymongo import MongoClient
 from django.contrib import messages
@@ -426,48 +426,101 @@ class CategoryListView(View):
 def _slugify_for_en(name: str) -> str:
     if not name:
         return ""
-    slug = name.strip().lower()
-    slug = re.sub(r"\s+", "-", slug)
-    slug = re.sub(r"[^a-z0-9\-]", "", slug)   # english-only slug (your seeds use english slugs)
-    slug = re.sub(r"-{2,}", "-", slug).strip("-")
-    return slug
+    s = name.strip().lower()
+    s = re.sub(r"\s+", "-", s)
+    s = re.sub(r"[^a-z0-9\-]", "", s)
+    s = re.sub(r"-{2,}", "-", s).strip("-")
+    return s
 
 
 def _ensure_unique_slug(col, base_slug: str) -> str:
-    """
-    Returns a slug that doesn't exist in col.
-    If base exists, append -2, -3, ...
-    """
     if not base_slug:
         base_slug = "category"
     candidate = base_slug
-    i = 2
+    n = 2
     while col.count_documents({"slug": candidate}, limit=1):
-        candidate = f"{base_slug}-{i}"
-        i += 1
+        candidate = f"{base_slug}-{n}"
+        n += 1
     return candidate
 
 
+def _build_parent_choices():
+    """Return a flat list of (id, indented_name) for the parent select."""
+    col = _get_db()[CATEGORIES_COLLECTION]
+    docs = list(col.find({}, {"name": 1, "parentId": 1}).sort("name", 1))
+
+    # build tree in-memory
+    nodes = {}
+    for d in docs:
+        nodes[d["_id"]] = {"_id": d["_id"], "name": d.get("name") or "", "pid": d.get("parentId"), "children": []}
+    roots = []
+    for _id, n in nodes.items():
+        pid = n["pid"]
+        if isinstance(pid, str):
+            try: pid = ObjectId(pid)
+            except Exception: pid = None
+        if pid and pid in nodes:
+            nodes[pid]["children"].append(n)
+        else:
+            roots.append(n)
+
+    def sort_tree(items):
+        items.sort(key=lambda x: x["name"])
+        for it in items:
+            sort_tree(it["children"])
+    sort_tree(roots)
+
+    choices = []
+    def dfs(node, level):
+        pad = "—" * level
+        label = f"{pad} {node['name']}" if pad else node["name"]
+        choices.append((str(node["_id"]), label))
+        for ch in node["children"]:
+            dfs(ch, level + 1)
+    for r in roots:
+        dfs(r, 0)
+    return choices
+
+
+def _get_parent_doc(parent_id_str):
+    if not parent_id_str:
+        return None
+    try:
+        pid = ObjectId(parent_id_str)
+    except Exception:
+        return None
+    col = _get_db()[CATEGORIES_COLLECTION]
+    return col.find_one({"_id": pid}, {"name": 1})
+
+
+@method_decorator(login_required, name="dispatch")
 class CategoryCreateView(View):
     template_name = "admin_dashboard/categories/create.html"
 
     def get(self, request, *args, **kwargs):
-        parent_id = request.GET.get("parent_id")
-        return render(request, self.template_name, {"parent_id": parent_id})
+        parent_id = request.GET.get("parent_id") or ""
+        choices = _build_parent_choices()
+        form = CategoryCreateForm(
+            initial={"parent_id": parent_id},
+            parent_choices=choices
+        )
+        parent = _get_parent_doc(parent_id)
+        return render(request, self.template_name, {"form": form, "parent": parent})
 
     def post(self, request, *args, **kwargs):
         col = _get_db()[CATEGORIES_COLLECTION]
+        choices = _build_parent_choices()
+        form = CategoryCreateForm(request.POST, parent_choices=choices)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "parent": _get_parent_doc(form.data.get("parent_id"))})
 
-        name_fa = (request.POST.get("name") or "").strip()
-        name_en = (request.POST.get("englishName") or "").strip()
-        slug_in = (request.POST.get("slug") or "").strip()  # optional input
-        parent_id_str = request.POST.get("parent_id") or request.GET.get("parent_id")
+        name_fa = form.cleaned_data["name"].strip()
+        name_en = form.cleaned_data["english_name"].strip() if form.cleaned_data["english_name"] else ""
+        parent_id_str = form.cleaned_data["parent_id"]
 
-        # 1) build slug from englishName (preferred) or from name fa if user left it blank
-        base_slug = slug_in or _slugify_for_en(name_en) or _slugify_for_en(name_fa)
+        base_slug = _slugify_for_en(name_en) or _slugify_for_en(name_fa)
         slug = _ensure_unique_slug(col, base_slug)
 
-        # 2) normalize parentId
         parent_id = None
         if parent_id_str:
             try:
@@ -475,12 +528,11 @@ class CategoryCreateView(View):
             except Exception:
                 parent_id = None
 
-        # 3) insert the category
         try:
             doc = {
                 "name": name_fa,
                 "englishName": name_en,
-                "slug": slug,                 # NEVER null
+                "slug": slug,
                 "is_active": True,
                 "subCategories": [],
             }
@@ -488,26 +540,16 @@ class CategoryCreateView(View):
                 doc["parentId"] = parent_id
 
             res = col.insert_one(doc)
-            new_id = res.inserted_id
-
-            # 4) if parent exists, add the child to its subCategories
             if parent_id:
-                col.update_one(
-                    {"_id": parent_id},
-                    {"$addToSet": {"subCategories": new_id}}
-                )
+                col.update_one({"_id": parent_id}, {"$addToSet": {"subCategories": res.inserted_id}})
 
             messages.success(request, "دسته با موفقیت ایجاد شد.")
-            return redirect(reverse("admin_dashboard:admin_category_list"))
+            return redirect(reverse("admin_dashboard:admin_categories"))  # keep your url name
 
         except Exception as e:
-            messages.error(request, f"خطا در ایجاد دسته: {e}")
-            return render(request, self.template_name, {
-                "parent_id": parent_id_str,
-                "name": name_fa,
-                "englishName": name_en,
-                "slug": slug_in,
-            })
+            form.add_error(None, f"خطا در ایجاد دسته: {e}")
+            return render(request, self.template_name, {"form": form, "parent": _get_parent_doc(parent_id_str)})
+
 
 
 @staff_required
