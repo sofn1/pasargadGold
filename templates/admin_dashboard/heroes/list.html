@@ -42,17 +42,17 @@
             <td>{{ hero.title }}</td>
 
             <td>
-              {% with raw=hero.description|default:hero.subtitle|default:hero.summary|default:hero.caption|default:hero.text|default:hero.body|default:hero.content|default:hero.desc|default:hero.details|default:"" %}
-                {% if raw %}
-                  {% with clean=raw|striptags %}
-                    <div class="line-clamp-2" style="max-width: 420px;" title="{{ clean }}">
-                      {{ clean|truncatechars:140 }}
-                    </div>
-                  {% endwith %}
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              {% endwith %}
+              {# Safely pick the first available text-like field #}
+              {% firstof hero.description hero.subtitle hero.caption hero.text hero.body hero.content hero.desc hero.details as raw %}
+              {% if raw %}
+                {% with clean=raw|striptags %}
+                  <div class="line-clamp-2" style="max-width: 420px;" title="{{ clean }}">
+                    {{ clean|truncatechars:140 }}
+                  </div>
+                {% endwith %}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
             </td>
 
             <td>
