@@ -14,17 +14,23 @@ urlpatterns = [
     path('categories/<uuid:category_id>/edit/', views.category_edit_view, name='admin_category_edit'),
     path('categories/<uuid:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
 
+    # Brands
+    path('brands/', views.BrandListView.as_view(), name='admin_brands'),
+    path('brands/create/', views.brand_create_view, name='admin_brand_create'),
+    path('brands/<str:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
+    path('brands/<str:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
+
     # Users
     path('users/', views.UserListView.as_view(), name='admin_users_list'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
 
-    # Blogs - CRUD
+    # Blogs
     path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs'),
     path('blogs/create/', views.blog_create_view, name='admin_blog_create'),
     path('blogs/<int:pk>/edit/', views.blog_edit_view, name='admin_blog_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blog_delete'),
 
-    # News - CRUD
+    # News
     path('news/', views.AdminNewsListView.as_view(), name='admin_news'),
     path('news/create/', views.news_create_view, name='admin_news_create'),
     path('news/<int:pk>/edit/', views.news_edit_view, name='admin_news_edit'),
@@ -38,22 +44,19 @@ urlpatterns = [
     path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
     path('orders/<int:pk>/status/', views.update_order_status, name='admin_update_order_status'),
 
-    # Media & Layout
+    # Banners
     path('banners/', views.BannerListView.as_view(), name='admin_banners'),
     path('banners/create/', views.banner_create_view, name='admin_banner_create'),
     path('banners/<int:pk>/edit/', views.banner_edit_view, name='admin_banner_edit'),
     path('banners/<int:pk>/delete/', views.banner_delete_view, name='admin_banner_delete'),
 
+    # Heros
     path('heroes/', views.HeroListView.as_view(), name='admin_heroes'),
     path('heroes/create/', views.hero_create_view, name='admin_hero_create'),
     path('heroes/<int:pk>/edit/', views.hero_edit_view, name='admin_hero_edit'),
     path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
 
-    path('brands/', views.BrandListView.as_view(), name='admin_brands'),
-    path('brands/create/', views.brand_create_view, name='admin_brand_create'),
-    path('brands/<uuid:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
-    path('brands/<uuid:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
-
+    # Products
     path('products/', views.ProductListView.as_view(), name='admin_products'),
     path('products/create/', views.product_create_view, name='admin_product_create'),
     path('products/<int:pk>/edit/', views.product_edit_view, name='admin_product_edit'),
