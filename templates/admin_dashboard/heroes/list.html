@@ -88,11 +88,7 @@
   <div class="alert alert-info">هیرویی یافت نشد.</div>
   {% endif %}
 
-  {% include 'admin_dashboard/_delete_modal.html' with
-      object_type="هیرو"
-      delete_url_name='admin_dashboard:admin_hero_delete'
-      delete_dummy_pk=0
-      return_url='admin_dashboard:admin_heroes' %}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="هیرو" delete_url_name='admin_dashboard:admin_hero_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_heroes' %}
 </div>
 
 <style>
