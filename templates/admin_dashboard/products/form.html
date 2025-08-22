@@ -19,6 +19,13 @@
     </div>
   {% endif %}
 
+  <!-- flag used by JS to decide if it should show the toast -->
+  {% if form.errors %}
+    <script>window.__form_has_errors__ = true;</script>
+  {% else %}
+    <script>window.__form_has_errors__ = false;</script>
+  {% endif %}
+
   <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -277,7 +284,26 @@
         </div>
       </div>
 
-      <!-- NOTE: Removed the fragile "fallback fields" block to avoid double-render/hidden fields issues -->
+      <!-- ===== سایر فیلدها (fallback امن) ===== -->
+      {% with excluded="name|english_name|category_id|brand|price|featured|is_active|owner_name|owner_profile|short_description|description|features|view_image|rel_blogs|rel_news|rel_products" %}
+        {% for field in form.visible_fields %}
+          {% with token="|"|add:field.name|add:"|" all="|"|add:excluded|add:"|" %}
+            {% if token not in all %}
+              <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                  <div class="card-body">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% for e in field.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+      {% endwith %}
+
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
 
       <!-- ===== Actions ===== -->
       <div class="col-12">
@@ -304,6 +330,7 @@
     z-index: 1055; background: #f8d7da; color:#842029; border:1px solid #f5c2c7;
     border-radius:.5rem; padding:.75rem 1rem; box-shadow:0 4px 16px rgba(0,0,0,.15);
   }
+  .is-invalid { border-color:#dc3545 !important; }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -313,6 +340,7 @@
   // ------- Helpers
   function showErrorToast(msg){
     try {
+      if (!window.__form_has_errors__) return; // only when server says there are errors
       const old = document.querySelector('.toast-error'); if (old) old.remove();
       const div = document.createElement('div');
       div.className = 'toast-error';
@@ -322,113 +350,84 @@
     } catch (e) {}
   }
 
-  // Ajax-select2 enhancement that keeps selections visible and preserved
-  function enhanceAjax(sel, url, multiple=false){
-    if (!(window.jQuery && jQuery.fn.select2)) return;
+  // attach 'is-invalid' to inputs that have an error block after them
+  (function highlightInvalids(){
+    if (!window.__form_has_errors__) return;
+    document.querySelectorAll('.text-danger.small').forEach(function(err){
+      const wrap = err.closest('.card-body') || document;
+      const inp = err.previousElementSibling; // our template renders input just before error
+      if (inp && (inp.tagName === 'INPUT' || inp.tagName === 'TEXTAREA' || inp.tagName === 'SELECT')) {
+        inp.classList.add('is-invalid');
+      } else if (wrap) {
+        const any = wrap.querySelector('input,select,textarea');
+        if (any) any.classList.add('is-invalid');
+      }
+    });
+  })();
 
+  function enhanceAjax(sel, url, multiple){
+    if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(sel);
     if (!$el.length) return;
 
-    // Ensure correct multiple behavior
     if (multiple && !$el.prop('multiple')) $el.prop('multiple', true);
 
     $el.select2({
       width: '100%',
       dir: 'rtl',
       dropdownParent: jQuery('body'),
-      multiple: multiple,
+      multiple: !!multiple,
       ajax: {
         url: url,
         dataType: 'json',
         delay: 250,
-        data: function (params) {
-          return { q: params.term };
-        },
-        processResults: function (data) {
-          // expects: {results:[{id:..., text:...}]}
-          return { results: (data && data.results) ? data.results : [] };
-        },
+        data: params => ({ q: params.term }),
+        processResults: data => ({ results: (data && data.results) ? data.results : [] }),
         cache: true
       },
       minimumInputLength: 0,
+      minimumResultsForSearch: 0,
       placeholder: multiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
-      allowClear: true
+      allowClear: true,
+      closeOnSelect: !multiple,
+      escapeMarkup: m => m
     });
 
-    // Make sure a chosen item is appended as an <option selected> immediately
+    // persist selection by appending a selected <option>
     $el.on('select2:select', function (e) {
-      var data = e.params && e.params.data;
+      const data = e.params && e.params.data;
       if (!data || data.id == null) return;
-      var found = false;
-      jQuery(this).find('option').each(function(){
-        if (String(this.value) === String(data.id)) { found = true; this.selected = true; }
-      });
-      if (!found) {
-        var newOpt = new Option(data.text, data.id, true, true);
-        this.add(newOpt);
-      }
-      jQuery(this).trigger('change.select2'); // refresh UI
-    });
-
-    // When unselecting in multi, reflect it in the DOM options
-    $el.on('select2:unselect', function (e) {
-      var data = e.params && e.params.data;
-      if (!data) return;
-      jQuery(this).find("option[value='"+data.id+"']").prop('selected', false);
-    });
-
-    // If the form comes back with bound values but without options loaded,
-    // Select2 will still show selected ones because they are in <option selected>.
-    // If not, we can try to synthesize selected options from the native value.
-    // (Works best when Django already renders selected <option>s for bound forms.)
-    const selectedVals = $el.val();
-    if (selectedVals && selectedVals.length) {
-      // Ensure they exist as <option selected>, otherwise add them with text = value
-      // (Text will be replaced upon next AJAX search/select)
-      const arr = Array.isArray(selectedVals) ? selectedVals : [selectedVals];
-      arr.forEach(function(v){
-        if (!$el.find("option[value='"+v+"']").length) {
-          const opt = new Option(String(v), String(v), true, true);
-          $el.append(opt);
-        }
-      });
-      $el.trigger('change.select2');
-    }
-  }
-
-  function ensureSelectionVisible(selector) {
-    if (!(window.jQuery && jQuery.fn.select2)) return;
-    jQuery(selector).on('select2:select', function (e) {
-      var data = e.params && e.params.data;
-      if (!data || data.id == null) return;
-      var opt = this.querySelector("option[value='" + data.id + "']");
+      let opt = this.querySelector("option[value='" + data.id + "']");
       if (!opt) {
-        var newOpt = new Option(data.text, data.id, true, true);
-        this.appendChild(newOpt);
+        opt = new Option(data.text, data.id, true, true);
+        this.add(opt);
       } else {
         opt.selected = true;
       }
+      $el.trigger('change.select2');
+    });
+
+    $el.on('select2:unselect', function (e) {
+      const data = e.params && e.params.data;
+      if (!data) return;
+      const opt = this.querySelector("option[value='" + data.id + "']");
+      if (opt) opt.selected = false;
     });
   }
 
-  // ------- Initialize Select2s
-  enhanceAjax('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
-  ensureSelectionVisible('#{{ form.category_id.id_for_label }}');
-
-  enhanceAjax('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
-  enhanceAjax('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
-  enhanceAjax('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
-  ensureSelectionVisible('#{{ form.rel_blogs.id_for_label }}');
-  ensureSelectionVisible('#{{ form.rel_news.id_for_label }}');
-  ensureSelectionVisible('#{{ form.rel_products.id_for_label }}');
-
-  // Open dropdown when clicking “افزودن”
+  // One-liner helper for “افزودن” buttons
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      var sel = document.querySelector(btn.getAttribute('data-open-select'));
+      const sel = document.querySelector(btn.getAttribute('data-open-select'));
       if (sel && window.jQuery && jQuery.fn.select2) jQuery(sel).select2('open');
     });
   });
+
+  // ------- Initialize Select2s
+  enhanceAjax('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  enhanceAjax('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
+  enhanceAjax('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
+  enhanceAjax('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
 
   // ------- Main image preview
   const mainInput = document.getElementById('{{ form.view_image.id_for_label }}');
@@ -530,10 +529,10 @@
     });
   }
 
-  // ------- Form submit: serialize features + strip price commas + error UX
+  // ------- Form submit: serialize features + strip price commas + toast/scroll
   const form = document.getElementById('product-form');
 
-  // Live comma formatting for price (frontend only)
+  // Live comma formatting for price
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
   if (priceInput) {
     const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -561,17 +560,16 @@
         });
         hidden.value = JSON.stringify(obj);
       }
-
       // strip price commas
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
     });
 
-    // If server returned errors, scroll to first .text-danger and show toast
-    const firstErr = document.querySelector('.text-danger');
-    if (firstErr) {
+    // show toast/scroll only if server reported errors
+    if (window.__form_has_errors__) {
       showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
-      const parentCard = firstErr.closest('.card') || firstErr;
-      parentCard.scrollIntoView({behavior:'smooth', block:'center'});
+      const firstErr = document.querySelector('.text-danger.small');
+      const target = (firstErr && firstErr.closest('.card')) || document.querySelector('form');
+      if (target) target.scrollIntoView({behavior:'smooth', block:'center'});
     }
   }
 })();
