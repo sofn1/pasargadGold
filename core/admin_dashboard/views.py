@@ -314,7 +314,8 @@ def api_stats_summary(request):
         'orders': {
             'total': Order.objects.count(),
             'paid': Order.objects.filter(status='paid').count(),
-            'revenue': float(Order.objects.filter(status='paid').aggregate(Sum('total_price'))['total_price__sum'] or 0),
+            'revenue': float(
+                Order.objects.filter(status='paid').aggregate(Sum('total_price'))['total_price__sum'] or 0),
         },
         'content': {
             'blogs': Blog.objects.count(),
@@ -474,7 +475,7 @@ class AdminBlogListView(ListView):
         if q:
             qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
         return qs
-    
+
 
 @staff_required
 def blog_create_view(request):
@@ -508,7 +509,8 @@ def blog_edit_view(request, pk):
             return redirect('admin_dashboard:blogs')
     else:
         form = BlogForm(instance=blog)
-    return render(request, 'admin_dashboard/blogs/form.html', {'form': form, 'title': f'Edit Blog: {blog.name}', 'blog': blog})
+    return render(request, 'admin_dashboard/blogs/form.html',
+                  {'form': form, 'title': f'Edit Blog: {blog.name}', 'blog': blog})
 
 
 @staff_required
@@ -589,7 +591,8 @@ def news_edit_view(request, pk):
             return redirect('admin_dashboard:news')
     else:
         form = NewsForm(instance=news)
-    return render(request, 'admin_dashboard/news/form.html', {'form': form, 'title': f'Edit News: {news.name}', 'news': news})
+    return render(request, 'admin_dashboard/news/form.html',
+                  {'form': form, 'title': f'Edit News: {news.name}', 'news': news})
 
 
 @staff_required
@@ -691,6 +694,7 @@ def hero_create_view(request):
     else:
         form = HeroForm()
     return render(request, 'admin_dashboard/heroes/form.html', {'form': form, 'title': 'ایجاد هیرو'})
+
 
 @staff_required
 def hero_edit_view(request, pk):
@@ -805,7 +809,6 @@ def brand_delete_view(request, pk):
     return render(request, 'admin_dashboard/brands/confirm_delete.html', {'brand': brand})
 
 
-
 # --- PRODUCT CRUD ---
 
 @method_staff_required
@@ -855,7 +858,8 @@ def product_edit_view(request, pk):
             return redirect('admin_dashboard:products')
     else:
         form = ProductForm(instance=product)
-    return render(request, 'admin_dashboard/products/form.html', {'form': form, 'title': f'Edit Product: {product.name}'})
+    return render(request, 'admin_dashboard/products/form.html',
+                  {'form': form, 'title': f'Edit Product: {product.name}'})
 
 
 @staff_required

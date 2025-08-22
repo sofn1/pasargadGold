@@ -42,13 +42,17 @@
             <td>{{ hero.title }}</td>
 
             <td>
-              {% if hero.description %}
-                <div class="text-truncate" style="max-width: 380px;" title="{{ hero.description }}">
-                  {{ hero.description|truncatechars:120 }}
-                </div>
-              {% else %}
-                <span class="text-muted">—</span>
-              {% endif %}
+              {% with raw=hero.description|default:hero.subtitle|default:hero.summary|default:hero.caption|default:hero.text|default:hero.body|default:hero.content|default:hero.desc|default:hero.details|default:"" %}
+                {% if raw %}
+                  {% with clean=raw|striptags %}
+                    <div class="line-clamp-2" style="max-width: 420px;" title="{{ clean }}">
+                      {{ clean|truncatechars:140 }}
+                    </div>
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              {% endwith %}
             </td>
 
             <td>
@@ -84,6 +88,20 @@
   <div class="alert alert-info">هیرویی یافت نشد.</div>
   {% endif %}
 
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="هیرو" delete_url_name='admin_dashboard:admin_hero_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_heroes' %}
+  {% include 'admin_dashboard/_delete_modal.html' with
+      object_type="هیرو"
+      delete_url_name='admin_dashboard:admin_hero_delete'
+      delete_dummy_pk=0
+      return_url='admin_dashboard:admin_heroes' %}
 </div>
+
+<style>
+  /* 2-line ellipsis */
+  .line-clamp-2{
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
 {% endblock %}
