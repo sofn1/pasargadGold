@@ -89,14 +89,14 @@ class HeroForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = "__all__"   # relies on model's editable=True fields
-        # You can optionally set labels or widgets here; the __init__ below styles generically.
+        fields = "__all__"   # or list explicit fields if you prefer
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # ---- Generic styling for all fields
         for name, field in self.fields.items():
             w = field.widget
-            # Style widgets generically
             if isinstance(w, (forms.TextInput, forms.EmailInput, forms.URLInput, forms.NumberInput)):
                 w.attrs.setdefault("class", "form-control")
             elif isinstance(w, forms.Textarea):
@@ -106,12 +106,74 @@ class ProductForm(forms.ModelForm):
                 w.attrs.setdefault("class", "form-select")
             elif isinstance(w, (forms.SelectMultiple,)):
                 w.attrs.setdefault("class", "form-select")
-                w.attrs.setdefault("size", "6")
+                w.attrs.setdefault("size", "8")
             elif isinstance(w, (forms.FileInput, forms.ClearableFileInput)):
                 w.attrs.setdefault("class", "form-control")
-                w.attrs.setdefault("accept", "*/*")
+                w.attrs.setdefault("accept", "image/*")
             elif isinstance(w, forms.CheckboxInput):
                 w.attrs.setdefault("class", "form-check-input")
+
+        # ---- Persian labels (applied only if the field exists)
+        label_map = {
+            "name": "نام",
+            "english_name": "نام انگلیسی",
+            "category": "دسته‌بندی",
+            "category_id": "دسته‌بندی",
+            "price": "قیمت",
+            "featured": "ویژه",
+            "owner_name": "نام مالک",
+            "owner_profile": "پروفایل مالک",
+            "short_description": "توضیح کوتاه",
+            "description": "توضیحات",
+            "features": "ویژگی‌ها (JSON)",
+            "view_image": "تصویر اصلی",
+            "image": "تصویر اصلی",
+            "images": "تصاویر",
+            "rel_news": "اخبار مرتبط",
+            "rel_blogs": "بلاگ‌های مرتبط",
+            "rel_products": "محصولات مرتبط",
+            "brand": "برند",
+            "is_active": "فعال",
+            # اختیاری:
+            "slug": "اسلاگ",
+        }
+        for key, label in label_map.items():
+            if key in self.fields:
+                self.fields[key].label = label
+
+        # ---- Help texts / placeholders for special fields (if present)
+        help_map = {
+            "features": "JSON معتبر وارد کنید. مثال: {\"weight\": \"10g\", \"material\": \"gold\"}",
+            "images": "در صورت JSON، آرایه‌ای از URLها. در صورت چندفایلی، چند تصویر بارگذاری کنید.",
+            "owner_profile": "لینک پروفایل مالک (اختیاری).",
+        }
+        for key, help_text in help_map.items():
+            if key in self.fields and not self.fields[key].help_text:
+                self.fields[key].help_text = help_text
+
+        placeholder_map = {
+            "name": "نام محصول",
+            "english_name": "English name",
+            "price": "مثلاً 2500000",
+            "owner_name": "نام شخص/برند مالک",
+            "short_description": "توضیح خلاصه‌ای درباره محصول…",
+        }
+        for key, ph in placeholder_map.items():
+            if key in self.fields and hasattr(self.fields[key].widget, "attrs"):
+                self.fields[key].widget.attrs.setdefault("placeholder", ph)
+
+        # ---- Tweak dropdown empty labels
+        if "brand" in self.fields and isinstance(self.fields["brand"], forms.ModelChoiceField):
+            self.fields["brand"].empty_label = "— انتخاب برند —"
+
+        # Category could be called category OR category_id (ModelChoiceField)
+        for cat_key in ("category", "category_id"):
+            if cat_key in self.fields and isinstance(self.fields[cat_key], forms.ModelChoiceField):
+                self.fields[cat_key].empty_label = "— انتخاب دسته —"
+
+        # Minimum for price (if NumberInput)
+        if "price" in self.fields and isinstance(self.fields["price"].widget, forms.NumberInput):
+            self.fields["price"].widget.attrs.setdefault("min", "0")
 
 
 class CategoryForm(forms.ModelForm):
