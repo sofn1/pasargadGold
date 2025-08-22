@@ -62,25 +62,19 @@ class NewsForm(forms.ModelForm):
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner
-        fields = [
-            "title", "description", "image", "position", "priority",
-            "link_url", "is_active"
-        ]
+        fields = ["title", "image", "position", "priority", "is_active"]  # ← trimmed
         labels = {
             "title": "عنوان",
-            "description": "توضیحات",
             "image": "تصویر",
             "position": "موقعیت",
             "priority": "اولویت",
-            "link_url": "لینک (اختیاری)",
             "is_active": "فعال",
         }
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control"}),
-            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "image": forms.ClearableFileInput(attrs={"class": "form-control", "accept": "image/*"}),
             "position": forms.Select(attrs={"class": "form-select"}),
             "priority": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
-            "link_url": forms.URLInput(attrs={"class": "form-control", "dir": "ltr"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
