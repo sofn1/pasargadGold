@@ -628,10 +628,10 @@ def banner_create_view(request):
                 action="Create Banner",
                 details=f"Banner '{banner.title}' created at position {banner.position}"
             )
-            return redirect('admin_dashboard:banners')
+            return redirect('admin_dashboard:admin_banners')  # <- matches your urls.py
     else:
         form = BannerForm()
-    return render(request, 'admin_dashboard/banners/form.html', {'form': form, 'title': 'Create Banner'})
+    return render(request, 'admin_dashboard/banners/form.html', {'form': form, 'title': 'ایجاد بنر'})
 
 
 @staff_required
