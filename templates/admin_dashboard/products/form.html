@@ -19,12 +19,34 @@
     </div>
   {% endif %}
 
-  {# Tell JS whether server returned errors for THIS render #}
+  {# Tell JS whether the server returned errors for THIS render #}
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
-    <div class="alert alert-danger">فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.</div>
   {% else %}
     <script>window.__form_has_errors__ = false;</script>
+  {% endif %}
+
+  {# Top error summary (safe, no dict indexing) #}
+  {% if form.errors %}
+  <div class="alert alert-danger">
+    <strong>بررسی خطاها:</strong>
+    <ul class="mb-0">
+      {% for bf in form %}
+        {% if bf.errors %}
+          <li><b>{{ bf.label }}</b>:
+            {% for e in bf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
+          </li>
+        {% endif %}
+      {% endfor %}
+      {% for hf in form.hidden_fields %}
+        {% if hf.errors %}
+          <li><b>{{ hf.name }}</b>:
+            {% for e in hf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
 
   <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
@@ -57,7 +79,7 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — single but wired EXACTLY like محصولات مرتبط (sticky + AJAX + clear/open) #}
+              {# دسته‌بندی — single, wired EXACTLY like rel_products (Select2 + sticky + open/clear) #}
               {% if form.category_id %}
               <div class="col-md-6">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
@@ -85,7 +107,7 @@
               <div class="col-md-6">
                 <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
                 {{ form.price }}
-                <small class="text-muted d-block mt-1">فقط در نمایش با ویرگول است؛ مقدار خالص ذخیره می‌شود.</small>
+                <small class="text-muted d-block mt-1">نمایش با ویرگول؛ مقدار خالص ذخیره می‌شود.</small>
                 {% for e in form.price.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -339,7 +361,7 @@
 
 <script>
 (function(){
-  // ------- Helpers
+  // ------- Error toast only when server returned errors
   function showErrorToast(msg){
     if (!window.__form_has_errors__) return;
     const old = document.querySelector('.toast-error'); if (old) old.remove();
@@ -350,7 +372,7 @@
     setTimeout(()=> div.remove(), 4500);
   }
 
-  // Highlight invalids if server sent errors
+  // Highlight invalid fields (inline)
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
     document.querySelectorAll('.text-danger.small').forEach(function(err){
@@ -361,18 +383,22 @@
     showErrorToast();
   })();
 
-  // Ensure the three related selects are not HTML-required
+  // Related selects not required on client
   ['id_rel_blogs','id_rel_news','id_rel_products'].forEach(function(id){
     const el = document.getElementById(id);
     if (el) el.removeAttribute('required');
   });
 
-  // Generic Select2 initializer — دسته‌بندی wired EXACTLY like محصولات مرتبط
+  // Select2 initializer — category wired EXACTLY like rel_products
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
     if (!$el.length) return;
 
+    // Ensure placeholder option exists for singles (so clear works)
+    if (!isMultiple && !$el.find('option[value=""]').length) {
+      $el.prepend(new Option('', '', false, false));
+    }
     if (isMultiple) $el.prop('multiple', true);
 
     $el.select2({
@@ -419,20 +445,23 @@
     });
   }
 
-  // “افزودن / حذف” helpers
-  document.querySelectorAll('[data-open-select]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      const sel = document.querySelector(btn.getAttribute('data-open-select'));
-      if (sel && window.jQuery && jQuery.fn.select2) jQuery(sel).select2('open');
-    });
+  // Delegated handlers so “افزودن/حذف” always work
+  document.addEventListener('click', function(e){
+    const openBtn = e.target.closest('[data-open-select]');
+    if (openBtn && window.jQuery && jQuery.fn.select2) {
+      const sel = document.querySelector(openBtn.getAttribute('data-open-select'));
+      if (sel) jQuery(sel).select2('open');
+    }
   });
-  document.querySelectorAll('[data-clear-select]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      const sel = document.querySelector(btn.getAttribute('data-clear-select'));
+  document.addEventListener('click', function(e){
+    const clearBtn = e.target.closest('[data-clear-select]');
+    if (clearBtn) {
+      const sel = document.querySelector(clearBtn.getAttribute('data-clear-select'));
       if (!sel) return;
       if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
-      [...sel.options].forEach(o => o.selected = false);
-    });
+      // Also clear native selection for safety
+      Array.from(sel.options).forEach(o => o.selected = false);
+    }
   });
 
   // ====== Initialize Select2s ======
