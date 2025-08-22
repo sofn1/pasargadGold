@@ -239,38 +239,46 @@
 
 <script>
 (function(){
-  // Currency unit
-  const unit = "{{ CURRENCY_UNIT|default:'ریال' }}";
-  const unitEl = document.getElementById('currency-unit');
-  if (unitEl) unitEl.textContent = `(${unit})`;
+  // --- Enhance static selects (brand/category) if you like:
+  function enhanceLocal(sel){ if (window.jQuery && jQuery.fn.select2) jQuery(sel).select2({ width:'100%', dir:'rtl' }); }
+  enhanceLocal('#id_category_id');
+  enhanceLocal('#id_brand');
 
-  // Enhance selects via Select2 (if available)
-  function enhanceSelect(sel){ if (window.jQuery && jQuery.fn.select2) jQuery(sel).select2({ width:'100%', dir:'rtl' }); }
-  enhanceSelect('#id_category_id');
-  enhanceSelect('#id_brand');
-  enhanceSelect('#id_rel_blogs');
-  enhanceSelect('#id_rel_news');
-  enhanceSelect('#id_rel_products');
+  // --- AJAX-powered Select2 for relateds
+  function enhanceAjax(sel, url){
+    if (!(window.jQuery && jQuery.fn.select2)) return;
+    jQuery(sel).select2({
+      width: '100%',
+      dir: 'rtl',
+      ajax: {
+        url: url,
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return { q: params.term };
+        },
+        processResults: function (data) {
+          return { results: data.results || [] };
+        },
+        cache: true
+      },
+      minimumInputLength: 1
+    });
+  }
 
-  document.querySelectorAll('[data-open-select]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const sel = document.querySelector(btn.getAttribute('data-open-select'));
+  enhanceAjax('#id_rel_blogs',    "{% url 'admin_dashboard:api_search_blogs' %}");
+  enhanceAjax('#id_rel_news',     "{% url 'admin_dashboard:api_search_news' %}");
+  enhanceAjax('#id_rel_products', "{% url 'admin_dashboard:api_search_products' %}");
+
+  // “افزودن” button still opens the dropdown
+  document.querySelectorAll('[data-open-select]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sel = document.querySelector(btn.getAttribute('data-open-select'));
       if (sel && window.jQuery && jQuery.fn.select2) jQuery(sel).select2('open');
     });
   });
 
-  // Price format
-  const price = document.getElementById('id_price');
-  function formatNumber(val){ return (val||'').toString().replace(/[^\d]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-  if (price){
-    price.value = formatNumber(price.value);
-    price.addEventListener('input', ()=>{
-      const raw = price.value.replace(/[^\d]/g,'');
-      price.value = formatNumber(raw);
-    });
-  }
-
-  // Main image live preview (view_image only)
+  // --- Main image preview (keep)
   const mainInput = document.getElementById('id_view_image');
   const mainPrev = document.getElementById('main-image-preview');
   if (mainInput && mainPrev){
@@ -289,7 +297,7 @@
     });
   }
 
-  // Extra images live preview
+  // --- Extra images preview (keep)
   const multi = document.getElementById('extra-images');
   const grid = document.getElementById('extra-images-preview');
   if (multi && grid){
@@ -309,7 +317,7 @@
     });
   }
 
-  // Features repeater
+  // --- Features repeater (unchanged)
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
@@ -332,17 +340,12 @@
       const initialText = repeater.getAttribute('data-initial') || "{}";
       const initial = JSON.parse(initialText);
       const keys = Object.keys(initial || {});
-      if (keys.length){
-        keys.forEach(k=> addFeatureRow(k, initial[k]));
-      } else {
-        addFeatureRow();
-      }
+      if (keys.length){ keys.forEach(k=> addFeatureRow(k, initial[k])); } else { addFeatureRow(); }
     }catch(e){ addFeatureRow(); }
 
     addBtn.addEventListener('click', ()=> addFeatureRow());
 
     document.getElementById('product-form').addEventListener('submit', ()=>{
-      // features -> JSON string
       const obj = {};
       rows.querySelectorAll('.row').forEach(r=>{
         const k = (r.querySelector('.feature-key')?.value || '').trim();
@@ -350,11 +353,9 @@
         if (k) obj[k] = v;
       });
       hidden.value = JSON.stringify(obj);
-
-      // strip separators from price
-      if (price) price.value = (price.value || '').replace(/[^\d]/g,'');
     });
   }
 })();
 </script>
+
 {% endblock %}

@@ -2,8 +2,8 @@
 import json
 from django.views import View
 from django.conf import settings
-from django.db.models import Sum
 from django.utils import timezone
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -12,7 +12,6 @@ from django.core.files.storage import default_storage
 from django.views.generic import ListView, DetailView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-
 
 from heroes.models import Hero
 from datetime import timedelta
@@ -810,6 +809,46 @@ def brand_delete_view(request, pk):
 
 # --- PRODUCT CRUD ---
 
+@staff_required
+def api_search_blogs(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = Blog.objects.all()
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
+    qs = qs.select_related("writer").order_by("-publish_time")[:20]
+    data = [{"id": obj.pk, "text": obj.name or obj.english_name or f"Blog #{obj.pk}"} for obj in qs]
+    return JsonResponse({"results": data})
+
+
+@staff_required
+def api_search_news(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = News.objects.all()
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
+    qs = qs.select_related("writer").order_by("-publish_time")[:20]
+    data = [{"id": obj.pk, "text": obj.name or obj.english_name or f"News #{obj.pk}"} for obj in qs]
+    return JsonResponse({"results": data})
+
+
+@staff_required
+def api_search_products(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = Product.objects.all()
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
+    qs = qs.select_related("brand").order_by("-created_at")[:20]
+
+    def label(p):
+        parts = [p.name or p.english_name or f"Product #{p.pk}"]
+        if getattr(p, "brand", None):
+            parts.append(f"({p.brand.name})")
+        return " ".join(parts)
+
+    data = [{"id": p.pk, "text": label(p)} for p in qs]
+    return JsonResponse({"results": data})
+
+
 @method_staff_required
 class ProductListView(ListView):
     model = Product
@@ -841,10 +880,8 @@ def product_create_view(request):
     if request.method == "POST":
         # normalize price (digits only) if present in POST
         if "price" in request.POST:
-            cleaned = "".join(ch for ch in request.POST["price"] if ch.isdigit())
-            # mutate POST is tricky; better to copy:
             request.POST = request.POST.copy()
-            request.POST["price"] = cleaned or request.POST["price"]
+            request.POST["price"] = request.POST["price"].replace(",", "")
 
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
@@ -889,7 +926,7 @@ def product_edit_view(request, pk):
     if request.method == "POST":
         if "price" in request.POST:
             request.POST = request.POST.copy()
-            request.POST["price"] = "".join(ch for ch in request.POST["price"] if ch.isdigit())
+            request.POST["price"] = request.POST["price"].replace(",", "")
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             features = form.cleaned_data.get("features")
@@ -920,7 +957,8 @@ def product_edit_view(request, pk):
     else:
         form = ProductForm(instance=product)
 
-    ctx = {'form': form, 'title': f'ویرایش محصول: {product.name}', 'CURRENCY_UNIT': getattr(settings, "CURRENCY_UNIT", "ریال")}
+    ctx = {'form': form, 'title': f'ویرایش محصول: {product.name}',
+           'CURRENCY_UNIT': getattr(settings, "CURRENCY_UNIT", "ریال")}
     return render(request, 'admin_dashboard/products/form.html', ctx)
 
 

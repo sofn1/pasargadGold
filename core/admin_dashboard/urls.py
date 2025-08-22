@@ -32,6 +32,11 @@ urlpatterns = [
     path('heroes/<int:pk>/edit/', views.hero_edit_view, name='admin_hero_edit'),
     path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
 
+    # AJAX search APIs (staff-only)
+    path('api/search/blogs/', views.api_search_blogs, name='api_search_blogs'),
+    path('api/search/news/', views.api_search_news, name='api_search_news'),
+    path('api/search/products/', views.api_search_products, name='api_search_products'),
+
     # Products
     path('products/', views.ProductListView.as_view(), name='admin_products'),
     path('products/create/', views.product_create_view, name='admin_product_create'),

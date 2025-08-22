@@ -1,13 +1,13 @@
 # admin_dashboard/forms.py
+import json
 from django import forms
-from django.core.exceptions import ValidationError
+from heroes.models import Hero
+from banners.models import Banner
+from news.models.news import News
+from blogs.models.blog import Blog
+from categories.models import Category
 from products.models.brand import Brand
 from products.models.product import Product
-from banners.models import Banner
-from heroes.models import Hero
-from blogs.models.blog import Blog
-from news.models.news import News
-from categories.models import Category
 
 
 # --- Shared Widgets ---
@@ -89,12 +89,12 @@ class HeroForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = "__all__"   # or list explicit fields if you prefer
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # ---- Generic styling for all fields
+        # ---------- Base widget classes ----------
         for name, field in self.fields.items():
             w = field.widget
             if isinstance(w, (forms.TextInput, forms.EmailInput, forms.URLInput, forms.NumberInput)):
@@ -104,7 +104,7 @@ class ProductForm(forms.ModelForm):
                 w.attrs.setdefault("rows", 4)
             elif isinstance(w, forms.Select):
                 w.attrs.setdefault("class", "form-select")
-            elif isinstance(w, (forms.SelectMultiple,)):
+            elif isinstance(w, forms.SelectMultiple):
                 w.attrs.setdefault("class", "form-select")
                 w.attrs.setdefault("size", "8")
             elif isinstance(w, (forms.FileInput, forms.ClearableFileInput)):
@@ -113,13 +113,13 @@ class ProductForm(forms.ModelForm):
             elif isinstance(w, forms.CheckboxInput):
                 w.attrs.setdefault("class", "form-check-input")
 
-        # ---- Persian labels (applied only if the field exists)
+        # ---------- Persian labels ----------
         label_map = {
             "name": "نام",
             "english_name": "نام انگلیسی",
             "category": "دسته‌بندی",
             "category_id": "دسته‌بندی",
-            "price": "قیمت",
+            "price": "قیمت (تومان)",
             "featured": "ویژه",
             "owner_name": "نام مالک",
             "owner_profile": "پروفایل مالک",
@@ -127,34 +127,30 @@ class ProductForm(forms.ModelForm):
             "description": "توضیحات",
             "features": "ویژگی‌ها (JSON)",
             "view_image": "تصویر اصلی",
-            "image": "تصویر اصلی",
             "images": "تصاویر",
             "rel_news": "اخبار مرتبط",
             "rel_blogs": "بلاگ‌های مرتبط",
             "rel_products": "محصولات مرتبط",
             "brand": "برند",
             "is_active": "فعال",
-            # اختیاری:
             "slug": "اسلاگ",
         }
         for key, label in label_map.items():
             if key in self.fields:
                 self.fields[key].label = label
 
-        # ---- Help texts / placeholders for special fields (if present)
+        # ---------- Help / placeholders ----------
         help_map = {
-            "features": "JSON معتبر وارد کنید. مثال: {\"weight\": \"10g\", \"material\": \"gold\"}",
-            "images": "در صورت JSON، آرایه‌ای از URLها. در صورت چندفایلی، چند تصویر بارگذاری کنید.",
             "owner_profile": "لینک پروفایل مالک (اختیاری).",
         }
-        for key, help_text in help_map.items():
+        for key, txt in help_map.items():
             if key in self.fields and not self.fields[key].help_text:
-                self.fields[key].help_text = help_text
+                self.fields[key].help_text = txt
 
         placeholder_map = {
             "name": "نام محصول",
             "english_name": "English name",
-            "price": "مثلاً 2500000",
+            "price": "مثلاً 2,500,000",
             "owner_name": "نام شخص/برند مالک",
             "short_description": "توضیح خلاصه‌ای درباره محصول…",
         }
@@ -162,18 +158,79 @@ class ProductForm(forms.ModelForm):
             if key in self.fields and hasattr(self.fields[key].widget, "attrs"):
                 self.fields[key].widget.attrs.setdefault("placeholder", ph)
 
-        # ---- Tweak dropdown empty labels
+        # ---------- Empty labels for dropdowns ----------
         if "brand" in self.fields and isinstance(self.fields["brand"], forms.ModelChoiceField):
             self.fields["brand"].empty_label = "— انتخاب برند —"
-
-        # Category could be called category OR category_id (ModelChoiceField)
         for cat_key in ("category", "category_id"):
             if cat_key in self.fields and isinstance(self.fields[cat_key], forms.ModelChoiceField):
                 self.fields[cat_key].empty_label = "— انتخاب دسته —"
 
-        # Minimum for price (if NumberInput)
-        if "price" in self.fields and isinstance(self.fields["price"].widget, forms.NumberInput):
-            self.fields["price"].widget.attrs.setdefault("min", "0")
+        # ---------- Price: server-side comma formatting (no JS) ----------
+        if "price" in self.fields:
+            self.fields["price"].widget.attrs.setdefault("inputmode", "numeric")
+            self.fields["price"].widget.attrs.setdefault("dir", "ltr")
+            raw = self.initial.get("price")
+            if raw is None and getattr(self.instance, "pk", None):
+                raw = getattr(self.instance, "price", None)
+            try:
+                if raw not in (None, ""):
+                    self.initial["price"] = f"{int(raw):,}"
+            except Exception:
+                pass
+            # optional min
+            if isinstance(self.fields["price"].widget, forms.NumberInput):
+                self.fields["price"].widget.attrs.setdefault("min", "0")
+
+        # ---------- Hide raw images JSON (we manage uploads via extra_images in the view/template) ----------
+        if "images" in self.fields:
+            self.fields["images"].widget = forms.HiddenInput()
+
+        # ---------- features initial as JSON string (for the repeater) ----------
+        if "features" in self.fields:
+            # Ensure initial is a JSON string (template reads it for the repeater)
+            init_val = self.initial.get("features", None)
+            if init_val is None and getattr(self.instance, "pk", None):
+                init_val = getattr(self.instance, "features", None)
+            try:
+                if isinstance(init_val, (dict, list)):
+                    self.initial["features"] = json.dumps(init_val, ensure_ascii=False)
+                elif isinstance(init_val, str) and init_val.strip():
+                    # Keep as-is (assume valid JSON); if not, clean_features will handle.
+                    self.initial["features"] = init_val
+                else:
+                    self.initial["features"] = "{}"
+            except Exception:
+                self.initial["features"] = "{}"
+
+    # ---------- Cleaners ----------
+
+    def clean_price(self):
+        price = self.cleaned_data.get("price")
+        if isinstance(price, str):
+            price = price.replace(",", "").strip()
+            price = int(price) if price.isdigit() else price
+        return price
+
+    def clean_features(self):
+        """
+        Accept either a dict (from JSONField) or a JSON string (from the repeater hidden textarea).
+        """
+        val = self.cleaned_data.get("features")
+        if isinstance(val, dict):
+            return val
+        if isinstance(val, str):
+            val = val.strip()
+            if not val:
+                return {}
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, dict):
+                    return parsed
+                # if user passed a list or other type, coerce to {}
+                return {}
+            except Exception:
+                raise forms.ValidationError("فرمت ویژگی‌ها معتبر نیست. لطفاً به صورت JSON وارد کنید.")
+        return {}
 
 
 class CategoryForm(forms.ModelForm):
