@@ -19,14 +19,12 @@
     </div>
   {% endif %}
 
-  {# Tell JS whether the server returned errors for THIS render #}
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
   {% else %}
     <script>window.__form_has_errors__ = false;</script>
   {% endif %}
 
-  {# Top error summary (safe, no dict indexing) #}
   {% if form.errors %}
   <div class="alert alert-danger">
     <strong>بررسی خطاها:</strong>
@@ -79,7 +77,7 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — single, wired EXACTLY like rel_products (Select2 + sticky + open/clear) #}
+              {# دسته‌بندی — single, wired EXACTLY like محصولات مرتبط (Select2 + sticky + open/clear) #}
               {% if form.category_id %}
               <div class="col-md-6">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
@@ -214,6 +212,7 @@
           <div class="card-body">
             <div class="row g-4">
 
+              {# تصویر اصلی (اختیاری/اجباری بسته به فرم شما) #}
               {% if form.view_image %}
               <div class="col-md-6">
                 <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
@@ -229,29 +228,36 @@
               </div>
               {% endif %}
 
+              {# تصاویر اضافی — every input uses the REAL backend field name #}
+              {% if form.images %}
               <div class="col-md-6">
-                <label class="form-label d-block">تصاویر اضافی</label>
-                <div id="extra-images-inputs" class="d-none"></div>
+                <label class="form-label d-block">{{ form.images.label|default:"تصاویر اضافی" }}</label>
+
+                <input type="hidden" id="images-field-name"
+                       value="{{ form.images.html_name|default:'images' }}">
+                <input type="hidden" id="images-accept"
+                       value="image/*">
+
                 <div class="d-flex align-items-center gap-2">
                   <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
                     افزودن تصویر
                   </button>
-                  <small class="text-muted">هر کلیک یک تصویر اضافه می‌کند.</small>
+                  <small class="text-muted">
+                    هر کلیک یک ورودی فایل جدید با نام
+                    <code>{{ form.images.html_name|default:'images' }}</code> اضافه می‌کند.
+                  </small>
                 </div>
+
+                <div id="extra-images-inputs" class="d-none"></div>
                 <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
 
-                {% if form.instance.pk and form.instance.images %}
-                  <div class="mt-3">
-                    <div class="text-muted mb-1">تصاویر موجود:</div>
-                    <div class="d-flex flex-wrap gap-2">
-                      {% for img in form.instance.images %}
-                        <img src="{{ img }}" alt="image"
-                             style="height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
-                      {% endfor %}
-                    </div>
+                {% if form.images.errors %}
+                  <div class="text-danger small mt-2">
+                    {% for e in form.images.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                   </div>
                 {% endif %}
               </div>
+              {% endif %}
 
             </div>
           </div>
@@ -309,7 +315,7 @@
       </div>
 
       <!-- ===== سایر فیلدها (fallback امن) ===== -->
-      {% with excluded="name|english_name|category_id|brand|price|featured|is_active|owner_name|owner_profile|short_description|description|features|view_image|rel_blogs|rel_news|rel_products" %}
+      {% with excluded="name|english_name|category_id|brand|price|featured|is_active|owner_name|owner_profile|short_description|description|features|view_image|images|rel_blogs|rel_news|rel_products" %}
         {% for field in form.visible_fields %}
           {% with token="|"|add:field.name|add:"|" all="|"|add:excluded|add:"|" %}
             {% if token not in all %}
@@ -361,7 +367,7 @@
 
 <script>
 (function(){
-  // ------- Error toast only when server returned errors
+  // ------- Error toast (only if server sent errors)
   function showErrorToast(msg){
     if (!window.__form_has_errors__) return;
     const old = document.querySelector('.toast-error'); if (old) old.remove();
@@ -372,7 +378,6 @@
     setTimeout(()=> div.remove(), 4500);
   }
 
-  // Highlight invalid fields (inline)
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
     document.querySelectorAll('.text-danger.small').forEach(function(err){
@@ -383,19 +388,18 @@
     showErrorToast();
   })();
 
-  // Related selects not required on client
+  // Ensure related multis aren’t HTML-required
   ['id_rel_blogs','id_rel_news','id_rel_products'].forEach(function(id){
     const el = document.getElementById(id);
     if (el) el.removeAttribute('required');
   });
 
-  // Select2 initializer — category wired EXACTLY like rel_products
+  // ----- Select2 initializer (category wired exactly like related products)
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
     if (!$el.length) return;
 
-    // Ensure placeholder option exists for singles (so clear works)
     if (!isMultiple && !$el.find('option[value=""]').length) {
       $el.prepend(new Option('', '', false, false));
     }
@@ -407,9 +411,7 @@
       dropdownParent: jQuery('body'),
       multiple: !!isMultiple,
       ajax: {
-        url: url,
-        dataType: 'json',
-        delay: 250,
+        url: url, dataType: 'json', delay: 250,
         data: params => ({ q: params.term }),
         processResults: data => ({ results: (data && data.results) ? data.results : [] }),
         cache: true
@@ -422,21 +424,15 @@
       escapeMarkup: m => m
     });
 
-    // Sticky selection: inject <option selected> on choose
     $el.on('select2:select', function (e) {
       const data = e.params && e.params.data;
       if (!data || data.id == null) return;
       let opt = this.querySelector("option[value='" + data.id + "']");
-      if (!opt) {
-        opt = new Option(data.text, data.id, true, true);
-        this.add(opt);
-      } else {
-        opt.selected = true;
-      }
+      if (!opt) { opt = new Option(data.text, data.id, true, true); this.add(opt); }
+      else { opt.selected = true; }
       $el.trigger('change.select2');
     });
 
-    // Reflect unselect (for multis)
     $el.on('select2:unselect', function (e) {
       const data = e.params && e.params.data;
       if (!data) return;
@@ -445,7 +441,7 @@
     });
   }
 
-  // Delegated handlers so “افزودن/حذف” always work
+  // Delegated open/clear so buttons always work
   document.addEventListener('click', function(e){
     const openBtn = e.target.closest('[data-open-select]');
     if (openBtn && window.jQuery && jQuery.fn.select2) {
@@ -455,36 +451,26 @@
   });
   document.addEventListener('click', function(e){
     const clearBtn = e.target.closest('[data-clear-select]');
-    if (clearBtn) {
-      const sel = document.querySelector(clearBtn.getAttribute('data-clear-select'));
-      if (!sel) return;
-      if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
-      // Also clear native selection for safety
-      Array.from(sel.options).forEach(o => o.selected = false);
-    }
+    if (!clearBtn) return;
+    const sel = document.querySelector(clearBtn.getAttribute('data-clear-select'));
+    if (!sel) return;
+    if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
+    Array.from(sel.options).forEach(o => o.selected = false);
   });
 
-  // ====== Initialize Select2s ======
-  // دسته‌بندی (single) — same pipeline as محصولات مرتبط
-  initAjaxSelect2('#{{ form.category_id.id_for_label }}',
-                  "{% url 'admin_dashboard:api_search_categories' %}", false);
+  // Init Select2s
+  initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
+  initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
+  initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
 
-  // Related multis
-  initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}',
-                  "{% url 'admin_dashboard:api_search_blogs' %}", true);
-  initAjaxSelect2('#{{ form.rel_news.id_for_label }}',
-                  "{% url 'admin_dashboard:api_search_news' %}", true);
-  initAjaxSelect2('#{{ form.rel_products.id_for_label }}',
-                  "{% url 'admin_dashboard:api_search_products' %}", true);
-
-  // ------- Main image preview
+  // ----- Main image preview
   const mainInput = document.getElementById('{{ form.view_image.id_for_label }}');
   const mainPrev = document.getElementById('main-image-preview');
   if (mainInput && mainPrev){
     mainInput.addEventListener('change', ()=>{
       mainPrev.innerHTML = '';
-      const f = mainInput.files?.[0];
-      if (!f) return;
+      const f = mainInput.files?.[0]; if (!f) return;
       const r = new FileReader();
       r.onload = e=>{
         const img = new Image();
@@ -496,96 +482,68 @@
     });
   }
 
-  // ------- Features repeater
-  const repeater = document.getElementById('features-repeater');
-  const rows = document.getElementById('feature-rows');
-  const addBtn = document.getElementById('add-feature');
-  const hidden = document.getElementById('features-hidden');
-
-  function addFeatureRow(k='', v=''){
-    const row = document.createElement('div');
-    row.className = 'row g-2';
-    row.innerHTML = `
-      <div class="col-md-5"><input type="text" class="form-control feature-key" placeholder="نام ویژگی" value="${k}"></div>
-      <div class="col-md-6"><input type="text" class="form-control feature-val" placeholder="مقدار ویژگی" value="${v}"></div>
-      <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-feature">&times;</button></div>
-    `;
-    rows.appendChild(row);
-    row.querySelector('.remove-feature').addEventListener('click', ()=> row.remove());
-  }
-
-  if (repeater && rows && addBtn && hidden){
-    try{
-      const initialText = repeater.getAttribute('data-initial') || "{}";
-      const initial = JSON.parse(initialText);
-      const keys = Object.keys(initial || {});
-      if (keys.length){ keys.forEach(k=> addFeatureRow(k, initial[k])); } else { addFeatureRow(); }
-      hidden.value = JSON.stringify(initial || {});
-    }catch(e){
-      addFeatureRow();
-      hidden.value = "{}";
-    }
-
-    addBtn.addEventListener('click', ()=> addFeatureRow());
-  }
-
-  // ------- Incremental extra images
+  // ----- Extra images (now named EXACTLY like the backend field)
   const inputsWrap = document.getElementById('extra-images-inputs');
   const addImgBtn  = document.getElementById('add-extra-image');
   const grid       = document.getElementById('extra-images-preview');
+  const imagesFieldName = (document.getElementById('images-field-name')?.value) || '{{ form.images.html_name|default:"images" }}';
+  const imagesAccept = (document.getElementById('images-accept')?.value) || 'image/*';
   let counter = 0;
 
-  if (inputsWrap && addImgBtn && grid) {
-    addImgBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.name = 'extra_images';
-      input.accept = 'image/*';
-      input.className = 'd-none';
-      input.dataset.key = `img-${++counter}`;
+  function addExtraImageInput(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = imagesFieldName;        // CRITICAL: matches Django form field
+    input.accept = imagesAccept;
+    input.className = 'd-none';
+    input.dataset.key = `img-${++counter}`;
+    inputsWrap.appendChild(input);
 
-      inputsWrap.appendChild(input);
+    input.addEventListener('change', () => {
+      if (!input.files || !input.files[0]) { input.remove(); return; }
 
-      input.addEventListener('change', () => {
-        if (!input.files || !input.files[0]) { input.remove(); return; }
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'position-relative';
+        wrap.dataset.key = input.dataset.key;
 
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const wrap = document.createElement('div');
-          wrap.className = 'position-relative';
-          wrap.dataset.key = input.dataset.key;
+        const img = new Image();
+        img.src = e.target.result;
+        img.style.height='72px'; img.style.width='72px'; img.style.objectFit='cover';
+        img.style.borderRadius='.5rem'; img.style.border='1px solid #e9ecef';
 
-          const img = new Image();
-          img.src = e.target.result;
-          img.style.height='72px'; img.style.width='72px'; img.style.objectFit='cover';
-          img.style.borderRadius='.5rem'; img.style.border='1px solid #e9ecef';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-danger position-absolute';
+        removeBtn.style.top='-8px'; removeBtn.style.left='-8px';
+        removeBtn.style.borderRadius='50%'; removeBtn.style.lineHeight='1'; removeBtn.style.padding='2px 6px';
+        removeBtn.innerHTML = '&times;';
 
-          const removeBtn = document.createElement('button');
-          removeBtn.type = 'button';
-          removeBtn.className = 'btn btn-sm btn-danger position-absolute';
-          removeBtn.style.top='-8px'; removeBtn.style.left='-8px';
-          removeBtn.style.borderRadius='50%'; removeBtn.style.lineHeight='1'; removeBtn.style.padding='2px 6px';
-          removeBtn.innerHTML = '&times;';
+        removeBtn.addEventListener('click', () => { wrap.remove(); input.remove(); });
 
-          removeBtn.addEventListener('click', () => { wrap.remove(); input.remove(); });
-
-          wrap.appendChild(img);
-          wrap.appendChild(removeBtn);
-          grid.appendChild(wrap);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      input.click();
+        wrap.appendChild(img);
+        wrap.appendChild(removeBtn);
+        grid.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
     });
+
+    input.click();
   }
 
-  // ------- Submit: serialize features + strip price commas
-  const form = document.getElementById('product-form');
+  if (inputsWrap && addImgBtn && grid) {
+    addImgBtn.addEventListener('click', addExtraImageInput);
+  }
+
+  // ----- Features hidden JSON + price commas
+  const formEl = document.getElementById('product-form');
+  const rows = document.getElementById('feature-rows');
+  const hidden = document.getElementById('features-hidden');
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
 
-  // live comma format for price
+  // price live format
   if (priceInput) {
     const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     if (priceInput.value && !/,/.test(priceInput.value)) { priceInput.value = format(priceInput.value); }
@@ -600,9 +558,8 @@
     });
   }
 
-  if (form) {
-    form.addEventListener('submit', function () {
-      // features -> hidden JSON (ensure {} even if empty)
+  if (formEl) {
+    formEl.addEventListener('submit', function () {
       if (rows && hidden) {
         const obj = {};
         rows.querySelectorAll('.row').forEach(r=>{
@@ -613,7 +570,6 @@
         hidden.value = JSON.stringify(obj || {});
         if (!hidden.value) hidden.value = "{}";
       }
-      // strip price commas
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
     });
   }
