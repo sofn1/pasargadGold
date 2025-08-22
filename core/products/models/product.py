@@ -7,7 +7,7 @@ class Product(models.Model):
     english_name = models.CharField(max_length=255)
     category_id = models.CharField(max_length=64)  # MongoDB category ID as string
 
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price = models.DecimalField(max_digits=15, decimal_places=0, default=0)
     featured = models.BooleanField(default=False)  # ✅ NEW FIELD
 
     owner_name = models.CharField(max_length=255)
