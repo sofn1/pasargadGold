@@ -19,6 +19,7 @@
           <tr>
             <th style="width:72px;">تصویر</th>
             <th>عنوان</th>
+            <th style="min-width:260px;">توضیحات</th>
             <th>فعال</th>
             <th>عملیات</th>
           </tr>
@@ -39,6 +40,16 @@
             </td>
 
             <td>{{ hero.title }}</td>
+
+            <td>
+              {% if hero.description %}
+                <div class="text-truncate" style="max-width: 380px;" title="{{ hero.description }}">
+                  {{ hero.description|truncatechars:120 }}
+                </div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
 
             <td>
               {% if hero.is_active %}
