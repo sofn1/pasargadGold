@@ -28,9 +28,9 @@ urlpatterns = [
 
     # Heros
     path('heroes/', views.HeroListView.as_view(), name='admin_heroes'),
-    path('heroes/create/', views.hero_create_view, name='admin_heroes_create'),
-    path('heroes/<int:pk>/edit/', views.hero_edit_view, name='admin_heroes_edit'),
-    path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_heroes_delete'),
+    path('heroes/create/', views.hero_create_view, name='admin_hero_create'),
+    path('heroes/<str:pk>/edit/', views.hero_edit_view, name='admin_hero_edit'),
+    path('heroes/<str:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
 
 
 

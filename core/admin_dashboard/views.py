@@ -685,13 +685,12 @@ def hero_create_view(request):
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Create Hero",
-                details=f"Hero '{hero.title}' created"
+                details=f"Hero '{getattr(hero, 'title', hero.pk)}' created"
             )
-            return redirect('admin_dashboard:heroes')
+            return redirect('admin_dashboard:admin_heroes')  # ← FIX
     else:
         form = HeroForm()
-    return render(request, 'admin_dashboard/heroes/form.html', {'form': form, 'title': 'Create Hero'})
-
+    return render(request, 'admin_dashboard/heroes/form.html', {'form': form, 'title': 'ایجاد هیرو'})
 
 @staff_required
 def hero_edit_view(request, pk):
@@ -703,26 +702,24 @@ def hero_edit_view(request, pk):
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Update Hero",
-                details=f"Updated hero '{hero.title}'"
+                details=f"Updated hero '{getattr(hero, 'title', hero.pk)}'"
             )
-            return redirect('admin_dashboard:heroes')
+            return redirect('admin_dashboard:admin_heroes')  # ← FIX
     else:
         form = HeroForm(instance=hero)
-    return render(request, 'admin_dashboard/heroes/form.html', {'form': form, 'title': f'Edit Hero: {hero.title}'})
-
+    return render(request, 'admin_dashboard/heroes/form.html',
+                  {'form': form, 'title': f'ویرایش هیرو: {getattr(hero, "title", "")}'})
 
 @staff_required
 def hero_delete_view(request, pk):
     hero = get_object_or_404(Hero, pk=pk)
     if request.method == "POST":
-        title = hero.title
+        title = getattr(hero, "title", str(hero.pk))
         hero.delete()
-        AdminActionLog.objects.create(
-            admin=request.user,
-            action="Delete Hero",
-            details=f"Deleted hero '{title}'"
-        )
-        return JsonResponse({'success': True})
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True})
+        messages.success(request, f"هیرو «{title}» حذف شد.")
+        return redirect('admin_dashboard:admin_heroes')  # ← FIX
     return render(request, 'admin_dashboard/heroes/confirm_delete.html', {'hero': hero})
 
 
