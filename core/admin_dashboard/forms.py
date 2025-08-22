@@ -93,6 +93,17 @@ class ProductForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "price" in self.fields:
+            # Render as text so commas don’t break HTML5 number input
+            self.fields["price"].widget = forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "dir": "ltr",
+                    "inputmode": "numeric",  # mobile numeric keypad
+                    "placeholder": "مثلاً 2,500,000",
+                }
+            )
+            self.fields["price"].label = "قیمت (تومان)"
 
         # ---------- Base widget classes ----------
         for name, field in self.fields.items():

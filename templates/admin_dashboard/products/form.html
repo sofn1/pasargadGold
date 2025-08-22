@@ -4,122 +4,154 @@
 
 {% block mainContent %}
 <div class="container-fluid px-4">
-  <div class="d-flex justify-content-between align-items-center my-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center my-4">
     <h2 class="text-white mb-0">
       {% if form.instance.pk %}ویرایش محصول{% else %}ایجاد محصول{% endif %}
     </h2>
     <a href="{% url 'admin_dashboard:admin_products' %}" class="btn btn-secondary">بازگشت</a>
   </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body">
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <form id="product-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+      <!-- ===== مشخصات اصلی ===== -->
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+            <i class="fas fa-box-open"></i><span>مشخصات اصلی</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+
+              {% if form.name %}
+              <div class="col-md-6">
+                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% for e in form.name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+              {% if form.english_name %}
+              <div class="col-md-6">
+                <label for="{{ form.english_name.id_for_label }}" class="form-label">{{ form.english_name.label }}</label>
+                {{ form.english_name }}
+                {% for e in form.english_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+              {% if form.category_id %}
+              <div class="col-md-6">
+                <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
+                {{ form.category_id }}
+                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
+                {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+              {% if form.brand %}
+              <div class="col-md-6">
+                <label for="{{ form.brand.id_for_label }}" class="form-label">{{ form.brand.label }}</label>
+                {{ form.brand }}
+                {% for e in form.brand.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+              {% if form.price %}
+              <div class="col-md-6">
+                <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
+                {{ form.price }}
+                <small class="text-muted d-block mt-1">ارزش فقط در نمایش با ویرگول نشان داده می‌شود؛ عدد خالص ذخیره می‌شود.</small>
+                {% for e in form.price.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+              <div class="col-md-3 d-flex align-items-end">
+                {% if form.featured %}
+                <div class="form-check">
+                  {{ form.featured }}
+                  <label class="form-check-label ms-1" for="{{ form.featured.id_for_label }}">{{ form.featured.label }}</label>
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-3 d-flex align-items-end">
+                {% if form.is_active %}
+                <div class="form-check">
+                  {{ form.is_active }}
+                  <label class="form-check-label ms-1" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                </div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
         </div>
-      {% endif %}
+      </div>
 
-      <form id="product-form" method="post" enctype="multipart/form-data" class="row g-4">
-        {% csrf_token %}
-
-        <!-- نام / نام انگلیسی -->
-        {% if form.name %}
-          <div class="col-md-6">
-            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
-            {{ form.name }}
-            {% for e in form.name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      <!-- ===== مالک و توضیحات ===== -->
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+            <i class="fas fa-user"></i><span>مالک و توضیحات</span>
           </div>
-        {% endif %}
-        {% if form.english_name %}
-          <div class="col-md-6">
-            <label for="{{ form.english_name.id_for_label }}" class="form-label">{{ form.english_name.label }}</label>
-            {{ form.english_name }}
-            {% for e in form.english_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
+          <div class="card-body">
+            <div class="row g-4">
 
-        <!-- دسته‌بندی (AJAX searchable) -->
-        {% if form.category_id %}
-          <div class="col-md-6">
-            <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
-            {{ form.category_id }}
-            <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
-            {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
+              {% if form.owner_name %}
+              <div class="col-md-6">
+                <label for="{{ form.owner_name.id_for_label }}" class="form-label">{{ form.owner_name.label }}</label>
+                {{ form.owner_name }}
+                {% for e in form.owner_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
 
-        <!-- برند -->
-        {% if form.brand %}
-          <div class="col-md-6">
-            <label for="{{ form.brand.id_for_label }}" class="form-label">{{ form.brand.label }}</label>
-            {{ form.brand }}
-            {% for e in form.brand.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
+              {% if form.owner_profile %}
+              <div class="col-md-6">
+                <label for="{{ form.owner_profile.id_for_label }}" class="form-label">{{ form.owner_profile.label }}</label>
+                {{ form.owner_profile }}
+                {% for e in form.owner_profile.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
 
-        <!-- قیمت (تومان) — بدون اسکریپت: کاما از سمت سرور -->
-        {% if form.price %}
-          <div class="col-md-6">
-            <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
-            {{ form.price }}
-            {% for e in form.price.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
+              {% if form.short_description %}
+              <div class="col-12">
+                <label for="{{ form.short_description.id_for_label }}" class="form-label">{{ form.short_description.label }}</label>
+                {{ form.short_description }}
+                {% for e in form.short_description.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
 
-        <!-- ویژه / فعال -->
-        {% if form.featured %}
-          <div class="col-md-3 d-flex align-items-end">
-            <div class="form-check">
-              {{ form.featured }}
-              <label class="form-check-label ms-1" for="{{ form.featured.id_for_label }}">{{ form.featured.label }}</label>
+              {% if form.description %}
+              <div class="col-12">
+                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% for e in form.description.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
             </div>
           </div>
-        {% endif %}
-        {% if form.is_active %}
-          <div class="col-md-3 d-flex align-items-end">
-            <div class="form-check">
-              {{ form.is_active }}
-              <label class="form-check-label ms-1" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-            </div>
-          </div>
-        {% endif %}
+        </div>
+      </div>
 
-        <!-- مالک / پروفایل -->
-        {% if form.owner_name %}
-          <div class="col-md-6">
-            <label for="{{ form.owner_name.id_for_label }}" class="form-label">{{ form.owner_name.label }}</label>
-            {{ form.owner_name }}
-            {% for e in form.owner_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      <!-- ===== ویژگی‌ها ===== -->
+      {% if form.features %}
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+            <i class="fas fa-list-ul"></i><span>ویژگی‌ها</span>
           </div>
-        {% endif %}
-        {% if form.owner_profile %}
-          <div class="col-md-6">
-            <label for="{{ form.owner_profile.id_for_label }}" class="form-label">{{ form.owner_profile.label }}</label>
-            {{ form.owner_profile }}
-            {% for e in form.owner_profile.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        <!-- توضیحات -->
-        {% if form.short_description %}
-          <div class="col-12">
-            <label for="{{ form.short_description.id_for_label }}" class="form-label">{{ form.short_description.label }}</label>
-            {{ form.short_description }}
-            {% for e in form.short_description.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-        {% if form.description %}
-          <div class="col-12">
-            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
-            {{ form.description }}
-            {% for e in form.description.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        <!-- ویژگی‌ها: تکرارشونده (JSON) -->
-        {% if form.features %}
-          <div class="col-12">
-            <label class="form-label">{{ form.features.label }}</label>
+          <div class="card-body">
             <div id="features-repeater" class="border rounded p-3"
                  data-initial='{{ form.initial.features|default:"{}"|escapejs }}'>
               <div id="feature-rows" class="d-flex flex-column gap-2"></div>
@@ -132,109 +164,150 @@
               </div>
             {% endif %}
           </div>
-        {% endif %}
+        </div>
+      </div>
+      {% endif %}
 
-        <!-- تصویر اصلی با پیش‌نمایش -->
-        {% if form.view_image %}
-          <div class="col-md-6">
-            <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
-            {% if form.instance.pk and form.instance.view_image %}
-              <div class="mb-2">
-                <img src="{{ form.instance.view_image.url }}" alt="preview"
-                     style="max-height:96px;border-radius:.5rem;object-fit:cover;border:1px solid #eee;">
+      <!-- ===== تصاویر ===== -->
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+            <i class="fas fa-images"></i><span>تصاویر</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+
+              <!-- تصویر اصلی -->
+              {% if form.view_image %}
+              <div class="col-md-6">
+                <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
+                {% if form.instance.pk and form.instance.view_image %}
+                  <div class="mb-2">
+                    <img src="{{ form.instance.view_image.url }}" alt="preview"
+                         style="max-height:96px;border-radius:.5rem;object-fit:cover;border:1px solid #eee;">
+                  </div>
+                {% endif %}
+                {{ form.view_image }}
+                <div id="main-image-preview" class="mt-2"></div>
+                {% for e in form.view_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
-            {% endif %}
-            {{ form.view_image }}
-            <div id="main-image-preview" class="mt-2"></div>
-            {% for e in form.view_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              {% endif %}
+
+              <!-- تصاویر اضافی: افزایشی با پیش‌نمایش -->
+              <div class="col-md-6">
+                <label class="form-label d-block">تصاویر اضافی</label>
+
+                <!-- hidden inputs bucket -->
+                <div id="extra-images-inputs" class="d-none"></div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
+                    افزودن تصویر
+                  </button>
+                  <small class="text-muted">هر کلیک یک تصویر اضافه می‌کند.</small>
+                </div>
+
+                <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
+
+                {% if form.instance.pk and form.instance.images %}
+                  <div class="mt-3">
+                    <div class="text-muted mb-1">تصاویر موجود:</div>
+                    <div class="d-flex flex-wrap gap-2">
+                      {% for img in form.instance.images %}
+                        <img src="{{ img }}" alt="image"
+                             style="height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+
+            </div>
           </div>
-        {% endif %}
+        </div>
+      </div>
 
-        <!-- تصاویر اضافی با پیش‌نمایش -->
-        <label class="form-label">تصاویر</label>
-        <!-- Hidden container to hold per-file inputs so they submit -->
-        <div id="extra-images-inputs" class="d-none"></div>
+      <!-- ===== ارتباطات ===== -->
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+            <i class="fas fa-link"></i><span>ارتباطات</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
 
-        <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
-          افزودن تصویر
-        </button>
-        <small class="text-muted d-block mt-1">
-          با هر بار کلیک «افزودن تصویر»، یک تصویر انتخاب و به فهرست اضافه می‌شود.
-        </small>
+              {% if form.rel_blogs %}
+              <div class="col-12">
+                <label for="{{ form.rel_blogs.id_for_label }}" class="form-label">{{ form.rel_blogs.label }}</label>
+                <div class="d-flex gap-2">
+                  <div class="flex-grow-1">{{ form.rel_blogs }}</div>
+                  <button type="button" class="btn btn-outline-primary"
+                          data-open-select="#{{ form.rel_blogs.id_for_label }}">افزودن</button>
+                </div>
+                {% for e in form.rel_blogs.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
 
-        <!-- Live previews of newly added images -->
-        <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+              {% if form.rel_news %}
+              <div class="col-12">
+                <label for="{{ form.rel_news.id_for_label }}" class="form-label">{{ form.rel_news.label }}</label>
+                <div class="d-flex gap-2">
+                  <div class="flex-grow-1">{{ form.rel_news }}</div>
+                  <button type="button" class="btn btn-outline-primary"
+                          data-open-select="#{{ form.rel_news.id_for_label }}">افزودن</button>
+                </div>
+                {% for e in form.rel_news.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
 
-        {% if form.instance.pk and form.instance.images %}
-          <div class="mt-3">
-            <div class="text-muted mb-1">تصاویر موجود:</div>
-            <div class="d-flex flex-wrap gap-2">
-              {% for img in form.instance.images %}
-                <img src="{{ img }}" alt="image"
-                     style="height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
-              {% endfor %}
+              {% if form.rel_products %}
+              <div class="col-12">
+                <label for="{{ form.rel_products.id_for_label }}" class="form-label">{{ form.rel_products.label }}</label>
+                <div class="d-flex gap-2">
+                  <div class="flex-grow-1">{{ form.rel_products }}</div>
+                  <button type="button" class="btn btn-outline-primary"
+                          data-open-select="#{{ form.rel_products.id_for_label }}">افزودن</button>
+                </div>
+                {% for e in form.rel_products.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== سایر فیلدها (fallback) ===== -->
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+      {% for field in form.visible_fields %}
+        {% if field.name not in "name,english_name,category_id,brand,price,featured,is_active,owner_name,owner_profile,short_description,description,features,view_image,rel_blogs,rel_news,rel_products" %}
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for e in field.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
             </div>
           </div>
         {% endif %}
+      {% endfor %}
 
-        <!-- مرتبط‌ها: AJAX searchable -->
-        {% if form.rel_blogs %}
-          <div class="col-12">
-            <label for="{{ form.rel_blogs.id_for_label }}" class="form-label">{{ form.rel_blogs.label }}</label>
-            <div class="d-flex gap-2">
-              <div class="flex-grow-1">{{ form.rel_blogs }}</div>
-              <button type="button" class="btn btn-outline-primary" data-open-select="#{{ form.rel_blogs.id_for_label }}">افزودن</button>
-            </div>
-            {% for e in form.rel_blogs.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        {% if form.rel_news %}
-          <div class="col-12">
-            <label for="{{ form.rel_news.id_for_label }}" class="form-label">{{ form.rel_news.label }}</label>
-            <div class="d-flex gap-2">
-              <div class="flex-grow-1">{{ form.rel_news }}</div>
-              <button type="button" class="btn btn-outline-primary" data-open-select="#{{ form.rel_news.id_for_label }}">افزودن</button>
-            </div>
-            {% for e in form.rel_news.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        {% if form.rel_products %}
-          <div class="col-12">
-            <label for="{{ form.rel_products.id_for_label }}" class="form-label">{{ form.rel_products.label }}</label>
-            <div class="d-flex gap-2">
-              <div class="flex-grow-1">{{ form.rel_products }}</div>
-              <button type="button" class="btn btn-outline-primary" data-open-select="#{{ form.rel_products.id_for_label }}">افزودن</button>
-            </div>
-            {% for e in form.rel_products.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        <!-- سایر فیلدهای باقی‌مانده -->
-        {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-        {% for field in form.visible_fields %}
-          {% if field.name not in "name,english_name,category_id,brand,price,featured,is_active,owner_name,owner_profile,short_description,description,features,view_image,rel_blogs,rel_news,rel_products" %}
-            <div class="col-md-6">
-              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-              {{ field }}
-              {% for e in field.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-            </div>
-          {% endif %}
-        {% endfor %}
-
-        <div class="col-12">
+      <!-- ===== Actions ===== -->
+      <div class="col-12">
+        <div class="d-flex gap-2">
           <button type="submit" class="btn btn-success px-4">
             {% if form.instance.pk %}ذخیره{% else %}ایجاد{% endif %}
           </button>
-          <a href="{% url 'admin_dashboard:admin_products' %}" class="btn btn-outline-secondary ms-2">انصراف</a>
+          <a href="{% url 'admin_dashboard:admin_products' %}" class="btn btn-outline-secondary">انصراف</a>
         </div>
-      </form>
+      </div>
+
     </div>
-  </div>
+  </form>
 </div>
 
-<!-- Load jQuery & Select2 locally here so the page actually changes visually -->
+<!-- Select2 (RTL) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 <style>
   .select2-container .select2-selection--single { height: 38px; }
@@ -246,7 +319,7 @@
 
 <script>
 (function(){
-  // --- AJAX-powered Select2 for category and relateds
+  // --- AJAX-powered Select2
   function enhanceAjax(sel, url, multiple=false){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     jQuery(sel).select2({
@@ -259,17 +332,37 @@
         processResults: function (data) { return { results: data.results || [] }; },
         cache: true
       },
-      minimumInputLength: 0
+      minimumInputLength: 0,
+      placeholder: multiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
+      allowClear: true
+    });
+  }
+
+  // Ensure selected option is shown immediately after choose
+  function ensureSelectionVisible(selector) {
+    if (!(window.jQuery && jQuery.fn.select2)) return;
+    jQuery(selector).on('select2:select', function (e) {
+      var data = e.params && e.params.data;
+      if (!data || data.id == null) return;
+      var opt = this.querySelector("option[value='" + data.id + "']");
+      if (!opt) {
+        var newOpt = new Option(data.text, data.id, true, true);
+        this.appendChild(newOpt);
+      }
     });
   }
 
   // Category (single)
   enhanceAjax('#id_category_id', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  ensureSelectionVisible('#id_category_id');
 
-  // Related (multi)
+  // Relateds (multi)
   enhanceAjax('#id_rel_blogs', "{% url 'admin_dashboard:api_search_blogs' %}", true);
   enhanceAjax('#id_rel_news', "{% url 'admin_dashboard:api_search_news' %}", true);
   enhanceAjax('#id_rel_products', "{% url 'admin_dashboard:api_search_products' %}", true);
+  ensureSelectionVisible('#id_rel_blogs');
+  ensureSelectionVisible('#id_rel_news');
+  ensureSelectionVisible('#id_rel_products');
 
   // Open dropdown when clicking “افزودن”
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
@@ -336,22 +429,18 @@
       hidden.value = JSON.stringify(obj);
     });
   }
-})();
-</script>
-<script>
-(function(){
+
   // ---- Incremental image adder ----
   const inputsWrap = document.getElementById('extra-images-inputs');
-  const addBtn     = document.getElementById('add-extra-image');
+  const addImgBtn  = document.getElementById('add-extra-image');
   const grid       = document.getElementById('extra-images-preview');
   let counter = 0;
 
-  if (inputsWrap && addBtn && grid) {
-    addBtn.addEventListener('click', () => {
-      // Make a hidden <input type="file" name="extra_images"> for THIS one image
+  if (inputsWrap && addImgBtn && grid) {
+    addImgBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.name = 'extra_images';           // Django will collect ALL with this name
+      input.name = 'extra_images';     // Django collects all with this name
       input.accept = 'image/*';
       input.className = 'd-none';
       input.dataset.key = `img-${++counter}`;
@@ -359,60 +448,76 @@
       inputsWrap.appendChild(input);
 
       input.addEventListener('change', () => {
-        // If user cancels, remove the orphan input
-        if (!input.files || !input.files[0]) {
-          input.remove();
-          return;
-        }
+        if (!input.files || !input.files[0]) { input.remove(); return; }
 
         const file = input.files[0];
         const reader = new FileReader();
-
         reader.onload = (e) => {
-          // Preview wrapper
           const wrap = document.createElement('div');
           wrap.className = 'position-relative';
           wrap.dataset.key = input.dataset.key;
 
-          // Thumbnail
           const img = new Image();
           img.src = e.target.result;
-          img.style.height = '72px';
-          img.style.width  = '72px';
-          img.style.objectFit = 'cover';
-          img.style.borderRadius = '.5rem';
-          img.style.border = '1px solid #e9ecef';
+          img.style.height='72px'; img.style.width='72px'; img.style.objectFit='cover';
+          img.style.borderRadius='.5rem'; img.style.border='1px solid #e9ecef';
 
-          // Remove button
           const removeBtn = document.createElement('button');
           removeBtn.type = 'button';
           removeBtn.className = 'btn btn-sm btn-danger position-absolute';
-          removeBtn.style.top = '-8px';
-          removeBtn.style.left = '-8px';
-          removeBtn.style.borderRadius = '50%';
-          removeBtn.style.lineHeight = '1';
-          removeBtn.style.padding = '2px 6px';
+          removeBtn.style.top='-8px'; removeBtn.style.left='-8px';
+          removeBtn.style.borderRadius='50%'; removeBtn.style.lineHeight='1'; removeBtn.style.padding='2px 6px';
           removeBtn.innerHTML = '&times;';
 
-          removeBtn.addEventListener('click', () => {
-            // Remove both the preview and the corresponding input so it won’t be submitted
-            wrap.remove();
-            input.remove();
-          });
+          removeBtn.addEventListener('click', () => { wrap.remove(); input.remove(); });
 
           wrap.appendChild(img);
           wrap.appendChild(removeBtn);
           grid.appendChild(wrap);
         };
-
         reader.readAsDataURL(file);
       });
 
-      // Open file dialog
       input.click();
     });
   }
+
+  // ---- Live comma formatting for price (frontend only) ----
+  const priceInput = document.getElementById('id_price');
+  if (priceInput) {
+    const format = (s) => (s || '')
+      .replace(/[^\d]/g, '')                 // keep digits only
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ','); // add commas
+
+    // Initialize if raw digits
+    if (priceInput.value && !/,/.test(priceInput.value)) {
+      priceInput.value = format(priceInput.value);
+    }
+
+    priceInput.addEventListener('input', function () {
+      const el = this;
+      const oldPos = el.selectionStart || 0;
+      const digitsBefore = (el.value.slice(0, oldPos).match(/\d/g) || []).length;
+
+      el.value = format(el.value);
+
+      // restore caret to the same digit index
+      let idx = 0, pos = 0;
+      for (; pos < el.value.length; pos++) {
+        if (/\d/.test(el.value[pos])) idx++;
+        if (idx >= digitsBefore) { pos++; break; }
+      }
+      el.setSelectionRange(pos, pos);
+    });
+
+    // Strip commas before submit (DB receives pure number)
+    const form = document.getElementById('product-form');
+    if (form) {
+      form.addEventListener('submit', function () {
+        priceInput.value = priceInput.value.replace(/,/g, '');
+      });
+    }
+  }
 })();
 </script>
-
 {% endblock %}
