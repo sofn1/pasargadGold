@@ -19,7 +19,7 @@
     </div>
   {% endif %}
 
-  <!-- flag used by JS to decide if it should show the toast -->
+  {# tell JS if server returned any errors #}
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
   {% else %}
@@ -56,6 +56,7 @@
               </div>
               {% endif %}
 
+              {# دسته‌بندی — single select but wired exactly like rel_products #}
               {% if form.category_id %}
               <div class="col-md-6">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
@@ -184,7 +185,6 @@
           <div class="card-body">
             <div class="row g-4">
 
-              <!-- تصویر اصلی -->
               {% if form.view_image %}
               <div class="col-md-6">
                 <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
@@ -200,20 +200,15 @@
               </div>
               {% endif %}
 
-              <!-- تصاویر اضافی -->
               <div class="col-md-6">
                 <label class="form-label d-block">تصاویر اضافی</label>
-
-                <!-- hidden inputs bucket -->
                 <div id="extra-images-inputs" class="d-none"></div>
-
                 <div class="d-flex align-items-center gap-2">
                   <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
                     افزودن تصویر
                   </button>
                   <small class="text-muted">هر کلیک یک تصویر اضافه می‌کند.</small>
                 </div>
-
                 <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
 
                 {% if form.instance.pk and form.instance.images %}
@@ -339,44 +334,38 @@
 (function(){
   // ------- Helpers
   function showErrorToast(msg){
-    try {
-      if (!window.__form_has_errors__) return; // only when server says there are errors
-      const old = document.querySelector('.toast-error'); if (old) old.remove();
-      const div = document.createElement('div');
-      div.className = 'toast-error';
-      div.textContent = msg || 'خطا در اعتبارسنجی فرم. لطفاً فیلدهای قرمز را بررسی کنید.';
-      document.body.appendChild(div);
-      setTimeout(()=> div.remove(), 4500);
-    } catch (e) {}
+    if (!window.__form_has_errors__) return;
+    const old = document.querySelector('.toast-error'); if (old) old.remove();
+    const div = document.createElement('div');
+    div.className = 'toast-error';
+    div.textContent = msg || 'فرم کامل نیست. لطفاً فیلدهای قرمز را بررسی کنید.';
+    document.body.appendChild(div);
+    setTimeout(()=> div.remove(), 4500);
   }
 
-  // attach 'is-invalid' to inputs that have an error block after them
+  // mark invalids if server sent errors
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
     document.querySelectorAll('.text-danger.small').forEach(function(err){
       const wrap = err.closest('.card-body') || document;
-      const inp = err.previousElementSibling; // our template renders input just before error
-      if (inp && (inp.tagName === 'INPUT' || inp.tagName === 'TEXTAREA' || inp.tagName === 'SELECT')) {
-        inp.classList.add('is-invalid');
-      } else if (wrap) {
-        const any = wrap.querySelector('input,select,textarea');
-        if (any) any.classList.add('is-invalid');
-      }
+      const field = wrap.querySelector('input,select,textarea');
+      if (field) field.classList.add('is-invalid');
     });
   })();
 
-  function enhanceAjax(sel, url, multiple){
+  // Generic Select2 initializer — **category wired exactly like rel_products**
+  function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
-    const $el = jQuery(sel);
+    const $el = jQuery(selector);
     if (!$el.length) return;
 
-    if (multiple && !$el.prop('multiple')) $el.prop('multiple', true);
+    if (isMultiple) $el.prop('multiple', true);
 
     $el.select2({
       width: '100%',
       dir: 'rtl',
       dropdownParent: jQuery('body'),
-      multiple: !!multiple,
+      multiple: !!isMultiple,
       ajax: {
         url: url,
         dataType: 'json',
@@ -387,13 +376,13 @@
       },
       minimumInputLength: 0,
       minimumResultsForSearch: 0,
-      placeholder: multiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
+      placeholder: isMultiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
       allowClear: true,
-      closeOnSelect: !multiple,
+      closeOnSelect: !isMultiple,
       escapeMarkup: m => m
     });
 
-    // persist selection by appending a selected <option>
+    // Persist like rel_products: inject <option selected> on select
     $el.on('select2:select', function (e) {
       const data = e.params && e.params.data;
       if (!data || data.id == null) return;
@@ -415,7 +404,7 @@
     });
   }
 
-  // One-liner helper for “افزودن” buttons
+  // “افزودن” buttons open dropdown
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
     btn.addEventListener('click', function(){
       const sel = document.querySelector(btn.getAttribute('data-open-select'));
@@ -423,11 +412,18 @@
     });
   });
 
-  // ------- Initialize Select2s
-  enhanceAjax('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
-  enhanceAjax('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
-  enhanceAjax('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
-  enhanceAjax('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
+  // ====== Initialize Select2s ======
+  // دسته‌بندی (single) — SAME pipeline as rel_products
+  initAjaxSelect2('#{{ form.category_id.id_for_label }}',
+                  "{% url 'admin_dashboard:api_search_categories' %}", false);
+
+  // این‌ها چندگانه‌اند
+  initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}',
+                  "{% url 'admin_dashboard:api_search_blogs' %}", true);
+  initAjaxSelect2('#{{ form.rel_news.id_for_label }}',
+                  "{% url 'admin_dashboard:api_search_news' %}", true);
+  initAjaxSelect2('#{{ form.rel_products.id_for_label }}',
+                  "{% url 'admin_dashboard:api_search_products' %}", true);
 
   // ------- Main image preview
   const mainInput = document.getElementById('{{ form.view_image.id_for_label }}');
@@ -529,11 +525,11 @@
     });
   }
 
-  // ------- Form submit: serialize features + strip price commas + toast/scroll
+  // ------- Submit: serialize features + strip price commas + user feedback
   const form = document.getElementById('product-form');
-
-  // Live comma formatting for price
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
+
+  // live comma format for price
   if (priceInput) {
     const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     if (priceInput.value && !/,/.test(priceInput.value)) { priceInput.value = format(priceInput.value); }
@@ -564,7 +560,7 @@
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
     });
 
-    // show toast/scroll only if server reported errors
+    // error UX only when server returned errors for THIS request
     if (window.__form_has_errors__) {
       showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
       const firstErr = document.querySelector('.text-danger.small');
