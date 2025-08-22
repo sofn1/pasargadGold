@@ -646,24 +646,23 @@ def banner_edit_view(request, pk):
                 action="Update Banner",
                 details=f"Updated banner '{banner.title}'"
             )
-            return redirect('admin_dashboard:banners')
+            return redirect('admin_dashboard:admin_banners')
     else:
         form = BannerForm(instance=banner)
-    return render(request, 'admin_dashboard/banners/form.html', {'form': form, 'title': f'Edit Banner: {banner.title}'})
+    return render(request, 'admin_dashboard/banners/form.html',
+                  {'form': form, 'title': f'ویرایش بنر: {getattr(banner, "title", "")}'})
 
 
 @staff_required
 def banner_delete_view(request, pk):
     banner = get_object_or_404(Banner, pk=pk)
     if request.method == "POST":
-        title = banner.title
+        name = getattr(banner, "title", str(banner.pk))
         banner.delete()
-        AdminActionLog.objects.create(
-            admin=request.user,
-            action="Delete Banner",
-            details=f"Deleted banner '{title}'"
-        )
-        return JsonResponse({'success': True})
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True})
+        messages.success(request, f"بنر «{name}» حذف شد.")
+        return redirect('admin_dashboard:admin_banners')  # ← fix
     return render(request, 'admin_dashboard/banners/confirm_delete.html', {'banner': banner})
 
 
