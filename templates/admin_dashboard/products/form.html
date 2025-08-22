@@ -19,11 +19,28 @@
     </div>
   {% endif %}
 
-  {# tell JS if server returned any errors #}
+  {# Flag for JS toast #}
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
   {% else %}
     <script>window.__form_has_errors__ = false;</script>
+  {% endif %}
+
+  {# Always show a top error summary if backend returned any errors #}
+  {% if form.errors %}
+  <div class="alert alert-danger">
+    <strong>بررسی خطاها:</strong>
+    <ul class="mb-0">
+      {% for field_name, field_errors in form.errors.items %}
+        {% if field_name != '__all__' %}
+          <li>
+            <b>{{ form[field_name].label|default:field_name }}</b>:
+            {% for e in field_errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
 
   <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
@@ -56,12 +73,18 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — single select but wired exactly like rel_products #}
+              {# دسته‌بندی — single, but wired like rel_products with the same Select2 flow #}
               {% if form.category_id %}
               <div class="col-md-6">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
-                {{ form.category_id }}
-                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
+                <div class="d-flex gap-2">
+                  <div class="flex-grow-1">{{ form.category_id }}</div>
+                  <button type="button" class="btn btn-outline-primary"
+                          data-open-select="#{{ form.category_id.id_for_label }}">افزودن</button>
+                  <button type="button" class="btn btn-outline-danger"
+                          data-clear-select="#{{ form.category_id.id_for_label }}">حذف</button>
+                </div>
+                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید… (اختیاری مگر اینکه در بک‌اند اجباری شده باشد)</small>
                 {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -78,7 +101,7 @@
               <div class="col-md-6">
                 <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
                 {{ form.price }}
-                <small class="text-muted d-block mt-1">ارزش فقط در نمایش با ویرگول نشان داده می‌شود؛ عدد خالص ذخیره می‌شود.</small>
+                <small class="text-muted d-block mt-1">فقط در نمایش با ویرگول است؛ مقدار خالص ذخیره می‌شود.</small>
                 {% for e in form.price.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -343,17 +366,29 @@
     setTimeout(()=> div.remove(), 4500);
   }
 
-  // mark invalids if server sent errors
+  // Mark invalids if server sent errors
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
+    const firstErr = document.querySelector('.alert.alert-danger + ul li, .text-danger.small');
+    if (firstErr) {
+      const targetCard = (firstErr.closest && firstErr.closest('.card')) || document.querySelector('form');
+      if (targetCard) targetCard.scrollIntoView({behavior:'smooth', block:'center'});
+    }
     document.querySelectorAll('.text-danger.small').forEach(function(err){
       const wrap = err.closest('.card-body') || document;
       const field = wrap.querySelector('input,select,textarea');
       if (field) field.classList.add('is-invalid');
     });
+    showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
   })();
 
-  // Generic Select2 initializer — **category wired exactly like rel_products**
+  // Ensure optional multi-selects are not HTML-required (server still decides)
+  ['id_rel_blogs','id_rel_news','id_rel_products'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.removeAttribute('required');
+  });
+
+  // Generic Select2 initializer — category wired EXACTLY like rel_products
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
@@ -382,7 +417,7 @@
       escapeMarkup: m => m
     });
 
-    // Persist like rel_products: inject <option selected> on select
+    // Persist selection by injecting <option selected>
     $el.on('select2:select', function (e) {
       const data = e.params && e.params.data;
       if (!data || data.id == null) return;
@@ -404,20 +439,29 @@
     });
   }
 
-  // “افزودن” buttons open dropdown
+  // “افزودن” / “حذف” helpers
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
     btn.addEventListener('click', function(){
       const sel = document.querySelector(btn.getAttribute('data-open-select'));
       if (sel && window.jQuery && jQuery.fn.select2) jQuery(sel).select2('open');
     });
   });
+  document.querySelectorAll('[data-clear-select]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const sel = document.querySelector(btn.getAttribute('data-clear-select'));
+      if (!sel) return;
+      if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
+      // Also clear native selection for safety
+      [...sel.options].forEach(o => o.selected = false);
+    });
+  });
 
   // ====== Initialize Select2s ======
-  // دسته‌بندی (single) — SAME pipeline as rel_products
+  // دسته‌بندی (single) — same pipeline as rel_products
   initAjaxSelect2('#{{ form.category_id.id_for_label }}',
                   "{% url 'admin_dashboard:api_search_categories' %}", false);
 
-  // این‌ها چندگانه‌اند
+  // Multi relateds
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}',
                   "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}',
@@ -468,7 +512,12 @@
       const initial = JSON.parse(initialText);
       const keys = Object.keys(initial || {});
       if (keys.length){ keys.forEach(k=> addFeatureRow(k, initial[k])); } else { addFeatureRow(); }
-    }catch(e){ addFeatureRow(); }
+      // initialize hidden so backend never gets empty value if required
+      hidden.value = JSON.stringify(initial || {});
+    }catch(e){
+      addFeatureRow();
+      hidden.value = "{}";
+    }
 
     addBtn.addEventListener('click', ()=> addFeatureRow());
   }
@@ -525,7 +574,7 @@
     });
   }
 
-  // ------- Submit: serialize features + strip price commas + user feedback
+  // ------- Submit: serialize features + strip price commas
   const form = document.getElementById('product-form');
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
 
@@ -546,7 +595,7 @@
 
   if (form) {
     form.addEventListener('submit', function () {
-      // features -> hidden JSON
+      // features -> hidden JSON (ensure {} even if empty)
       if (rows && hidden) {
         const obj = {};
         rows.querySelectorAll('.row').forEach(r=>{
@@ -555,18 +604,11 @@
           if (k) obj[k] = v;
         });
         hidden.value = JSON.stringify(obj);
+        if (!hidden.value) hidden.value = "{}";
       }
       // strip price commas
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
     });
-
-    // error UX only when server returned errors for THIS request
-    if (window.__form_has_errors__) {
-      showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
-      const firstErr = document.querySelector('.text-danger.small');
-      const target = (firstErr && firstErr.closest('.card')) || document.querySelector('form');
-      if (target) target.scrollIntoView({behavior:'smooth', block:'center'});
-    }
   }
 })();
 </script>
