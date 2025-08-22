@@ -1,14 +1,18 @@
 # admin_dashboard/views.py
+import json
+from django.views import View
+from django.conf import settings
+from django.db.models import Sum
+from django.utils import timezone
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.utils.decorators import method_decorator
+from django.core.files.storage import default_storage
+from django.views.generic import ListView, DetailView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.views import View
-from django.views.generic import ListView, DetailView
-from django.utils.decorators import method_decorator
-from django.db.models.deletion import ProtectedError
+
 
 from heroes.models import Hero
 from datetime import timedelta
@@ -821,41 +825,103 @@ class ProductListView(ListView):
         return qs
 
 
+def _save_extra_images(files):
+    """Save uploaded images and return a list of their media URLs/paths."""
+    saved = []
+    for f in files:
+        # store under products/<filename> (unique name is ensured by storage)
+        path = default_storage.save(f"products/{f.name}", ContentFile(f.read()))
+        # If you want absolute URL: settings.MEDIA_URL + path
+        saved.append(f"{settings.MEDIA_URL}{path}".rstrip("/"))
+    return saved
+
+
 @staff_required
 def product_create_view(request):
     if request.method == "POST":
+        # normalize price (digits only) if present in POST
+        if "price" in request.POST:
+            cleaned = "".join(ch for ch in request.POST["price"] if ch.isdigit())
+            # mutate POST is tricky; better to copy:
+            request.POST = request.POST.copy()
+            request.POST["price"] = cleaned or request.POST["price"]
+
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
+            # ensure features is dict (JSONField)
+            features = form.cleaned_data.get("features")
+            if isinstance(features, str):
+                try:
+                    form.instance.features = json.loads(features or "{}")
+                except Exception:
+                    form.instance.features = {}
+
             product = form.save()
+
+            # handle extra images
+            extra_files = request.FILES.getlist("extra_images")
+            if extra_files and hasattr(product, "images"):
+                new_urls = _save_extra_images(extra_files)
+                try:
+                    current = list(product.images or [])
+                except Exception:
+                    current = []
+                product.images = current + new_urls
+                product.save(update_fields=["images"])
+
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Create Product",
                 details=f"Product '{product.name}' created"
             )
-            return redirect('admin_dashboard:admin_products')  # ← correct name
+            return redirect('admin_dashboard:admin_products')
     else:
         form = ProductForm()
-    return render(request, 'admin_dashboard/products/form.html',
-                  {'form': form, 'title': 'ایجاد محصول'})
+
+    # currency unit for template label
+    ctx = {'form': form, 'title': 'ایجاد محصول', 'CURRENCY_UNIT': getattr(settings, "CURRENCY_UNIT", "ریال")}
+    return render(request, 'admin_dashboard/products/form.html', ctx)
 
 
 @staff_required
 def product_edit_view(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == "POST":
+        if "price" in request.POST:
+            request.POST = request.POST.copy()
+            request.POST["price"] = "".join(ch for ch in request.POST["price"] if ch.isdigit())
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
+            features = form.cleaned_data.get("features")
+            if isinstance(features, str):
+                try:
+                    form.instance.features = json.loads(features or "{}")
+                except Exception:
+                    form.instance.features = {}
+
             product = form.save()
+
+            extra_files = request.FILES.getlist("extra_images")
+            if extra_files and hasattr(product, "images"):
+                new_urls = _save_extra_images(extra_files)
+                try:
+                    current = list(product.images or [])
+                except Exception:
+                    current = []
+                product.images = current + new_urls
+                product.save(update_fields=["images"])
+
             AdminActionLog.objects.create(
                 admin=request.user,
                 action="Update Product",
                 details=f"Updated product '{product.name}'"
             )
-            return redirect('admin_dashboard:admin_products')  # ← correct name
+            return redirect('admin_dashboard:admin_products')
     else:
         form = ProductForm(instance=product)
-    return render(request, 'admin_dashboard/products/form.html',
-                  {'form': form, 'title': f'ویرایش محصول: {product.name}'})
+
+    ctx = {'form': form, 'title': f'ویرایش محصول: {product.name}', 'CURRENCY_UNIT': getattr(settings, "CURRENCY_UNIT", "ریال")}
+    return render(request, 'admin_dashboard/products/form.html', ctx)
 
 
 @staff_required
