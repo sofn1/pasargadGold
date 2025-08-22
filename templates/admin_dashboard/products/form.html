@@ -19,28 +19,12 @@
     </div>
   {% endif %}
 
-  {# Flag for JS toast #}
+  {# Tell JS whether server returned errors for THIS render #}
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
+    <div class="alert alert-danger">فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.</div>
   {% else %}
     <script>window.__form_has_errors__ = false;</script>
-  {% endif %}
-
-  {# Always show a top error summary if backend returned any errors #}
-  {% if form.errors %}
-  <div class="alert alert-danger">
-    <strong>بررسی خطاها:</strong>
-    <ul class="mb-0">
-      {% for field_name, field_errors in form.errors.items %}
-        {% if field_name != '__all__' %}
-          <li>
-            <b>{{ form[field_name].label|default:field_name }}</b>:
-            {% for e in field_errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
-          </li>
-        {% endif %}
-      {% endfor %}
-    </ul>
-  </div>
   {% endif %}
 
   <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
@@ -73,7 +57,7 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — single, but wired like rel_products with the same Select2 flow #}
+              {# دسته‌بندی — single but wired EXACTLY like محصولات مرتبط (sticky + AJAX + clear/open) #}
               {% if form.category_id %}
               <div class="col-md-6">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
@@ -84,7 +68,7 @@
                   <button type="button" class="btn btn-outline-danger"
                           data-clear-select="#{{ form.category_id.id_for_label }}">حذف</button>
                 </div>
-                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید… (اختیاری مگر اینکه در بک‌اند اجباری شده باشد)</small>
+                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
                 {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -366,29 +350,24 @@
     setTimeout(()=> div.remove(), 4500);
   }
 
-  // Mark invalids if server sent errors
+  // Highlight invalids if server sent errors
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
-    const firstErr = document.querySelector('.alert.alert-danger + ul li, .text-danger.small');
-    if (firstErr) {
-      const targetCard = (firstErr.closest && firstErr.closest('.card')) || document.querySelector('form');
-      if (targetCard) targetCard.scrollIntoView({behavior:'smooth', block:'center'});
-    }
     document.querySelectorAll('.text-danger.small').forEach(function(err){
       const wrap = err.closest('.card-body') || document;
       const field = wrap.querySelector('input,select,textarea');
       if (field) field.classList.add('is-invalid');
     });
-    showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
+    showErrorToast();
   })();
 
-  // Ensure optional multi-selects are not HTML-required (server still decides)
+  // Ensure the three related selects are not HTML-required
   ['id_rel_blogs','id_rel_news','id_rel_products'].forEach(function(id){
     const el = document.getElementById(id);
     if (el) el.removeAttribute('required');
   });
 
-  // Generic Select2 initializer — category wired EXACTLY like rel_products
+  // Generic Select2 initializer — دسته‌بندی wired EXACTLY like محصولات مرتبط
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
@@ -417,7 +396,7 @@
       escapeMarkup: m => m
     });
 
-    // Persist selection by injecting <option selected>
+    // Sticky selection: inject <option selected> on choose
     $el.on('select2:select', function (e) {
       const data = e.params && e.params.data;
       if (!data || data.id == null) return;
@@ -431,6 +410,7 @@
       $el.trigger('change.select2');
     });
 
+    // Reflect unselect (for multis)
     $el.on('select2:unselect', function (e) {
       const data = e.params && e.params.data;
       if (!data) return;
@@ -439,7 +419,7 @@
     });
   }
 
-  // “افزودن” / “حذف” helpers
+  // “افزودن / حذف” helpers
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
     btn.addEventListener('click', function(){
       const sel = document.querySelector(btn.getAttribute('data-open-select'));
@@ -451,17 +431,16 @@
       const sel = document.querySelector(btn.getAttribute('data-clear-select'));
       if (!sel) return;
       if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
-      // Also clear native selection for safety
       [...sel.options].forEach(o => o.selected = false);
     });
   });
 
   // ====== Initialize Select2s ======
-  // دسته‌بندی (single) — same pipeline as rel_products
+  // دسته‌بندی (single) — same pipeline as محصولات مرتبط
   initAjaxSelect2('#{{ form.category_id.id_for_label }}',
                   "{% url 'admin_dashboard:api_search_categories' %}", false);
 
-  // Multi relateds
+  // Related multis
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}',
                   "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}',
@@ -512,7 +491,6 @@
       const initial = JSON.parse(initialText);
       const keys = Object.keys(initial || {});
       if (keys.length){ keys.forEach(k=> addFeatureRow(k, initial[k])); } else { addFeatureRow(); }
-      // initialize hidden so backend never gets empty value if required
       hidden.value = JSON.stringify(initial || {});
     }catch(e){
       addFeatureRow();
@@ -603,7 +581,7 @@
           const v = (r.querySelector('.feature-val')?.value || '').trim();
           if (k) obj[k] = v;
         });
-        hidden.value = JSON.stringify(obj);
+        hidden.value = JSON.stringify(obj || {});
         if (!hidden.value) hidden.value = "{}";
       }
       // strip price commas
