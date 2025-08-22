@@ -11,7 +11,6 @@
     </a>
   </div>
 
-  {# 🔎 Optional search #}
   <div class="mb-3">
     <input type="text" id="productSearch" class="form-control" placeholder="جستجو در محصولات..." />
   </div>
@@ -25,8 +24,8 @@
             <th style="width:72px;">تصویر</th>
             <th>نام</th>
             <th>برند</th>
+            <th>دسته</th>
             <th>قیمت</th>
-            <th>موجودی</th>
             <th>فعال</th>
             <th>عملیات</th>
           </tr>
@@ -42,27 +41,31 @@
               {% endif %}
             </td>
 
-            <td>{{ product.name }}</td>
-
             <td>
-              {% if product.brand %}{{ product.brand.name|default:product.brand }}{% else %}
-                <span class="text-muted">—</span>
+              <div class="fw-semibold">{{ product.name }}</div>
+              {% if product.english_name %}
+                <div class="text-muted small">{{ product.english_name }}</div>
               {% endif %}
             </td>
 
             <td>
-              {% if product.price %}
-                {{ product.price }}
+              {% if product.brand %}
+                {{ product.brand.name|default:product.brand }}
               {% else %}
                 <span class="text-muted">—</span>
               {% endif %}
             </td>
 
             <td>
-              {% firstof product.stock product.inventory product.quantity as stock %}
-              {% if stock is not None %}
-                {{ stock }}
+              {% if product.category %}
+                {{ product.category.name|default:product.category }}
               {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if product.price %}{{ product.price }}{% else %}
                 <span class="text-muted">—</span>
               {% endif %}
             </td>
@@ -100,12 +103,14 @@
   <div class="alert alert-info">محصولی یافت نشد.</div>
   {% endif %}
 
-  {# Global delete modal #}
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" delete_url_name='admin_dashboard:admin_product_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_products' %}
+  {% include 'admin_dashboard/_delete_modal.html' with
+      object_type="محصول"
+      delete_url_name='admin_dashboard:admin_product_delete'
+      delete_dummy_pk=0
+      return_url='admin_dashboard:admin_products' %}
 </div>
 
 <script>
-  // Simple client-side filter
   document.getElementById('productSearch').addEventListener('keyup', function () {
     const term = this.value.toLowerCase();
     document.querySelectorAll('#productTableBody tr').forEach(tr => {

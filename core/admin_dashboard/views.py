@@ -832,10 +832,11 @@ def product_create_view(request):
                 action="Create Product",
                 details=f"Product '{product.name}' created"
             )
-            return redirect('admin_dashboard:products')
+            return redirect('admin_dashboard:admin_products')  # ← correct name
     else:
         form = ProductForm()
-    return render(request, 'admin_dashboard/products/form.html', {'form': form, 'title': 'Create Product'})
+    return render(request, 'admin_dashboard/products/form.html',
+                  {'form': form, 'title': 'ایجاد محصول'})
 
 
 @staff_required
@@ -850,11 +851,11 @@ def product_edit_view(request, pk):
                 action="Update Product",
                 details=f"Updated product '{product.name}'"
             )
-            return redirect('admin_dashboard:products')
+            return redirect('admin_dashboard:admin_products')  # ← correct name
     else:
         form = ProductForm(instance=product)
     return render(request, 'admin_dashboard/products/form.html',
-                  {'form': form, 'title': f'Edit Product: {product.name}'})
+                  {'form': form, 'title': f'ویرایش محصول: {product.name}'})
 
 
 @staff_required
@@ -868,5 +869,8 @@ def product_delete_view(request, pk):
             action="Delete Product",
             details=f"Deleted product '{name}'"
         )
-        return JsonResponse({'success': True})
+        # AJAX (modal) path:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({'success': True})
+        return redirect('admin_dashboard:admin_products')
     return render(request, 'admin_dashboard/products/confirm_delete.html', {'product': product})
