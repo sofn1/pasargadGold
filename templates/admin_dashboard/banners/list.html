@@ -11,13 +11,13 @@
     </a>
   </div>
 
-  <!-- Table -->
   {% if banners %}
   <div class="card shadow-sm">
     <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0">
+      <table class="table table-striped table-hover mb-0 align-middle">
         <thead class="table-dark">
           <tr>
+            <th style="width:72px;">تصویر</th>
             <th>عنوان</th>
             <th>موقعیت</th>
             <th>اولویت</th>
@@ -28,6 +28,18 @@
         <tbody>
           {% for banner in banners %}
           <tr>
+            <td>
+              {% if banner.image %}
+                <img src="{{ banner.image.url }}" alt="{{ banner.title }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% elif banner.mobile_image %}
+                <img src="{{ banner.mobile_image.url }}" alt="{{ banner.title }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% elif banner.background_image %}
+                <img src="{{ banner.background_image.url }}" alt="{{ banner.title }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
             <td>{{ banner.title }}</td>
             <td>{{ banner.get_position_display }}</td>
             <td>{{ banner.priority }}</td>
@@ -41,8 +53,11 @@
             <td>
               <div class="btn-group">
                 <a href="{% url 'admin_dashboard:admin_banner_edit' banner.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ banner.pk }}" data-name="{{ banner.title }}">
+                <button type="button" class="btn btn-sm btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        data-id="{{ banner.pk }}"
+                        data-name="{{ banner.title }}">
                   حذف
                 </button>
               </div>
@@ -59,7 +74,6 @@
   <div class="alert alert-info">بنری یافت نشد.</div>
   {% endif %}
 
-  <!-- Delete Modal -->
   {% include 'admin_dashboard/_delete_modal.html' with object_type="بنر" delete_url_name='admin_dashboard:admin_banner_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_banners' %}
 </div>
 {% endblock %}
