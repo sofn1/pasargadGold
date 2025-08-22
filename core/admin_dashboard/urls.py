@@ -33,6 +33,7 @@ urlpatterns = [
     path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
 
     # AJAX search APIs (staff-only)
+    path('api/search/categories/', views.api_search_categories, name='api_search_categories'),
     path('api/search/blogs/', views.api_search_blogs, name='api_search_blogs'),
     path('api/search/news/', views.api_search_news, name='api_search_news'),
     path('api/search/products/', views.api_search_products, name='api_search_products'),

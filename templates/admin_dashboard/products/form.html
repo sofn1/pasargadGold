@@ -22,7 +22,7 @@
       <form id="product-form" method="post" enctype="multipart/form-data" class="row g-4">
         {% csrf_token %}
 
-        {# --- نام / نام انگلیسی --- #}
+        <!-- نام / نام انگلیسی -->
         {% if form.name %}
           <div class="col-md-6">
             <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
@@ -38,17 +38,17 @@
           </div>
         {% endif %}
 
-        {# --- دسته‌بندی (field name: category_id) --- #}
+        <!-- دسته‌بندی (AJAX searchable) -->
         {% if form.category_id %}
           <div class="col-md-6">
             <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
             {{ form.category_id }}
-            {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
             <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
+            {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
           </div>
         {% endif %}
 
-        {# --- برند --- #}
+        <!-- برند -->
         {% if form.brand %}
           <div class="col-md-6">
             <label for="{{ form.brand.id_for_label }}" class="form-label">{{ form.brand.label }}</label>
@@ -57,19 +57,16 @@
           </div>
         {% endif %}
 
-        {# --- قیمت با واحد پویا و جداکننده هزارگان --- #}
+        <!-- قیمت (تومان) — بدون اسکریپت: کاما از سمت سرور -->
         {% if form.price %}
           <div class="col-md-6">
-            <label for="{{ form.price.id_for_label }}" class="form-label">
-              {{ form.price.label }} <span class="text-muted" id="currency-unit"></span>
-            </label>
+            <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
             {{ form.price }}
             {% for e in form.price.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-            <small class="text-muted d-block mt-1">اعداد را وارد کنید؛ هزارگان خودکار می‌شود.</small>
           </div>
         {% endif %}
 
-        {# --- ویژه / فعال --- #}
+        <!-- ویژه / فعال -->
         {% if form.featured %}
           <div class="col-md-3 d-flex align-items-end">
             <div class="form-check">
@@ -87,7 +84,7 @@
           </div>
         {% endif %}
 
-        {# --- مالک / پروفایل --- #}
+        <!-- مالک / پروفایل -->
         {% if form.owner_name %}
           <div class="col-md-6">
             <label for="{{ form.owner_name.id_for_label }}" class="form-label">{{ form.owner_name.label }}</label>
@@ -103,7 +100,7 @@
           </div>
         {% endif %}
 
-        {# --- توضیحات کوتاه / توضیحات --- #}
+        <!-- توضیحات -->
         {% if form.short_description %}
           <div class="col-12">
             <label for="{{ form.short_description.id_for_label }}" class="form-label">{{ form.short_description.label }}</label>
@@ -119,7 +116,7 @@
           </div>
         {% endif %}
 
-        {# --- ویژگی‌ها: تکرارشونده key/value → ذخیره در features(JSON) --- #}
+        <!-- ویژگی‌ها: تکرارشونده (JSON) -->
         {% if form.features %}
           <div class="col-12">
             <label class="form-label">{{ form.features.label }}</label>
@@ -134,33 +131,26 @@
                 {% for e in form.features.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
               </div>
             {% endif %}
-            {% if form.features.help_text %}
-              <small class="text-muted d-block mt-1">{{ form.features.help_text }}</small>
-            {% endif %}
           </div>
         {% endif %}
 
-        {# --- تصویر اصلی: فقط view_image (بدون ارجاع به image) --- #}
+        <!-- تصویر اصلی با پیش‌نمایش -->
         {% if form.view_image %}
           <div class="col-md-6">
             <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
-
-            {# پیش‌نمایش موجود در حالت ویرایش #}
             {% if form.instance.pk and form.instance.view_image %}
               <div class="mb-2">
                 <img src="{{ form.instance.view_image.url }}" alt="preview"
                      style="max-height:96px;border-radius:.5rem;object-fit:cover;border:1px solid #eee;">
               </div>
             {% endif %}
-
             {{ form.view_image }}
             <div id="main-image-preview" class="mt-2"></div>
-
             {% for e in form.view_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
           </div>
         {% endif %}
 
-        {# --- تصاویر اضافی: چندفایلی + پیش‌نمایش زنده --- #}
+        <!-- تصاویر اضافی با پیش‌نمایش -->
         <div class="col-md-6">
           <label class="form-label">تصاویر</label>
           <input type="file" id="extra-images" name="extra_images" class="form-control" accept="image/*" multiple>
@@ -180,7 +170,7 @@
           {% endif %}
         </div>
 
-        {# --- مرتبط‌ها --- #}
+        <!-- مرتبط‌ها: AJAX searchable -->
         {% if form.rel_blogs %}
           <div class="col-12">
             <label for="{{ form.rel_blogs.id_for_label }}" class="form-label">{{ form.rel_blogs.label }}</label>
@@ -214,7 +204,7 @@
           </div>
         {% endif %}
 
-        {# --- سایر فیلدهای باقی‌مانده (اگر چیزی رندر نشده) --- #}
+        <!-- سایر فیلدهای باقی‌مانده -->
         {% for field in form.hidden_fields %}{{ field }}{% endfor %}
         {% for field in form.visible_fields %}
           {% if field.name not in "name,english_name,category_id,brand,price,featured,is_active,owner_name,owner_profile,short_description,description,features,view_image,rel_blogs,rel_news,rel_products" %}
@@ -237,40 +227,44 @@
   </div>
 </div>
 
+<!-- Load jQuery & Select2 locally here so the page actually changes visually -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+<style>
+  .select2-container .select2-selection--single { height: 38px; }
+  .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
+  .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 (function(){
-  // --- Enhance static selects (brand/category) if you like:
-  function enhanceLocal(sel){ if (window.jQuery && jQuery.fn.select2) jQuery(sel).select2({ width:'100%', dir:'rtl' }); }
-  enhanceLocal('#id_category_id');
-  enhanceLocal('#id_brand');
-
-  // --- AJAX-powered Select2 for relateds
-  function enhanceAjax(sel, url){
+  // --- AJAX-powered Select2 for category and relateds
+  function enhanceAjax(sel, url, multiple=false){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     jQuery(sel).select2({
       width: '100%',
       dir: 'rtl',
+      multiple: multiple,
       ajax: {
-        url: url,
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-          return { q: params.term };
-        },
-        processResults: function (data) {
-          return { results: data.results || [] };
-        },
+        url: url, dataType: 'json', delay: 250,
+        data: function (params) { return { q: params.term }; },
+        processResults: function (data) { return { results: data.results || [] }; },
         cache: true
       },
-      minimumInputLength: 1
+      minimumInputLength: 0
     });
   }
 
-  enhanceAjax('#id_rel_blogs',    "{% url 'admin_dashboard:api_search_blogs' %}");
-  enhanceAjax('#id_rel_news',     "{% url 'admin_dashboard:api_search_news' %}");
-  enhanceAjax('#id_rel_products', "{% url 'admin_dashboard:api_search_products' %}");
+  // Category (single)
+  enhanceAjax('#id_category_id', "{% url 'admin_dashboard:api_search_categories' %}", false);
 
-  // “افزودن” button still opens the dropdown
+  // Related (multi)
+  enhanceAjax('#id_rel_blogs', "{% url 'admin_dashboard:api_search_blogs' %}", true);
+  enhanceAjax('#id_rel_news', "{% url 'admin_dashboard:api_search_news' %}", true);
+  enhanceAjax('#id_rel_products', "{% url 'admin_dashboard:api_search_products' %}", true);
+
+  // Open dropdown when clicking “افزودن”
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var sel = document.querySelector(btn.getAttribute('data-open-select'));
@@ -278,7 +272,7 @@
     });
   });
 
-  // --- Main image preview (keep)
+  // Main image preview
   const mainInput = document.getElementById('id_view_image');
   const mainPrev = document.getElementById('main-image-preview');
   if (mainInput && mainPrev){
@@ -297,7 +291,7 @@
     });
   }
 
-  // --- Extra images preview (keep)
+  // Extra images preview
   const multi = document.getElementById('extra-images');
   const grid = document.getElementById('extra-images-preview');
   if (multi && grid){
@@ -317,7 +311,7 @@
     });
   }
 
-  // --- Features repeater (unchanged)
+  // Features repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
@@ -357,5 +351,4 @@
   }
 })();
 </script>
-
 {% endblock %}
