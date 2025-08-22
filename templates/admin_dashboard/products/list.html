@@ -37,6 +37,11 @@
     </tbody>
   </table>
   {% include 'admin_dashboard/_pagination.html' %}
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" return_url="admin_dashboard:admin_products" %}
+  {% include 'admin_dashboard/_delete_modal.html' with
+    object_type="محصول"
+    delete_url_name='admin_dashboard:admin_product_delete'
+    delete_dummy_pk=0
+    return_url='admin_dashboard:admin_products' %}
+
 </div>
 {% endblock %}

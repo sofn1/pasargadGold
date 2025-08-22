@@ -20,6 +20,14 @@ urlpatterns = [
     path("brands/<str:pk>/edit/", views.brand_edit_view, name="admin_brand_edit"),
     path("brands/<str:pk>/delete/", views.brand_delete_view, name="admin_brand_delete"),
 
+    # Banners
+    path('banners/', views.BannerListView.as_view(), name='admin_banners'),
+    path('banners/create/', views.banner_create_view, name='admin_banner_create'),
+    path('banners/<int:pk>/edit/', views.banner_edit_view, name='admin_banner_edit'),
+    path('banners/<int:pk>/delete/', views.banner_delete_view, name='admin_banner_delete'),
+
+
+
     # Users
     path('users/', views.UserListView.as_view(), name='admin_users_list'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
@@ -43,12 +51,6 @@ urlpatterns = [
     path('orders/', views.OrderListView.as_view(), name='admin_orders'),
     path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
     path('orders/<int:pk>/status/', views.update_order_status, name='admin_update_order_status'),
-
-    # Banners
-    path('banners/', views.BannerListView.as_view(), name='admin_banners'),
-    path('banners/create/', views.banner_create_view, name='admin_banner_create'),
-    path('banners/<int:pk>/edit/', views.banner_edit_view, name='admin_banner_edit'),
-    path('banners/<int:pk>/delete/', views.banner_delete_view, name='admin_banner_delete'),
 
     # Heros
     path('heroes/', views.HeroListView.as_view(), name='admin_heroes'),
