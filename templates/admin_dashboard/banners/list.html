@@ -60,10 +60,6 @@
   {% endif %}
 
   <!-- Delete Modal -->
-  {% include 'admin_dashboard/_delete_modal.html' with
-    object_type="بنر"
-    delete_url_name='admin_dashboard:admin_banner_delete'
-    delete_dummy_pk=0
-    return_url='admin_dashboard:admin_banners' %}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="بنر" delete_url_name='admin_dashboard:admin_banner_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_banners' %}
 </div>
 {% endblock %}
