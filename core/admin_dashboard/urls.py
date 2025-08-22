@@ -32,6 +32,13 @@ urlpatterns = [
     path('heroes/<int:pk>/edit/', views.hero_edit_view, name='admin_hero_edit'),
     path('heroes/<int:pk>/delete/', views.hero_delete_view, name='admin_hero_delete'),
 
+    # Products
+    path('products/', views.ProductListView.as_view(), name='admin_products'),
+    path('products/create/', views.product_create_view, name='admin_product_create'),
+    path('products/<int:pk>/edit/', views.product_edit_view, name='admin_product_edit'),
+    path('products/<int:pk>/delete/', views.product_delete_view, name='admin_product_delete'),
+
+
 
 
     # Users
@@ -57,12 +64,6 @@ urlpatterns = [
     path('orders/', views.OrderListView.as_view(), name='admin_orders'),
     path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
     path('orders/<int:pk>/status/', views.update_order_status, name='admin_update_order_status'),
-
-    # Products
-    path('products/', views.ProductListView.as_view(), name='admin_products'),
-    path('products/create/', views.product_create_view, name='admin_product_create'),
-    path('products/<int:pk>/edit/', views.product_edit_view, name='admin_product_edit'),
-    path('products/<int:pk>/delete/', views.product_delete_view, name='admin_product_delete'),
 
     # Logs
     path('activity/', views.ActivityLogView.as_view(), name='admin_activity_logs'),

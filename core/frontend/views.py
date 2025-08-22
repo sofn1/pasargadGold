@@ -6,7 +6,7 @@ from banners.models import Banner
 from heroes.models import Hero
 from products.models.product import Product
 from products.models.brand import Brand
-from products.mongo_service.category_service import ProductCategoryService
+from categories.services import ProductCategoryService
 
 
 def home(request):

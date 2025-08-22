@@ -1,43 +1,116 @@
 {% extends "admin_dashboard/dashboard.html" %}
-{% block title %}محصولات{% endblock %}
+
+{% block title %}مدیریت محصولات{% endblock %}
+
 {% block mainContent %}
 <div class="container-fluid px-4">
-  <div class="d-flex justify-content-between mb-4">
-    <h2>محصولات</h2>
-    <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">+ جدید</a>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">محصولات</h2>
+    <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">
+      <i class="fas fa-plus"></i> افزودن محصول جدید
+    </a>
   </div>
-  <form method="get" class="mb-3">
-    <input type="text" name="q" class="form-control w-25 d-inline-block" placeholder="جستجو..." value="{{ request.GET.q }}">
-    <button class="btn btn-primary">جستجو</button>
-  </form>
-  <table class="table">
-    <thead class="table-dark">
-      <tr>
-        <th>نام</th>
-        <th>برند</th>
-        <th>قیمت</th>
-        <th>ویژه</th>
-        <th>عملیات</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in products %}
-      <tr>
-        <td>{{ p.name }}</td>
-        <td>{{ p.brand.name|default:"-" }}</td>
-        <td>{{ p.price|floatformat:0 }} تومان</td>
-        <td>{% if p.featured %}<span class="badge bg-info">ویژه</span>{% endif %}</td>
-        <td>
-          <a href="{% url 'admin_dashboard:admin_product_edit' p.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-          <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                  data-id="{{ p.pk }}" data-name="{{ p.name }}">حذف</button>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% include 'admin_dashboard/_pagination.html' %}
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" delete_url_name='admin_dashboard:admin_product_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_products' %}
 
+  {# 🔎 Optional search #}
+  <div class="mb-3">
+    <input type="text" id="productSearch" class="form-control" placeholder="جستجو در محصولات..." />
+  </div>
+
+  {% if products %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-striped table-hover mb-0 align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:72px;">تصویر</th>
+            <th>نام</th>
+            <th>برند</th>
+            <th>قیمت</th>
+            <th>موجودی</th>
+            <th>فعال</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody">
+          {% for product in products %}
+          <tr>
+            <td>
+              {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>{{ product.name }}</td>
+
+            <td>
+              {% if product.brand %}{{ product.brand.name|default:product.brand }}{% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if product.price %}
+                {{ product.price }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% firstof product.stock product.inventory product.quantity as stock %}
+              {% if stock is not None %}
+                {{ stock }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if product.is_active %}
+                <span class="badge bg-success">فعال</span>
+              {% else %}
+                <span class="badge bg-danger">غیرفعال</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="btn-group">
+                <a href="{% url 'admin_dashboard:admin_product_edit' product.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                <button type="button"
+                        class="btn btn-sm btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        data-id="{{ product.pk }}"
+                        data-name="{{ product.name }}">
+                  حذف
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'admin_dashboard/_pagination.html' %}
+  {% else %}
+  <div class="alert alert-info">محصولی یافت نشد.</div>
+  {% endif %}
+
+  {# Global delete modal #}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" delete_url_name='admin_dashboard:admin_product_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_products' %}
 </div>
+
+<script>
+  // Simple client-side filter
+  document.getElementById('productSearch').addEventListener('keyup', function () {
+    const term = this.value.toLowerCase();
+    document.querySelectorAll('#productTableBody tr').forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+  });
+</script>
 {% endblock %}

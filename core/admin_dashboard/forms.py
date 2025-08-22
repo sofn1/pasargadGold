@@ -89,48 +89,29 @@ class HeroForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = [
-            'name', 'english_name', 'category_id',
-            'price', 'featured', 'is_active',
-            'owner_name', 'owner_profile',
-            'short_description', 'description',
-            'features', 'view_image', 'images',
-            'rel_news', 'rel_blogs', 'rel_products',
-            'brand'
-        ]
-        widgets = {
-            'description': RichTextarea(),
-            'short_description': forms.Textarea(attrs={'rows': 3}),
-            'features': forms.Textarea(attrs={'rows': 4}),
-            'images': forms.Textarea(attrs={'rows': 4}),
-            'rel_news': forms.Textarea(attrs={'rows': 2}),
-            'rel_blogs': forms.Textarea(attrs={'rows': 2}),
-            'rel_products': forms.Textarea(attrs={'rows': 2}),
-        }
+        fields = "__all__"   # relies on model's editable=True fields
+        # You can optionally set labels or widgets here; the __init__ below styles generically.
 
-    def clean_features(self):
-        data = self.cleaned_data['features']
-        if isinstance(data, str):
-            try:
-                import json
-                data = json.loads(data)
-            except Exception:
-                raise ValidationError("Invalid JSON for features.")
-        return data
-
-    def clean_images(self):
-        data = self.cleaned_data['images']
-        if isinstance(data, str):
-            try:
-                import json
-                data = json.loads(data)
-            except Exception:
-                raise ValidationError("Invalid JSON for images.")
-            if not isinstance(data, list):
-                raise ValidationError("Images must be a list.")
-            if len(data) > 5:
-                raise ValidationError("You can upload up to 5 images.")
-        return data
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            w = field.widget
+            # Style widgets generically
+            if isinstance(w, (forms.TextInput, forms.EmailInput, forms.URLInput, forms.NumberInput)):
+                w.attrs.setdefault("class", "form-control")
+            elif isinstance(w, forms.Textarea):
+                w.attrs.setdefault("class", "form-control")
+                w.attrs.setdefault("rows", 4)
+            elif isinstance(w, forms.Select):
+                w.attrs.setdefault("class", "form-select")
+            elif isinstance(w, (forms.SelectMultiple,)):
+                w.attrs.setdefault("class", "form-select")
+                w.attrs.setdefault("size", "6")
+            elif isinstance(w, (forms.FileInput, forms.ClearableFileInput)):
+                w.attrs.setdefault("class", "form-control")
+                w.attrs.setdefault("accept", "*/*")
+            elif isinstance(w, forms.CheckboxInput):
+                w.attrs.setdefault("class", "form-check-input")
 
 
 class CategoryForm(forms.ModelForm):

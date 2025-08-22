@@ -3,7 +3,7 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.http import Http404
 from django.db.models import Q, Prefetch
 from .models.product import Product
-from .mongo_service.category_service import ProductCategoryService
+from categories.services import ProductCategoryService
 
 
 def _map_category_doc(doc):

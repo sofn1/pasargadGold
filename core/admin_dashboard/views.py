@@ -25,8 +25,8 @@ from products.models.brand import Brand
 from orders.models import Order, CartItem
 from payments.models import FailedPayment
 from products.models.product import Product
-from products.mongo_service.category_service import ProductCategoryService
-from .forms import BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm, CategoryCreateForm
+from .forms import (BlogForm, NewsForm, BannerForm, HeroForm,
+                    BrandForm, ProductForm, CategoryForm, CategoryCreateForm)
 
 # Shortcut to check if user is staff
 staff_required = user_passes_test(lambda u: u.is_staff, login_url='/accounts/login/')
@@ -333,11 +333,6 @@ def api_stats_summary(request):
 # =====================================
 # CATEGORY VIEW
 # =====================================
-
-def get_category_service():
-    """Helper to instantiate the service."""
-    return ProductCategoryService()
-
 
 @method_decorator(login_required, name="dispatch")
 class CategoryListView(View):
