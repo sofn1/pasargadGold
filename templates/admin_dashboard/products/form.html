@@ -21,30 +21,27 @@
 
   {% if form.errors %}
     <script>window.__form_has_errors__ = true;</script>
+    <div class="alert alert-danger">
+      <strong>بررسی خطاها:</strong>
+      <ul class="mb-0">
+        {% for bf in form %}
+          {% if bf.errors %}
+            <li><b>{{ bf.label }}</b>:
+              {% for e in bf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
+            </li>
+          {% endif %}
+        {% endfor %}
+        {% for hf in form.hidden_fields %}
+          {% if hf.errors %}
+            <li><b>{{ hf.name }}</b>:
+              {% for e in hf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
   {% else %}
     <script>window.__form_has_errors__ = false;</script>
-  {% endif %}
-
-  {% if form.errors %}
-  <div class="alert alert-danger">
-    <strong>بررسی خطاها:</strong>
-    <ul class="mb-0">
-      {% for bf in form %}
-        {% if bf.errors %}
-          <li><b>{{ bf.label }}</b>:
-            {% for e in bf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
-          </li>
-        {% endif %}
-      {% endfor %}
-      {% for hf in form.hidden_fields %}
-        {% if hf.errors %}
-          <li><b>{{ hf.name }}</b>:
-            {% for e in hf.errors %}{{ e }}{% if not forloop.last %} | {% endif %}{% endfor %}
-          </li>
-        {% endif %}
-      {% endfor %}
-    </ul>
-  </div>
   {% endif %}
 
   <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
@@ -194,7 +191,6 @@
                 افزودن ویژگی
               </button>
             </div>
-            {# The real field the backend reads: always submit at least "{}" #}
             <textarea id="features-hidden" name="{{ form.features.html_name }}" hidden></textarea>
             {% if form.features.errors %}
               <div class="text-danger small mt-2">
@@ -231,30 +227,35 @@
               </div>
               {% endif %}
 
-              {# تصاویر اضافی — single visible <input multiple> with the REAL name so Django gets them #}
-              {% if form.images %}
+              {# گالری تصاویر — render real widget OR inject fallback #}
               <div class="col-md-6">
-                <label class="form-label d-block">{{ form.images.label|default:"تصاویر اضافی" }}</label>
+                <label class="form-label d-block">
+                  {% if form.images %}{{ form.images.label|default:"تصاویر اضافی" }}{% else %}تصاویر اضافی{% endif %}
+                </label>
 
-                {{ form.images }}
+                <div id="images-field-wrap">
+                  {% if form.images %}
+                    {{ form.images }}
+                  {% endif %}
+                </div>
 
-                  <div class="d-flex align-items-center gap-2 mt-2">
-                    <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
-                      افزودن تصویر
-                    </button>
-                    <small class="text-muted">می‌توانید چند تصویر را با هم انتخاب کنید.</small>
-                  </div>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                  <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
+                    افزودن تصویر
+                  </button>
+                  <small class="text-muted">می‌توانید چند تصویر را با هم انتخاب کنید.</small>
+                </div>
 
-                  <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
 
-
-                {% if form.images.errors %}
-                  <div class="text-danger small mt-2">
-                    {% for e in form.images.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
-                  </div>
+                {% if form.images %}
+                  {% if form.images.errors %}
+                    <div class="text-danger small mt-2">
+                      {% for e in form.images.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                    </div>
+                  {% endif %}
                 {% endif %}
               </div>
-              {% endif %}
 
             </div>
           </div>
@@ -360,7 +361,7 @@
 
 <script>
 (function(){
-  // ------- Error highlighting
+  // ---------- Error highlighting
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
     document.querySelectorAll('.text-danger.small').forEach(function(err){
@@ -370,7 +371,7 @@
     });
   })();
 
-  // ----- Select2 init (category wired exactly like related products)
+  // ---------- Select2 init (category wired like related products)
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
@@ -417,7 +418,7 @@
     });
   }
 
-  // Delegated open/clear
+  // Delegated open/clear for select2s
   document.addEventListener('click', function(e){
     const btn = e.target.closest('[data-open-select]');
     if (btn && window.jQuery && jQuery.fn.select2) {
@@ -434,12 +435,13 @@
     Array.from(sel.options).forEach(o => o.selected = false);
   });
 
+  // Initialize Select2s
   initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
   initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
 
-  // ----- Features repeater
+  // ---------- Features repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
@@ -458,7 +460,6 @@
   }
 
   if (repeater && rows && addBtn && hidden){
-    // Initialize from initial or ensure {}
     let initialObj = {};
     try{
       const initialText = repeater.getAttribute('data-initial') || "{}";
@@ -471,19 +472,52 @@
     addBtn.addEventListener('click', ()=> addFeatureRow());
   }
 
-  // ----- Images: multi input + previews
-  const uploader = document.getElementById('{{ form.images.id_for_label }}'); // real Django input
-  const grid = document.getElementById('extra-images-preview');
+  function featuresToHidden(){
+    if (!(rows && hidden)) return;
+    const obj = {};
+    rows.querySelectorAll('.row').forEach(r=>{
+      const k = (r.querySelector('.feature-key')?.value || '').trim();
+      const v = (r.querySelector('.feature-val')?.value || '').trim();
+      if (k) obj[k] = v;
+    });
+    const json = JSON.stringify(obj);
+    hidden.value = json && json.length ? json : '{}';
+  }
+
+  // ---------- Images: ensure input exists, multiple, previews, and button opens it
+  const imagesWrap = document.getElementById('images-field-wrap');
+  const previews = document.getElementById('extra-images-preview');
   const openBtn = document.getElementById('add-extra-image');
 
-  // ensure multiple is available even if widget wasn't configured with it
-  if (uploader && !uploader.hasAttribute('multiple')) {
-    uploader.setAttribute('multiple', 'multiple');
+  // Values (fall back if form.images is missing)
+  const imagesName = '{{ form.images.html_name|default:"images" }}';
+  const imagesId   = '{{ form.images.id_for_label|default:"id_images" }}';
+
+  function ensureImagesInput(){
+    if (!imagesWrap) return null;
+    let input = imagesWrap.querySelector('input[type="file"][name="'+imagesName+'"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'file';
+      input.name = imagesName;
+      input.id = imagesId;
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.className = 'form-control';
+      imagesWrap.appendChild(input);
+    } else {
+      // enforce attributes
+      input.accept = 'image/*';
+      input.multiple = true;
+      if (!input.id) input.id = imagesId || ('id_' + imagesName);
+      if (!input.classList.contains('form-control')) input.classList.add('form-control');
+    }
+    return input;
   }
 
   function renderPreviews(fileList){
-    if (!grid) return;
-    grid.innerHTML = '';
+    if (!previews) return;
+    previews.innerHTML = '';
     Array.from(fileList || []).forEach(file=>{
       if (!file.type || !file.type.startsWith('image/')) return;
       const r = new FileReader();
@@ -494,36 +528,28 @@
         img.src = e.target.result;
         img.className = 'thumb';
         wrap.appendChild(img);
-        grid.appendChild(wrap);
+        previews.appendChild(wrap);
       };
       r.readAsDataURL(file);
     });
   }
 
-  if (uploader){
-    uploader.addEventListener('change', ()=> renderPreviews(uploader.files));
+  const imagesInput = ensureImagesInput();
+
+  if (imagesInput){
+    imagesInput.addEventListener('change', ()=> renderPreviews(imagesInput.files));
   }
   if (openBtn){
-    openBtn.addEventListener('click', ()=> uploader && uploader.click());
+    openBtn.addEventListener('click', ()=> {
+      const input = ensureImagesInput();
+      if (input) input.click();
+    });
   }
 
-  // ----- Submit: serialize features + strip price commas, guarantee {}
+  // ---------- Price formatting + submit handlers
   const formEl = document.getElementById('product-form');
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
 
-  function featuresToHidden(){
-    if (!(rows && hidden)) return;
-    const obj = {};
-    rows.querySelectorAll('.row').forEach(r=>{
-      const k = (r.querySelector('.feature-key')?.value || '').trim();
-      const v = (r.querySelector('.feature-val')?.value || '').trim();
-      if (k) obj[k] = v;
-    });
-    const json = JSON.stringify(obj);
-    hidden.value = json && json.length ? json : '{}';   // NEVER empty string
-  }
-
-  // live comma formatting
   if (priceInput) {
     const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     if (priceInput.value && !/,/.test(priceInput.value)) { priceInput.value = format(priceInput.value); }
@@ -540,7 +566,7 @@
 
   if (formEl) {
     formEl.addEventListener('submit', function () {
-      featuresToHidden();                                 // ensure "{}" at least
+      featuresToHidden();
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
     });
   }
