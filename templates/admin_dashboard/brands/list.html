@@ -79,6 +79,6 @@
   {% endif %}
 
   <!-- Delete Modal -->
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="برند" return_url="admin_dashboard:admin_brands" %}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="برند" delete_url_name='admin_brand_delete' delete_dummy_pk=0 %}
 </div>
 {% endblock %}
