@@ -151,24 +151,31 @@
         {% endif %}
 
         <!-- تصاویر اضافی با پیش‌نمایش -->
-        <div class="col-md-6">
-          <label class="form-label">تصاویر</label>
-          <input type="file" id="extra-images" name="extra_images" class="form-control" accept="image/*" multiple>
-          <small class="text-muted d-block mt-1">می‌توانید چند تصویر انتخاب کنید؛ پیش‌نمایش در زیر نمایش داده می‌شود.</small>
-          <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+        <label class="form-label">تصاویر</label>
+        <!-- Hidden container to hold per-file inputs so they submit -->
+        <div id="extra-images-inputs" class="d-none"></div>
 
-          {% if form.instance.pk and form.instance.images %}
-            <div class="mt-3">
-              <div class="text-muted mb-1">تصاویر موجود:</div>
-              <div class="d-flex flex-wrap gap-2">
-                {% for img in form.instance.images %}
-                  <img src="{{ img }}" alt="image"
-                       style="height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
-                {% endfor %}
-              </div>
+        <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
+          افزودن تصویر
+        </button>
+        <small class="text-muted d-block mt-1">
+          با هر بار کلیک «افزودن تصویر»، یک تصویر انتخاب و به فهرست اضافه می‌شود.
+        </small>
+
+        <!-- Live previews of newly added images -->
+        <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+
+        {% if form.instance.pk and form.instance.images %}
+          <div class="mt-3">
+            <div class="text-muted mb-1">تصاویر موجود:</div>
+            <div class="d-flex flex-wrap gap-2">
+              {% for img in form.instance.images %}
+                <img src="{{ img }}" alt="image"
+                     style="height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% endfor %}
             </div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
 
         <!-- مرتبط‌ها: AJAX searchable -->
         {% if form.rel_blogs %}
@@ -291,26 +298,6 @@
     });
   }
 
-  // Extra images preview
-  const multi = document.getElementById('extra-images');
-  const grid = document.getElementById('extra-images-preview');
-  if (multi && grid){
-    multi.addEventListener('change', ()=>{
-      grid.innerHTML = '';
-      Array.from(multi.files || []).forEach(f=>{
-        const r = new FileReader();
-        r.onload = e=>{
-          const img = new Image();
-          img.src = e.target.result;
-          img.style.height='72px'; img.style.width='72px'; img.style.objectFit='cover';
-          img.style.borderRadius='.5rem'; img.style.border='1px solid #e9ecef';
-          grid.appendChild(img);
-        };
-        r.readAsDataURL(f);
-      });
-    });
-  }
-
   // Features repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
@@ -351,4 +338,81 @@
   }
 })();
 </script>
+<script>
+(function(){
+  // ---- Incremental image adder ----
+  const inputsWrap = document.getElementById('extra-images-inputs');
+  const addBtn     = document.getElementById('add-extra-image');
+  const grid       = document.getElementById('extra-images-preview');
+  let counter = 0;
+
+  if (inputsWrap && addBtn && grid) {
+    addBtn.addEventListener('click', () => {
+      // Make a hidden <input type="file" name="extra_images"> for THIS one image
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.name = 'extra_images';           // Django will collect ALL with this name
+      input.accept = 'image/*';
+      input.className = 'd-none';
+      input.dataset.key = `img-${++counter}`;
+
+      inputsWrap.appendChild(input);
+
+      input.addEventListener('change', () => {
+        // If user cancels, remove the orphan input
+        if (!input.files || !input.files[0]) {
+          input.remove();
+          return;
+        }
+
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          // Preview wrapper
+          const wrap = document.createElement('div');
+          wrap.className = 'position-relative';
+          wrap.dataset.key = input.dataset.key;
+
+          // Thumbnail
+          const img = new Image();
+          img.src = e.target.result;
+          img.style.height = '72px';
+          img.style.width  = '72px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '.5rem';
+          img.style.border = '1px solid #e9ecef';
+
+          // Remove button
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'btn btn-sm btn-danger position-absolute';
+          removeBtn.style.top = '-8px';
+          removeBtn.style.left = '-8px';
+          removeBtn.style.borderRadius = '50%';
+          removeBtn.style.lineHeight = '1';
+          removeBtn.style.padding = '2px 6px';
+          removeBtn.innerHTML = '&times;';
+
+          removeBtn.addEventListener('click', () => {
+            // Remove both the preview and the corresponding input so it won’t be submitted
+            wrap.remove();
+            input.remove();
+          });
+
+          wrap.appendChild(img);
+          wrap.appendChild(removeBtn);
+          grid.appendChild(wrap);
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      // Open file dialog
+      input.click();
+    });
+  }
+})();
+</script>
+
 {% endblock %}
