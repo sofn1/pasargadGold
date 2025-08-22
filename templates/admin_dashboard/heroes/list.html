@@ -11,7 +11,6 @@
     </a>
   </div>
 
-  <!-- Table -->
   {% if heroes %}
   <div class="card shadow-sm">
     <div class="card-body p-0">
@@ -37,8 +36,12 @@
             <td>
               <div class="btn-group">
                 <a href="{% url 'admin_dashboard:admin_hero_edit' hero.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ hero.pk }}" data-name="{{ hero.title }}">
+                <button type="button"
+                        class="btn btn-sm btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        data-id="{{ hero.pk }}"
+                        data-name="{{ hero.title }}">
                   حذف
                 </button>
               </div>
@@ -55,7 +58,10 @@
   <div class="alert alert-info">هیرویی یافت نشد.</div>
   {% endif %}
 
-  <!-- Delete Modal -->
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="هیرو" return_url="admin_dashboard:admin_heroes" %}
+  {% include 'admin_dashboard/_delete_modal.html' with
+      object_type="هیرو"
+      delete_url_name='admin_dashboard:admin_hero_delete'
+      delete_dummy_pk=0
+      return_url='admin_dashboard:admin_heroes' %}
 </div>
 {% endblock %}
