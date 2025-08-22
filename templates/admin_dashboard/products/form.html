@@ -19,7 +19,7 @@
     </div>
   {% endif %}
 
-  <form id="product-form" method="post" enctype="multipart/form-data">
+  <form id="product-form" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
     <div class="row g-4">
@@ -193,7 +193,7 @@
               </div>
               {% endif %}
 
-              <!-- تصاویر اضافی: افزایشی با پیش‌نمایش -->
+              <!-- تصاویر اضافی -->
               <div class="col-md-6">
                 <label class="form-label d-block">تصاویر اضافی</label>
 
@@ -277,21 +277,7 @@
         </div>
       </div>
 
-      <!-- ===== سایر فیلدها (fallback) ===== -->
-      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-      {% for field in form.visible_fields %}
-        {% if field.name not in "name,english_name,category_id,brand,price,featured,is_active,owner_name,owner_profile,short_description,description,features,view_image,rel_blogs,rel_news,rel_products" %}
-          <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% for e in field.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-              </div>
-            </div>
-          </div>
-        {% endif %}
-      {% endfor %}
+      <!-- NOTE: Removed the fragile "fallback fields" block to avoid double-render/hidden fields issues -->
 
       <!-- ===== Actions ===== -->
       <div class="col-12">
@@ -313,32 +299,103 @@
   .select2-container .select2-selection--single { height: 38px; }
   .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
   .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
+  .toast-error {
+    position: fixed; inset-inline-start: 1rem; inset-block-start: 1rem;
+    z-index: 1055; background: #f8d7da; color:#842029; border:1px solid #f5c2c7;
+    border-radius:.5rem; padding:.75rem 1rem; box-shadow:0 4px 16px rgba(0,0,0,.15);
+  }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 (function(){
-  // --- AJAX-powered Select2
+  // ------- Helpers
+  function showErrorToast(msg){
+    try {
+      const old = document.querySelector('.toast-error'); if (old) old.remove();
+      const div = document.createElement('div');
+      div.className = 'toast-error';
+      div.textContent = msg || 'خطا در اعتبارسنجی فرم. لطفاً فیلدهای قرمز را بررسی کنید.';
+      document.body.appendChild(div);
+      setTimeout(()=> div.remove(), 4500);
+    } catch (e) {}
+  }
+
+  // Ajax-select2 enhancement that keeps selections visible and preserved
   function enhanceAjax(sel, url, multiple=false){
     if (!(window.jQuery && jQuery.fn.select2)) return;
-    jQuery(sel).select2({
+
+    const $el = jQuery(sel);
+    if (!$el.length) return;
+
+    // Ensure correct multiple behavior
+    if (multiple && !$el.prop('multiple')) $el.prop('multiple', true);
+
+    $el.select2({
       width: '100%',
       dir: 'rtl',
+      dropdownParent: jQuery('body'),
       multiple: multiple,
       ajax: {
-        url: url, dataType: 'json', delay: 250,
-        data: function (params) { return { q: params.term }; },
-        processResults: function (data) { return { results: data.results || [] }; },
+        url: url,
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return { q: params.term };
+        },
+        processResults: function (data) {
+          // expects: {results:[{id:..., text:...}]}
+          return { results: (data && data.results) ? data.results : [] };
+        },
         cache: true
       },
       minimumInputLength: 0,
       placeholder: multiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
       allowClear: true
     });
+
+    // Make sure a chosen item is appended as an <option selected> immediately
+    $el.on('select2:select', function (e) {
+      var data = e.params && e.params.data;
+      if (!data || data.id == null) return;
+      var found = false;
+      jQuery(this).find('option').each(function(){
+        if (String(this.value) === String(data.id)) { found = true; this.selected = true; }
+      });
+      if (!found) {
+        var newOpt = new Option(data.text, data.id, true, true);
+        this.add(newOpt);
+      }
+      jQuery(this).trigger('change.select2'); // refresh UI
+    });
+
+    // When unselecting in multi, reflect it in the DOM options
+    $el.on('select2:unselect', function (e) {
+      var data = e.params && e.params.data;
+      if (!data) return;
+      jQuery(this).find("option[value='"+data.id+"']").prop('selected', false);
+    });
+
+    // If the form comes back with bound values but without options loaded,
+    // Select2 will still show selected ones because they are in <option selected>.
+    // If not, we can try to synthesize selected options from the native value.
+    // (Works best when Django already renders selected <option>s for bound forms.)
+    const selectedVals = $el.val();
+    if (selectedVals && selectedVals.length) {
+      // Ensure they exist as <option selected>, otherwise add them with text = value
+      // (Text will be replaced upon next AJAX search/select)
+      const arr = Array.isArray(selectedVals) ? selectedVals : [selectedVals];
+      arr.forEach(function(v){
+        if (!$el.find("option[value='"+v+"']").length) {
+          const opt = new Option(String(v), String(v), true, true);
+          $el.append(opt);
+        }
+      });
+      $el.trigger('change.select2');
+    }
   }
 
-  // Ensure selected option is shown immediately after choose
   function ensureSelectionVisible(selector) {
     if (!(window.jQuery && jQuery.fn.select2)) return;
     jQuery(selector).on('select2:select', function (e) {
@@ -348,21 +405,22 @@
       if (!opt) {
         var newOpt = new Option(data.text, data.id, true, true);
         this.appendChild(newOpt);
+      } else {
+        opt.selected = true;
       }
     });
   }
 
-  // Category (single)
-  enhanceAjax('#id_category_id', "{% url 'admin_dashboard:api_search_categories' %}", false);
-  ensureSelectionVisible('#id_category_id');
+  // ------- Initialize Select2s
+  enhanceAjax('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  ensureSelectionVisible('#{{ form.category_id.id_for_label }}');
 
-  // Relateds (multi)
-  enhanceAjax('#id_rel_blogs', "{% url 'admin_dashboard:api_search_blogs' %}", true);
-  enhanceAjax('#id_rel_news', "{% url 'admin_dashboard:api_search_news' %}", true);
-  enhanceAjax('#id_rel_products', "{% url 'admin_dashboard:api_search_products' %}", true);
-  ensureSelectionVisible('#id_rel_blogs');
-  ensureSelectionVisible('#id_rel_news');
-  ensureSelectionVisible('#id_rel_products');
+  enhanceAjax('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
+  enhanceAjax('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
+  enhanceAjax('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
+  ensureSelectionVisible('#{{ form.rel_blogs.id_for_label }}');
+  ensureSelectionVisible('#{{ form.rel_news.id_for_label }}');
+  ensureSelectionVisible('#{{ form.rel_products.id_for_label }}');
 
   // Open dropdown when clicking “افزودن”
   document.querySelectorAll('[data-open-select]').forEach(function(btn){
@@ -372,8 +430,8 @@
     });
   });
 
-  // Main image preview
-  const mainInput = document.getElementById('id_view_image');
+  // ------- Main image preview
+  const mainInput = document.getElementById('{{ form.view_image.id_for_label }}');
   const mainPrev = document.getElementById('main-image-preview');
   if (mainInput && mainPrev){
     mainInput.addEventListener('change', ()=>{
@@ -391,7 +449,7 @@
     });
   }
 
-  // Features repeater
+  // ------- Features repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
@@ -418,19 +476,9 @@
     }catch(e){ addFeatureRow(); }
 
     addBtn.addEventListener('click', ()=> addFeatureRow());
-
-    document.getElementById('product-form').addEventListener('submit', ()=>{
-      const obj = {};
-      rows.querySelectorAll('.row').forEach(r=>{
-        const k = (r.querySelector('.feature-key')?.value || '').trim();
-        const v = (r.querySelector('.feature-val')?.value || '').trim();
-        if (k) obj[k] = v;
-      });
-      hidden.value = JSON.stringify(obj);
-    });
   }
 
-  // ---- Incremental image adder ----
+  // ------- Incremental extra images
   const inputsWrap = document.getElementById('extra-images-inputs');
   const addImgBtn  = document.getElementById('add-extra-image');
   const grid       = document.getElementById('extra-images-preview');
@@ -440,7 +488,7 @@
     addImgBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.name = 'extra_images';     // Django collects all with this name
+      input.name = 'extra_images';
       input.accept = 'image/*';
       input.className = 'd-none';
       input.dataset.key = `img-${++counter}`;
@@ -482,40 +530,48 @@
     });
   }
 
-  // ---- Live comma formatting for price (frontend only) ----
-  const priceInput = document.getElementById('id_price');
+  // ------- Form submit: serialize features + strip price commas + error UX
+  const form = document.getElementById('product-form');
+
+  // Live comma formatting for price (frontend only)
+  const priceInput = document.getElementById('{{ form.price.id_for_label }}');
   if (priceInput) {
-    const format = (s) => (s || '')
-      .replace(/[^\d]/g, '')                 // keep digits only
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ','); // add commas
-
-    // Initialize if raw digits
-    if (priceInput.value && !/,/.test(priceInput.value)) {
-      priceInput.value = format(priceInput.value);
-    }
-
+    const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (priceInput.value && !/,/.test(priceInput.value)) { priceInput.value = format(priceInput.value); }
     priceInput.addEventListener('input', function () {
       const el = this;
       const oldPos = el.selectionStart || 0;
       const digitsBefore = (el.value.slice(0, oldPos).match(/\d/g) || []).length;
-
       el.value = format(el.value);
-
-      // restore caret to the same digit index
       let idx = 0, pos = 0;
-      for (; pos < el.value.length; pos++) {
-        if (/\d/.test(el.value[pos])) idx++;
-        if (idx >= digitsBefore) { pos++; break; }
-      }
+      for (; pos < el.value.length; pos++) { if (/\d/.test(el.value[pos])) idx++; if (idx >= digitsBefore) { pos++; break; } }
       el.setSelectionRange(pos, pos);
     });
+  }
 
-    // Strip commas before submit (DB receives pure number)
-    const form = document.getElementById('product-form');
-    if (form) {
-      form.addEventListener('submit', function () {
-        priceInput.value = priceInput.value.replace(/,/g, '');
-      });
+  if (form) {
+    form.addEventListener('submit', function () {
+      // features -> hidden JSON
+      if (rows && hidden) {
+        const obj = {};
+        rows.querySelectorAll('.row').forEach(r=>{
+          const k = (r.querySelector('.feature-key')?.value || '').trim();
+          const v = (r.querySelector('.feature-val')?.value || '').trim();
+          if (k) obj[k] = v;
+        });
+        hidden.value = JSON.stringify(obj);
+      }
+
+      // strip price commas
+      if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
+    });
+
+    // If server returned errors, scroll to first .text-danger and show toast
+    const firstErr = document.querySelector('.text-danger');
+    if (firstErr) {
+      showErrorToast('فرم کامل نیست. لطفاً خطاهای مشخص‌شده را برطرف کنید.');
+      const parentCard = firstErr.closest('.card') || firstErr;
+      parentCard.scrollIntoView({behavior:'smooth', block:'center'});
     }
   }
 })();
