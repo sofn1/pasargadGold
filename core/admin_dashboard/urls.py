@@ -15,10 +15,10 @@ urlpatterns = [
     path('categories/<uuid:category_id>/delete/', views.category_delete_view, name='admin_category_delete'),
 
     # Brands
-    path('brands/', views.BrandListView.as_view(), name='admin_brands'),
-    path('brands/create/', views.brand_create_view, name='admin_brand_create'),
-    path('brands/<str:pk>/edit/', views.brand_edit_view, name='admin_brand_edit'),
-    path('brands/<str:pk>/delete/', views.brand_delete_view, name='admin_brand_delete'),
+    path("brands/", views.BrandListView.as_view(), name="admin_brands"),
+    path("brands/create/", views.brand_create_view, name="admin_brand_create"),
+    path("brands/<str:pk>/edit/", views.brand_edit_view, name="admin_brand_edit"),
+    path("brands/<str:pk>/delete/", views.brand_delete_view, name="admin_brand_delete"),
 
     # Users
     path('users/', views.UserListView.as_view(), name='admin_users_list'),
