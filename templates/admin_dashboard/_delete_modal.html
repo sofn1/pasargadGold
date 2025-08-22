@@ -22,6 +22,29 @@
   </div>
 </div>
 
+{# Build a reversed URL with a valid dummy PK #}
+{% if delete_url_name %}
+  {% if delete_dummy_pk or delete_dummy_pk == 0 %}
+    {% url delete_url_name delete_dummy_pk as delete_dummy_url %}
+    <script>
+      var DELETE_DUMMY_PK = "{{ delete_dummy_pk }}";
+      var DELETE_URL_TEMPLATE = "{{ delete_dummy_url }}";
+    </script>
+  {% else %}
+    {% url delete_url_name '00000000-0000-0000-0000-000000000000' as delete_dummy_url %}
+    <script>
+      var DELETE_DUMMY_PK = "00000000-0000-0000-0000-000000000000";
+      var DELETE_URL_TEMPLATE = "{{ delete_dummy_url }}";
+    </script>
+  {% endif %}
+{% else %}
+  <script>
+    console.warn("Delete modal: 'delete_url_name' not provided.");
+    var DELETE_DUMMY_PK = null;
+    var DELETE_URL_TEMPLATE = null;
+  </script>
+{% endif %}
+
 <script>
 (function() {
   document.addEventListener('DOMContentLoaded', function () {
@@ -31,34 +54,22 @@
     var nameEl = document.getElementById('del-name');
     var form   = document.getElementById('delete-form');
 
-    // --- Build a URL template at render-time with a VALID dummy PK ---
-    // If the including template passes delete_dummy_pk (e.g., 0 for int routes), use it.
-    // Otherwise default to a zero-UUID for <uuid:...> routes.
-    {% if delete_dummy_pk %}
-      var DUMMY_PK = "{{ delete_dummy_pk }}";
-      var urlTemplate = "{% url delete_url_name delete_dummy_pk %}";
-    {% else %}
-      var DUMMY_PK = "00000000-0000-0000-0000-000000000000";
-      var urlTemplate = "{% url delete_url_name '00000000-0000-0000-0000-000000000000' %}";
-    {% endif %}
-
     function buildDeleteUrl(id) {
-      return urlTemplate.replace(DUMMY_PK, id);
+      return (DELETE_URL_TEMPLATE || '').replace(String(DELETE_DUMMY_PK), String(id));
     }
 
     modal.addEventListener('show.bs.modal', function (event) {
-      var button = event.relatedTarget; // trigger button in row
+      var button = event.relatedTarget; // the trigger button
       if (!button) return;
 
       var id   = button.getAttribute('data-id');
       var name = button.getAttribute('data-name') || '';
 
       if (nameEl) nameEl.textContent = name;
-      if (form && id) form.action = buildDeleteUrl(id);
+      if (form && id && DELETE_URL_TEMPLATE) form.action = buildDeleteUrl(id);
 
       form.onsubmit = function (e) {
         e.preventDefault();
-
         var formData = new FormData(form);
         fetch(form.action, {
           method: 'POST',
@@ -77,8 +88,7 @@
         })
         .then(function(result) {
           if (!result.ok) throw new Error('Delete failed');
-
-          // If your view returns JSON {success: true} for AJAX, remove row; else reload.
+          // If view returns JSON {success: true}, remove row; else reload.
           if (result.data && result.data.success) {
             var bsModal = bootstrap.Modal.getInstance(modal);
             if (bsModal) bsModal.hide();
