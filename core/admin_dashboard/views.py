@@ -27,8 +27,7 @@ from categories.models import Category
 from products.models.brand import Brand
 from orders.models import Order, CartItem
 from payments.models import FailedPayment
-from products.models.product import Product
-from products.models import Product, Category, Blog, News, Products
+from products.models.product import Product, Category, Blog, News
 from .forms import (BlogForm, NewsForm, BannerForm, HeroForm,
                     BrandForm, ProductForm, CategoryForm, CategoryCreateForm)
 
