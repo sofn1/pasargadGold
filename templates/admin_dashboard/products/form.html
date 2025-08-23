@@ -418,8 +418,9 @@
     });
   }
 
-  // Delegated open/clear for select2s — Combined into one listener
+  // Delegated open/clear for select2s — Single listener, correct behavior
   document.addEventListener('click', function(e) {
+    // Handle "افزودن" → open dropdown
     const openBtn = e.target.closest('[data-open-select]');
     if (openBtn && window.jQuery && jQuery.fn.select2) {
       const selector = openBtn.getAttribute('data-open-select');
@@ -430,14 +431,14 @@
       return;
     }
 
+    // Handle "حذف" → clear selection
     const clearBtn = e.target.closest('[data-clear-select]');
     if (clearBtn && window.jQuery && jQuery.fn.select2) {
       const selector = clearBtn.getAttribute('data-clear-select');
       const sel = document.querySelector(selector);
       if (sel) {
-        jQuery(sel).val(null).trigger('change'); // This will deselect all
+        jQuery(sel).val(null).trigger('change.select2');
       }
-      return;
     }
   });
 
