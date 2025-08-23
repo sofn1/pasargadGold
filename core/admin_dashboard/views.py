@@ -816,9 +816,9 @@ def api_search_categories(request):
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q) | Q(slug__icontains=q))
     qs = qs.order_by('name')[:50]
-    # Ensure id is a STRING; Select2 is picky with mixed int/str ids
     data = [{"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"} for c in qs]
     return JsonResponse({"results": data})
+
 
 
 @staff_required

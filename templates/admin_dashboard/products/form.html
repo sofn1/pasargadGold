@@ -413,47 +413,55 @@
 
   // Robust select handler: always ensure an <option> exists and update the value list
   $el.on('select2:select', function (e) {
-    const data = e.params && e.params.data;
-    if (!data || data.id == null) return;
+  const data = e.params && e.params.data;
+  if (!data || data.id == null) return;
 
-    const id = String(data.id);
-    const text = data.text || id;
-    let opt = this.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
-    if (!opt) {
-      opt = new Option(text, id, true, true);
-      this.add(opt);
-    } else {
-      opt.selected = true;
-    }
+  const sel = this; // the real <select>
+  const id = String(data.id);
+  const text = data.text || id;
 
-    if (isMultiple) {
-      const vals = Array.from(this.options)
-        .filter(o => o.selected)
-        .map(o => String(o.value));
-      $el.val(vals).trigger('change'); // update Select2 visible state
-    } else {
-      $el.val(id).trigger('change');
-    }
-  });
-
-  // Keep deselection in sync for multi-selects
-  $el.on('select2:unselect', function (e) {
-    const data = e.params && e.params.data;
-    if (!data) return;
-    const id = String(data.id);
-    const opt = this.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
-    if (opt) opt.selected = false;
-
-    if (isMultiple) {
-      const vals = Array.from(this.options)
-        .filter(o => o.selected)
-        .map(o => String(o.value));
-      $el.val(vals).trigger('change');
-    } else {
-      $el.val(null).trigger('change');
-    }
-  });
+  let opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
+  if (!opt) {
+    opt = new Option(text, id, true, true);
+    sel.add(opt);
+  } else {
+    opt.selected = true;
   }
+
+  if (isMultiple) {
+    const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
+    $el.val(vals).trigger('change'); // will fire our .on('change', ...) above
+  } else {
+    $el.val(id).trigger('change');
+  }
+
+  // rebuild chips explicitly (protect against delegated change targets)
+  if (typeof rebuildCategoryChipsFromSelect === 'function' && sel === document.querySelector(catSelect)) {
+    rebuildCategoryChipsFromSelect(sel);
+  }
+});
+
+$el.on('select2:unselect', function (e) {
+  const data = e.params && e.params.data;
+  if (!data) return;
+
+  const sel = this; // the real <select>
+  const id = String(data.id);
+  const opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
+  if (opt) opt.selected = false;
+
+  if (isMultiple) {
+    const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
+    $el.val(vals).trigger('change');
+  } else {
+    $el.val(null).trigger('change');
+  }
+
+  if (typeof rebuildCategoryChipsFromSelect === 'function' && sel === document.querySelector(catSelect)) {
+    rebuildCategoryChipsFromSelect(sel);
+  }
+});
+
 
 
   // ---------- دسته‌بندی: multi + chips (no buttons)
@@ -461,32 +469,39 @@
   initAjaxSelect2(catSelect, "{% url 'admin_dashboard:api_search_categories' %}", true);
 
   const chipsWrap = document.getElementById('category-chips');
-  function rebuildCategoryChips(){
+  function rebuildCategoryChipsFromSelect(sel){
     if (!chipsWrap) return;
-    const sel = document.querySelector(catSelect);
-    if (!sel) return;
-    chipsWrap.innerHTML = '';
+    // Ensure we really have a <select> with options
+    if (!sel || sel.tagName !== 'SELECT' || !sel.options) return;
 
+    chipsWrap.innerHTML = '';
     Array.from(sel.options).forEach(function(o){
       if (!o.selected) return;
       const chip = document.createElement('span');
       chip.className = 'chip';
-      chip.dataset.value = o.value;
+      chip.dataset.value = String(o.value);
       chip.innerHTML = `<span>${o.text}</span><button type="button" aria-label="remove">&times;</button>`;
       chip.querySelector('button').addEventListener('click', function(){
         o.selected = false;
         if (window.jQuery && jQuery.fn.select2) jQuery(sel).trigger('change.select2');
-        rebuildCategoryChips();
+        rebuildCategoryChipsFromSelect(sel);
       });
       chipsWrap.appendChild(chip);
     });
   }
 
+
   if (window.jQuery && jQuery.fn.select2) {
-    jQuery(document).on('change', catSelect, rebuildCategoryChips);
-    // build once for initial values
-    setTimeout(rebuildCategoryChips, 0);
+    jQuery(catSelect).on('change', function(){
+      rebuildCategoryChipsFromSelect(this);
+    });
+    // build once for initial values (after DOM paint)
+    setTimeout(function(){
+      const el = document.querySelector(catSelect);
+      rebuildCategoryChipsFromSelect(el);
+    }, 0);
   }
+
 
   // ---------- Other select2 (rel_* keep as-is, multi)
   initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true);
