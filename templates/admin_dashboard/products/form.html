@@ -418,21 +418,27 @@
     });
   }
 
-  // Delegated open/clear for select2s
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('[data-open-select]');
-    if (btn && window.jQuery && jQuery.fn.select2) {
-      const sel = document.querySelector(btn.getAttribute('data-open-select'));
-      if (sel) jQuery(sel).select2('open');
+  // Delegated open/clear for select2s — Combined into one listener
+  document.addEventListener('click', function(e) {
+    const openBtn = e.target.closest('[data-open-select]');
+    if (openBtn && window.jQuery && jQuery.fn.select2) {
+      const selector = openBtn.getAttribute('data-open-select');
+      const sel = document.querySelector(selector);
+      if (sel) {
+        jQuery(sel).select2('open');
+      }
+      return;
     }
-  });
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('[data-clear-select]');
-    if (!btn) return;
-    const sel = document.querySelector(btn.getAttribute('data-clear-select'));
-    if (!sel) return;
-    if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
-    Array.from(sel.options).forEach(o => o.selected = false);
+
+    const clearBtn = e.target.closest('[data-clear-select]');
+    if (clearBtn && window.jQuery && jQuery.fn.select2) {
+      const selector = clearBtn.getAttribute('data-clear-select');
+      const sel = document.querySelector(selector);
+      if (sel) {
+        jQuery(sel).val(null).trigger('change'); // This will deselect all
+      }
+      return;
+    }
   });
 
   // Initialize Select2s
