@@ -375,52 +375,27 @@
     }
   }
 
-  $el.select2({
-    width: '100%',
-    dir: 'rtl',
-    dropdownParent: jQuery('body'),
-    multiple: !!isMultiple,
-    ajax: {
-      url: url,
-      dataType: 'json',
-      delay: 250,
-      data: params => ({ q: params.term }),
-      processResults: data => ({ results: (data && data.results) ? data.results : [] }),
-      cache: true
-    },
-    minimumInputLength: 0,
-    minimumResultsForSearch: 0,
-    placeholder: isMultiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
-    allowClear: true,
-    closeOnSelect: !isMultiple,
-    escapeMarkup: m => m
-  });
-
-  // Robust select handler: always ensure an <option> exists and update the value list
   $el.on('select2:select', function (e) {
   const data = e.params && e.params.data;
   if (!data || data.id == null) return;
 
-  const sel = this; // the real <select>
-  const id = String(data.id);
+  const sel  = this;                       // the real <select>
+  const id   = String(data.id);
   const text = data.text || id;
 
+  // ensure an <option> exists and is selected
   let opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
-  if (!opt) {
-    opt = new Option(text, id, true, true);
-    sel.add(opt);
-  } else {
-    opt.selected = true;
-  }
+  if (!opt) { opt = new Option(text, id, true, true); sel.add(opt); }
+  else { opt.selected = true; }
 
   if (isMultiple) {
-    const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
-    $el.val(vals).trigger('change'); // will fire our .on('change', ...) above
+    const current = ($el.val() || []).map(String);
+    if (!current.includes(id)) current.push(id);
+    $el.val(current).trigger('change.select2');
   } else {
-    $el.val(id).trigger('change');
+    $el.val(id).trigger('change.select2');
   }
 
-  // rebuild chips explicitly (protect against delegated change targets)
   if (typeof rebuildCategoryChipsFromSelect === 'function' && sel === document.querySelector(catSelect)) {
     rebuildCategoryChipsFromSelect(sel);
   }
@@ -430,22 +405,24 @@ $el.on('select2:unselect', function (e) {
   const data = e.params && e.params.data;
   if (!data) return;
 
-  const sel = this; // the real <select>
-  const id = String(data.id);
+  const sel = this;                         // the real <select>
+  const id  = String(data.id);
   const opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
   if (opt) opt.selected = false;
 
   if (isMultiple) {
-    const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
-    $el.val(vals).trigger('change');
+    const current = ($el.val() || []).map(String).filter(v => v !== id);
+    $el.val(current).trigger('change.select2');
   } else {
-    $el.val(null).trigger('change');
+    $el.val(null).trigger('change.select2');
   }
 
   if (typeof rebuildCategoryChipsFromSelect === 'function' && sel === document.querySelector(catSelect)) {
     rebuildCategoryChipsFromSelect(sel);
   }
-  });
+});
+
+
 }
 
 
@@ -477,16 +454,14 @@ $el.on('select2:unselect', function (e) {
   }
 
 
-  if (window.jQuery && jQuery.fn.select2) {
-    jQuery(catSelect).on('change', function(){
-      rebuildCategoryChipsFromSelect(this);
+  const catEl = document.querySelector(catSelect);
+  if (catEl && window.jQuery && jQuery.fn.select2) {
+    catEl.addEventListener('change', function(){
+      rebuildCategoryChipsFromSelect(catEl);
     });
-    // build once for initial values (after DOM paint)
-    setTimeout(function(){
-      const el = document.querySelector(catSelect);
-      rebuildCategoryChipsFromSelect(el);
-    }, 0);
+    setTimeout(function(){ rebuildCategoryChipsFromSelect(catEl); }, 0);
   }
+
 
 
   // ---------- Other select2 (rel_* keep as-is, multi)
