@@ -76,19 +76,26 @@
 
               {# دسته‌بندی — single, wired exactly like محصولات مرتبط (Select2 + sticky + open/clear) #}
               {% if form.category_id %}
-              <div class="col-md-6">
-                <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
-                <div class="d-flex gap-2">
-                  <div class="flex-grow-1">{{ form.category_id }}</div>
-                  <button type="button" class="btn btn-outline-primary"
-                          data-open-select="#{{ form.category_id.id_for_label }}">افزودن</button>
-                  <button type="button" class="btn btn-outline-danger"
-                          data-clear-select="#{{ form.category_id.id_for_label }}">حذف</button>
+                <div class="col-md-6">
+                  <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
+
+                  {# we keep the original select, but also mark a stable selector via data-select-target #}
+                  <div class="d-flex gap-2 align-items-start" 
+                      data-select-target="[name='{{ form.category_id.html_name|default:"category" }}']">
+                    <div class="flex-grow-1">{{ form.category_id }}</div>
+                    <div class="d-flex flex-column gap-2">
+                      <button type="button" class="btn btn-outline-primary"
+                              data-open-select>افزودن</button>
+                      <button type="button" class="btn btn-outline-danger"
+                              data-clear-select>حذف</button>
+                    </div>
+                  </div>
+
+                  <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
+                  {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
                 </div>
-                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
-                {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
-              </div>
               {% endif %}
+
 
               {% if form.brand %}
               <div class="col-md-6">
@@ -419,31 +426,31 @@
   }
 
   // Delegated open/clear for select2s — Single listener, correct behavior
-  document.addEventListener('click', function(e) {
-    // Handle "افزودن" → open dropdown
-    const openBtn = e.target.closest('[data-open-select]');
-    if (openBtn && window.jQuery && jQuery.fn.select2) {
-      const selector = openBtn.getAttribute('data-open-select');
-      const sel = document.querySelector(selector);
-      if (sel) {
-        jQuery(sel).select2('open');
-      }
-      return;
-    }
-
-    // Handle "حذف" → clear selection
-    const clearBtn = e.target.closest('[data-clear-select]');
-    if (clearBtn && window.jQuery && jQuery.fn.select2) {
-      const selector = clearBtn.getAttribute('data-clear-select');
-      const sel = document.querySelector(selector);
-      if (sel) {
-        jQuery(sel).val(null).trigger('change.select2');
-      }
-    }
+  // open the select2 dropdown
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-open-select]');
+    if (!btn || !(window.jQuery && jQuery.fn.select2)) return;
+    const wrap = btn.closest('[data-select-target]');
+    const selector = wrap ? wrap.getAttribute('data-select-target') : null;
+    const sel = selector ? document.querySelector(selector) : null;
+    if (sel) jQuery(sel).select2('open');
   });
 
+  // clear selection
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-clear-select]');
+    if (!btn) return;
+    const wrap = btn.closest('[data-select-target]');
+    const selector = wrap ? wrap.getAttribute('data-select-target') : null;
+    const sel = selector ? document.querySelector(selector) : null;
+    if (!sel) return;
+    if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
+    Array.from(sel.options || []).forEach(o => o.selected = false);
+  });
+
+
   // Initialize Select2s
-  initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  initAjaxSelect2("[name='{{ form.category_id.html_name|default:"category" }}']", "{% url 'admin_dashboard:api_search_categories' %}", false);
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
   initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
