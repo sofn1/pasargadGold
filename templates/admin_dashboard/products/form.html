@@ -453,8 +453,10 @@
 
   // ---------- دسته‌بندی: multi + chips (no buttons)
   const catSelect = '#{{ form.category_id.id_for_label }}';
-  const initialCategories = [{% for c in form.instance.category_id.all %}{ id: "{{ c.pk }}", text: "{{ c.name }}" }{% if not forloop.last %}, {% endif %}{% endfor %}];
+  const initialCategories = [{% for c in form.instance.category_id.all %}
+    { id: "{{ c.pk }}", text: "{{ c.name|default:c.english_name|default:c.slug|default:c.pk }}" }{% if not forloop.last %},{% endif %}{% endfor %}];
   initAjaxSelect2(catSelect, "{% url 'admin_dashboard:api_search_categories' %}", true, initialCategories);
+
 
   const chipsWrap = document.getElementById('category-chips');
   function rebuildCategoryChipsFromSelect(sel){
@@ -488,15 +490,31 @@
   }
 
   // ---------- Other select2 (rel_* keep as-is, multi)
-  const initialBlogs = [{% for b in form.instance.rel_blogs.all %}{ id: "{{ b.pk }}", text: "{{ b.name|default:b.english_name }}" }{% if not forloop.last %}, {% endif %}{% endfor %}];
+// For Blogs
+  const initialBlogs = [
+    {% for b in form.instance.rel_blogs.all %}
+    { id: "{{ b.pk }}", text: "{{ b.name|default:b.english_name }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, initialBlogs);
-  
-  const initialNews = [{% for n in form.instance.rel_news.all %}{ id: "{{ n.pk }}", text: "{{ n.name|default:n.english_name }}" }{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+  // For News
+  const initialNews = [
+    {% for n in form.instance.rel_news.all %}
+    { id: "{{ n.pk }}", text: "{{ n.name|default:n.english_name }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, initialNews);
-  
-  const initialProducts = [{% for p in form.instance.rel_products.all %}{ id: "{{ p.pk }}", text: "{{ p.name|default:p.english_name }}" }{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+  // For Products
+  const initialProducts = [
+    {% for p in form.instance.rel_products.all %}
+    { id: "{{ p.pk }}", text: "{{ p.name|default:p.english_name }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
   initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, initialProducts);
 
+  
   // ---------- Features repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
