@@ -87,9 +87,21 @@ class HeroForm(forms.ModelForm):
 
 # --- BRAND & PRODUCT ---
 class ProductForm(forms.ModelForm):
+    # Change the category_id field to handle multiple selections
+    category_id = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        required=False, # Set to True or False based on your requirements
+        widget=forms.SelectMultiple(attrs={'class': 'form-control select2'}),
+        label="دسته‌بندی"
+    )
+
+    images = forms.JSONField(required=False)
+
     class Meta:
         model = Product
         fields = "__all__"
+        fields = ['name', 'english_name', 'category_id', 'brand', 'price', 'featured', 'is_active', 'owner_name', 'owner_profile', 'short_description', 'description', 'features', 'view_image', 'rel_blogs', 'rel_news', 'rel_products']
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
