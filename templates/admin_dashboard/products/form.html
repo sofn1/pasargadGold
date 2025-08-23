@@ -245,9 +245,12 @@
                 </div>
 
                 <div id="existing-images-preview" class="d-flex flex-wrap gap-2 mt-3">
-                  {% if form.instance.pk and form.instance.images %}
+                  {% if form.instance.pk %}
                     {% for url in form.instance.images %}
-                      <img src="{{ url }}" class="thumb" alt="img">
+                      <div class="thumb-wrap position-relative" data-url="{{ url }}">
+                        <img src="{{ url }}" class="thumb" alt="img">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-1 m-1" style="border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 1;">&times;</button>
+                      </div>
                     {% endfor %}
                   {% endif %}
                 </div>
@@ -538,31 +541,67 @@ $el.on('select2:unselect', function (e) {
   }
 
   // ---------- Images
-  const previews = document.getElementById('extra-images-preview');
+  const newImagesPreview = document.getElementById('extra-images-preview');
+  const existingImagesPreview = document.getElementById('existing-images-preview');
   const imagesHidden = document.getElementById('images-hidden');
   const imagesInput = document.getElementById('id_extra_images');
 
-  function renderPreviews(fileList){
-    if (!previews) return;
-    previews.innerHTML = '';
-    Array.from(fileList || []).forEach(file=>{
+  let newFiles = []; // Array to hold all newly selected files
+
+  function renderNewPreviews() {
+    if (!newImagesPreview) return;
+    newImagesPreview.innerHTML = ''; // Clear the previews before re-rendering
+    newFiles.forEach(file => {
       if (!file.type || !file.type.startsWith('image/')) return;
       const r = new FileReader();
-      r.onload = e=>{
+      r.onload = e => {
         const img = new Image();
         img.src = e.target.result;
         img.className = 'thumb';
-        previews.appendChild(img);
+        newImagesPreview.appendChild(img);
       };
       r.readAsDataURL(file);
     });
   }
+  
+  // Handle adding new files
   if (imagesInput){
-    imagesInput.addEventListener('change', ()=> renderPreviews(imagesInput.files));
+    imagesInput.addEventListener('change', function() {
+      // Add newly selected files to our `newFiles` array
+      Array.from(this.files).forEach(file => {
+        // Prevent duplicates
+        if (!newFiles.some(f => f.name === file.name && f.size === file.size)) {
+          newFiles.push(file);
+        }
+      });
+      // Update the previews
+      renderNewPreviews();
+      // Reset the file input so the change event fires even if the same file is selected again
+      this.value = '';
+    });
   }
-  if (imagesHidden && !imagesHidden.value.trim()){
-    imagesHidden.value = '[]';
+
+  // Handle removing existing images
+  if (existingImagesPreview) {
+    existingImagesPreview.addEventListener('click', function(e) {
+      const removeBtn = e.target.closest('.thumb-wrap .remove-btn');
+      if (removeBtn) {
+        const wrap = removeBtn.closest('.thumb-wrap');
+        const url = wrap.dataset.url;
+        if (imagesHidden) {
+          try {
+            let currentImages = JSON.parse(imagesHidden.value || '[]');
+            currentImages = currentImages.filter(imgUrl => imgUrl !== url);
+            imagesHidden.value = JSON.stringify(currentImages);
+          } catch(err) {
+            console.error('Failed to parse images JSON:', err);
+          }
+        }
+        wrap.remove();
+      }
+    });
   }
+
 
   // ---------- Price formatting + submit handlers
   const formEl = document.getElementById('product-form');
@@ -583,10 +622,17 @@ $el.on('select2:unselect', function (e) {
   }
 
   if (formEl) {
-    formEl.addEventListener('submit', function () {
+    formEl.addEventListener('submit', function (event) {
       featuresToHidden();
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
       if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
+      
+      // Append the new files to the form data
+      if (newFiles.length > 0) {
+        const dataTransfer = new DataTransfer();
+        newFiles.forEach(file => dataTransfer.items.add(file));
+        imagesInput.files = dataTransfer.files;
+      }
     });
   }
 })();
