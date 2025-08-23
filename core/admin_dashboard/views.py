@@ -28,6 +28,7 @@ from products.models.brand import Brand
 from orders.models import Order, CartItem
 from payments.models import FailedPayment
 from products.models.product import Product
+from products.models import Product, Category, Blog, News, Products
 from .forms import (BlogForm, NewsForm, BannerForm, HeroForm,
                     BrandForm, ProductForm, CategoryForm, CategoryCreateForm)
 
@@ -808,6 +809,47 @@ def brand_delete_view(request, pk):
 
 
 # --- PRODUCT CRUD ---
+@staff_required
+def api_get_product_data(request, product_id):
+    """
+    Fetches a single product's data by ID and returns it as JSON.
+    This API is used to dynamically populate the product form.
+    """
+    try:
+        # Fetch the product instance
+        product = Product.objects.get(pk=product_id)
+
+        # Build a dictionary to hold all the data
+        data = {
+            "name": product.name,
+            "category_id": [
+                {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
+                for c in product.category_id.all()
+            ],
+            "rel_blogs": [
+                {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
+                for b in product.rel_blogs.all()
+            ],
+            "rel_news": [
+                {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
+                for n in product.rel_news.all()
+            ],
+            "rel_products": [
+                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
+                for p in product.rel_products.all()
+            ],
+            # Safely handle the JSON field
+            "features": json.loads(product.features) if product.features else []
+        }
+        
+        return JsonResponse(data)
+
+    except Product.DoesNotExist:
+        return JsonResponse({"error": "Product not found"}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data in features field"}, status=500)
+
+
 @staff_required
 def api_search_categories(request):
     from categories.models import Category

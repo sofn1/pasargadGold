@@ -351,303 +351,107 @@
 
 {% block extra_js %}
 <script>
-(function(){
-  // ---------- Error highlighting
-  (function highlightInvalids(){
-    if (!window.__form_has_errors__) return;
-    document.querySelectorAll('.text-danger.small').forEach(function(err){
-      const wrap = err.closest('.card-body') || document;
-      const field = wrap.querySelector('input,select,textarea');
-      if (field) field.classList.add('is-invalid');
-    });
-  })();
+    // Utility function to initialize a Select2 field
+    function initAjaxSelect2(selector, url, isMultiple, initialData) {
+        const $el = $(selector);
+        $el.select2({
+            placeholder: "Search...",
+            allowClear: true,
+            multiple: isMultiple,
+            ajax: {
+                url: url,
+                dataType: "json",
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                }
+            }
+        });
 
-  // ---------- Select2 init (with initial data)
-  function initAjaxSelect2(selector, url, isMultiple, initialData = []){
-    if (!(window.jQuery && jQuery.fn.select2)) return;
-    const $el = jQuery(selector);
-    if (!$el.length) return;
-
-    if (isMultiple) {
-      $el.prop('multiple', true).attr('multiple', 'multiple');
-    } else {
-      if (!$el.find('option[value=""]').length) {
-        $el.prepend(new Option('', '', false, false));
-      }
+        // Set the initial data for the select field
+        if (initialData && initialData.length > 0) {
+            initialData.forEach(item => {
+                const newOption = new Option(item.text, item.id, true, true);
+                $el.append(newOption);
+            });
+            $el.trigger('change');
+        }
     }
 
-    $el.select2({
-      width: '100%',
-      dir: 'rtl',
-      dropdownParent: jQuery('body'),
-      multiple: !!isMultiple,
-      ajax: {
-        url: url,
-        dataType: 'json',
-        delay: 250,
-        data: params => ({ q: params.term }),
-        processResults: data => ({ results: (data && data.results) ? data.results : [] }),
-        cache: true
-      },
-      minimumInputLength: 0,
-      minimumResultsForSearch: 0,
-      placeholder: isMultiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
-      allowClear: true,
-      closeOnSelect: !isMultiple,
-      escapeMarkup: m => m
-    });
-
-    // Populate with initial data if available
-    if (initialData.length > 0) {
-      initialData.forEach(item => {
-        let opt = $el.find(`option[value="${item.id}"]`);
-        if (!opt.length) {
-          opt = new Option(item.text, item.id, true, true);
-          $el.append(opt);
+    // Function to initialize the features repeater
+    function initializeFeaturesRepeater(initialData) {
+        const repeaterEl = document.getElementById('features-repeater');
+        if (!repeaterEl) {
+            console.error("Features repeater element not found!");
+            return;
         }
-      });
-      $el.val(initialData.map(item => item.id)).trigger('change');
+
+        // Clear existing repeater items
+        repeaterEl.innerHTML = '';
+
+        // Add items from initial data
+        if (Array.isArray(initialData)) {
+            initialData.forEach(item => {
+                // You will need to write the function `addFeatureItem` yourself
+                // to add a new row to the repeater with the provided data.
+                addFeatureItem(item.name, item.value);
+            });
+        }
     }
 
-    $el.on('select2:select', function (e) {
-      const data = e.params && e.params.data;
-      if (!data || data.id == null) return;
 
-      const sel = this;
-      const id = String(data.id);
-      const text = data.text || id;
+    $(document).ready(function() {
+        const productId = "{{ form.instance.pk }}"; // Get the product ID from the Django form instance
 
-      let opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
-      if (!opt) {
-        opt = new Option(text, id, true, true);
-        sel.add(opt);
-      } else {
-        opt.selected = true;
-      }
+        if (productId) {
+            fetch(`/admin-dashboard/api/get-product/${productId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('API Error:', data.error);
+                        return;
+                    }
 
-      if (isMultiple) {
-        const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
-        $el.val(vals).trigger('change');
-      } else {
-        $el.val(id).trigger('change');
-      }
-    });
+                    // Populate Select2 fields using the fetched data
+                    initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.category_id);
+                    initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, data.rel_blogs);
+                    initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, data.rel_news);
+                    initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, data.rel_products);
 
-    $el.on('select2:unselect', function (e) {
-      const data = e.params && e.params.data;
-      if (!data) return;
+                    // Initialize the features repeater with fetched data
+                    initializeFeaturesRepeater(data.features);
 
-      const sel = this;
-      const id = String(data.id);
-      const opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
-      if (opt) opt.selected = false;
+                    // If you have other fields, you can populate them here as well
+                    if (data.name) {
+                       document.getElementById("{{ form.name.id_for_label }}").value = data.name;
+                    }
 
-      if (isMultiple) {
-        const vals = Array.from(sel.options).filter(o => o.selected).map(o => String(o.value));
-        $el.val(vals).trigger('change');
-      } else {
-        $el.val(null).trigger('change');
-      }
-    });
-  }
-
-  // ---------- دسته‌بندی: multi + chips (no buttons)
-  const catSelect = '#{{ form.category_id.id_for_label }}';
-  const initialCategories = [{% for c in form.instance.category_id.all %}
-    { id: "{{ c.pk }}", text: "{{ c.name|default:c.english_name|default:c.slug|default:c.pk }}" }{% if not forloop.last %},{% endif %}{% endfor %}];
-  initAjaxSelect2(catSelect, "{% url 'admin_dashboard:api_search_categories' %}", true, initialCategories);
-
-
-  const chipsWrap = document.getElementById('category-chips');
-  function rebuildCategoryChipsFromSelect(sel){
-    if (!chipsWrap) return;
-    if (!sel || sel.tagName !== 'SELECT' || !sel.options) return;
-
-    chipsWrap.innerHTML = '';
-    Array.from(sel.options).forEach(function(o){
-      if (!o.selected) return;
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.dataset.value = String(o.value);
-      chip.innerHTML = `<span>${o.text}</span><button type="button" aria-label="remove">&times;</button>`;
-      chip.querySelector('button').addEventListener('click', function(){
-        o.selected = false;
-        if (window.jQuery && jQuery.fn.select2) jQuery(sel).trigger('change.select2');
-        rebuildCategoryChipsFromSelect(sel);
-      });
-      chipsWrap.appendChild(chip);
-    });
-  }
-
-  if (window.jQuery && jQuery.fn.select2) {
-    jQuery(catSelect).on('change', function(){
-      rebuildCategoryChipsFromSelect(this);
-    });
-    setTimeout(function(){
-      const el = document.querySelector(catSelect);
-      rebuildCategoryChipsFromSelect(el);
-    }, 0);
-  }
-
-  // ---------- Other select2 (rel_* keep as-is, multi)
-// For Blogs
-  const initialBlogs = [
-    {% for b in form.instance.rel_blogs.all %}
-    { id: "{{ b.pk }}", text: "{{ b.name|default:b.english_name }}" }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
-  initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, initialBlogs);
-
-  // For News
-  const initialNews = [
-    {% for n in form.instance.rel_news.all %}
-    { id: "{{ n.pk }}", text: "{{ n.name|default:n.english_name }}" }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
-  initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, initialNews);
-
-  // For Products
-  const initialProducts = [
-    {% for p in form.instance.rel_products.all %}
-    { id: "{{ p.pk }}", text: "{{ p.name|default:p.english_name }}" }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
-  initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, initialProducts);
-
-  
-  // ---------- Features repeater
-  const repeater = document.getElementById('features-repeater');
-  const rows = document.getElementById('feature-rows');
-  const addBtn = document.getElementById('add-feature');
-  const hidden = document.getElementById('features-hidden');
-
-  function addFeatureRow(k='', v=''){
-    const row = document.createElement('div');
-    row.className = 'row g-2 feature-row';
-    row.innerHTML = `
-      <div class="col-md-5"><input type="text" class="form-control feature-key" placeholder="نام ویژگی" value="${k}"></div>
-      <div class="col-md-6"><input type="text" class="form-control feature-val" placeholder="مقدار ویژگی" value="${v}"></div>
-      <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-feature">&times;</button></div>
-    `;
-    rows.appendChild(row);
-    row.querySelector('.remove-feature').addEventListener('click', ()=> row.remove());
-  }
-
-  if (repeater && rows && addBtn && hidden){
-    let initialObj = {};
-    try{
-      const initialText = repeater.getAttribute('data-initial') || "{}";
-      initialObj = JSON.parse(initialText || "{}") || {};
-    }catch(e){ initialObj = {}; }
-    const keys = Object.keys(initialObj);
-    if (keys.length){ keys.forEach(k=> addFeatureRow(k, initialObj[k])); } else { addFeatureRow(); }
-    hidden.value = JSON.stringify(initialObj);
-
-    addBtn.addEventListener('click', ()=> addFeatureRow());
-  }
-
-  function featuresToHidden(){
-    if (!(rows && hidden)) return;
-    const obj = {};
-    rows.querySelectorAll('.feature-row').forEach(r=>{
-      const k = (r.querySelector('.feature-key')?.value || '').trim();
-      const v = (r.querySelector('.feature-val')?.value || '').trim();
-      if (k) obj[k] = v;
-    });
-    const json = JSON.stringify(obj);
-    hidden.value = json && json.length ? json : '{}';
-  }
-
-  // ---------- Images
-  const newImagesPreview = document.getElementById('extra-images-preview');
-  const existingImagesPreview = document.getElementById('existing-images-preview');
-  const imagesHidden = document.getElementById('images-hidden');
-  const imagesInput = document.getElementById('id_extra_images');
-  let newFiles = []; 
-
-  function renderNewPreviews() {
-    if (!newImagesPreview) return;
-    newImagesPreview.innerHTML = '';
-    newFiles.forEach(file => {
-      if (!file.type || !file.type.startsWith('image/')) return;
-      const r = new FileReader();
-      r.onload = e => {
-        const img = new Image();
-        img.src = e.target.result;
-        img.className = 'thumb';
-        newImagesPreview.appendChild(img);
-      };
-      r.readAsDataURL(file);
-    });
-  }
-  
-  if (imagesInput){
-    imagesInput.addEventListener('change', function() {
-      Array.from(this.files).forEach(file => {
-        if (!newFiles.some(f => f.name === file.name && f.size === file.size)) {
-          newFiles.push(file);
+                })
+                .catch(error => console.error('Error fetching product data:', error));
+        } else {
+            // For new product creation (no existing product ID)
+            initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, []);
+            initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, []);
+            initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, []);
+            initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, []);
         }
-      });
-      renderNewPreviews();
-      this.value = '';
     });
-  }
 
-  if (existingImagesPreview) {
-    existingImagesPreview.addEventListener('click', function(e) {
-      const removeBtn = e.target.closest('.thumb-wrap .remove-btn');
-      if (removeBtn) {
-        const wrap = removeBtn.closest('.thumb-wrap');
-        const url = wrap.dataset.url;
-        if (imagesHidden) {
-          try {
-            let currentImages = JSON.parse(imagesHidden.value || '[]');
-            currentImages = currentImages.filter(imgUrl => imgUrl !== url);
-            imagesHidden.value = JSON.stringify(currentImages);
-          } catch(err) {
-            console.error('Failed to parse images JSON:', err);
-          }
-        }
-        wrap.remove();
-      }
-    });
-  }
-
-  // ---------- Price formatting + submit handlers
-  const formEl = document.getElementById('product-form');
-  const priceInput = document.getElementById('{{ form.price.id_for_label }}');
-
-  if (priceInput) {
-    const format = (s) => (s || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    if (priceInput.value && !/,/.test(priceInput.value)) { priceInput.value = format(priceInput.value); }
-    priceInput.addEventListener('input', function () {
-      const el = this;
-      const oldPos = el.selectionStart || 0;
-      const digitsBefore = (el.value.slice(0, oldPos).match(/\d/g) || []).length;
-      el.value = format(el.value);
-      let idx = 0, pos = 0;
-      for (; pos < el.value.length; pos++) { if (/\d/.test(el.value[pos])) idx++; if (idx >= digitsBefore) { pos++; break; } }
-      el.setSelectionRange(pos, pos);
-    });
-  }
-
-  if (formEl) {
-    formEl.addEventListener('submit', function (event) {
-      featuresToHidden();
-      if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
-      if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
-      
-      if (newFiles.length > 0) {
-        const dataTransfer = new DataTransfer();
-        newFiles.forEach(file => dataTransfer.items.add(file));
-        imagesInput.files = dataTransfer.files;
-      }
-    });
-  }
-})();
 </script>
-<br>
-This video can help with understanding how to set up Django and Select2 for managing multiple selections and form updates.
+
+
 {% endblock %}
 
 {% block extra_css %}
