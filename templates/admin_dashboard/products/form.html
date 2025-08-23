@@ -343,25 +343,10 @@
     </div>
   </form>
 </div>
+{% endblock %}
 
-<!-- Select2 (RTL) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-<style>
-  .select2-container .select2-selection--single { height: 38px; }
-  .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
-  .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
-  .is-invalid { border-color:#dc3545 !important; }
-  .thumb { height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef; }
-  .chip {
-    display:inline-flex; align-items:center; gap:.5rem;
-    padding:.25rem .5rem; border-radius:999px; border:1px solid #dee2e6;
-    background:#f8f9fa; font-size:.875rem;
-  }
-  .chip button { border:0; background:transparent; line-height:1; cursor:pointer; }
-</style>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+{% block extra_js %}
 <script>
 (function(){
   // ---------- Error highlighting
@@ -604,6 +589,6 @@ $el.on('select2:unselect', function (e) {
       if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
     });
   }
-}();
+})();
 </script>
 {% endblock %}
