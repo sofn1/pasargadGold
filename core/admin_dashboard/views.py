@@ -810,14 +810,14 @@ def brand_delete_view(request, pk):
 # --- PRODUCT CRUD ---
 @staff_required
 def api_search_categories(request):
-    # adjust import if your Category model lives elsewhere
     from categories.models import Category
     q = (request.GET.get("q") or "").strip()
     qs = Category.objects.all()
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q) | Q(slug__icontains=q))
     qs = qs.order_by('name')[:50]
-    data = [{"id": c.pk, "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"} for c in qs]
+    # Ensure id is a STRING; Select2 is picky with mixed int/str ids
+    data = [{"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"} for c in qs]
     return JsonResponse({"results": data})
 
 

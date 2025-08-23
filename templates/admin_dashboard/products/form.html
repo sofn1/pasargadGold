@@ -376,48 +376,85 @@
 
   // ---------- Select2 init
   function initAjaxSelect2(selector, url, isMultiple){
-    if (!(window.jQuery && jQuery.fn.select2)) return;
-    const $el = jQuery(selector);
-    if (!$el.length) return;
+  if (!(window.jQuery && jQuery.fn.select2)) return;
+  const $el = jQuery(selector);
+  if (!$el.length) return;
 
-    if (isMultiple) $el.prop('multiple', true);
-
-    $el.select2({
-      width: '100%',
-      dir: 'rtl',
-      dropdownParent: jQuery('body'),
-      multiple: !!isMultiple,
-      ajax: {
-        url: url, dataType: 'json', delay: 250,
-        data: params => ({ q: params.term }),
-        processResults: data => ({ results: (data && data.results) ? data.results : [] }),
-        cache: true
-      },
-      minimumInputLength: 0,
-      minimumResultsForSearch: 0,
-      placeholder: isMultiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
-      allowClear: true,
-      closeOnSelect: !isMultiple,
-      escapeMarkup: m => m
-    });
-
-    $el.on('select2:select', function (e) {
-      const data = e.params && e.params.data;
-      if (!data || data.id == null) return;
-      let opt = this.querySelector("option[value='" + data.id + "']");
-      if (!opt) { opt = new Option(data.text, data.id, true, true); this.add(opt); }
-      else { opt.selected = true; }
-      $el.trigger('change.select2');
-    });
-
-    $el.on('select2:unselect', function (e) {
-      const data = e.params && e.params.data;
-      if (!data) return;
-      const opt = this.querySelector("option[value='" + data.id + "']");
-      if (opt) opt.selected = false;
-      $el.trigger('change.select2');
-    });
+  // Make sure the underlying <select> truly behaves as multiple
+  if (isMultiple) {
+    $el.prop('multiple', true);
+    $el.attr('multiple', 'multiple'); // some UAs/extensions are picky
+  } else {
+    if (!$el.find('option[value=""]').length) {
+      $el.prepend(new Option('', '', false, false));
+    }
   }
+
+  $el.select2({
+    width: '100%',
+    dir: 'rtl',
+    dropdownParent: jQuery('body'),
+    multiple: !!isMultiple,
+    ajax: {
+      url: url,
+      dataType: 'json',
+      delay: 250,
+      data: params => ({ q: params.term }),
+      processResults: data => ({ results: (data && data.results) ? data.results : [] }),
+      cache: true
+    },
+    minimumInputLength: 0,
+    minimumResultsForSearch: 0,
+    placeholder: isMultiple ? 'برای افزودن تایپ کنید…' : 'انتخاب کنید…',
+    allowClear: true,
+    closeOnSelect: !isMultiple,
+    escapeMarkup: m => m
+  });
+
+  // Robust select handler: always ensure an <option> exists and update the value list
+  $el.on('select2:select', function (e) {
+    const data = e.params && e.params.data;
+    if (!data || data.id == null) return;
+
+    const id = String(data.id);
+    const text = data.text || id;
+    let opt = this.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
+    if (!opt) {
+      opt = new Option(text, id, true, true);
+      this.add(opt);
+    } else {
+      opt.selected = true;
+    }
+
+    if (isMultiple) {
+      const vals = Array.from(this.options)
+        .filter(o => o.selected)
+        .map(o => String(o.value));
+      $el.val(vals).trigger('change'); // update Select2 visible state
+    } else {
+      $el.val(id).trigger('change');
+    }
+  });
+
+  // Keep deselection in sync for multi-selects
+  $el.on('select2:unselect', function (e) {
+    const data = e.params && e.params.data;
+    if (!data) return;
+    const id = String(data.id);
+    const opt = this.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
+    if (opt) opt.selected = false;
+
+    if (isMultiple) {
+      const vals = Array.from(this.options)
+        .filter(o => o.selected)
+        .map(o => String(o.value));
+      $el.val(vals).trigger('change');
+    } else {
+      $el.val(null).trigger('change');
+    }
+  });
+  }
+
 
   // ---------- دسته‌بندی: multi + chips (no buttons)
   const catSelect = '#{{ form.category_id.id_for_label }}';
@@ -452,6 +489,7 @@
   }
 
   // ---------- Other select2 (rel_* keep as-is, multi)
+  initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true);
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
   initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
