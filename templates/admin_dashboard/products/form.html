@@ -74,18 +74,16 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — SAME wiring as محصولات مرتبط (Select2 + open/clear by id) #}
+              {# دسته‌بندی — multi-select like محصولات مرتبط, NO buttons, with chips #}
               {% if form.category_id %}
-              <div class="col-md-6">
+              <div class="col-12">
                 <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
-                <div class="d-flex gap-2">
-                  <div class="flex-grow-1">{{ form.category_id }}</div>
-                  <button type="button" class="btn btn-outline-primary"
-                          data-open-select="#{{ form.category_id.id_for_label }}">افزودن</button>
-                  <button type="button" class="btn btn-outline-danger"
-                          data-clear-select="#{{ form.category_id.id_for_label }}">حذف</button>
-                </div>
-                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید…</small>
+                <div class="flex-grow-1">{{ form.category_id }}</div>
+                <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید و انتخاب کنید. می‌توانید چند مورد را انتخاب کنید.</small>
+
+                <!-- selected category chips -->
+                <div id="category-chips" class="d-flex flex-wrap gap-2 mt-2"></div>
+
                 {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -211,7 +209,7 @@
           <div class="card-body">
             <div class="row g-4">
 
-              {# تصویر اصلی (اختیاری) #}
+              {# تصویر اصلی #}
               {% if form.view_image %}
               <div class="col-md-6">
                 <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
@@ -227,7 +225,7 @@
               </div>
               {% endif %}
 
-              {# گالری تصاویر (Upload -> extra_images) + Hidden JSON (images) to satisfy form validation #}
+              {# گالری تصاویر #}
               <div class="col-md-6">
                 <label class="form-label d-block">
                   {% if form.images %}{{ form.images.label|default:"تصاویر اضافی" }}{% else %}تصاویر اضافی{% endif %}
@@ -243,9 +241,6 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2 mt-2">
-                  <button type="button" id="add-extra-image" class="btn btn-outline-primary btn-sm">
-                    افزودن تصویر
-                  </button>
                   <small class="text-muted">می‌توانید چند تصویر را با هم انتخاب کنید.</small>
                 </div>
 
@@ -259,7 +254,6 @@
 
                 <div id="extra-images-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
 
-                {# Hidden JSON field for images to pass validation (#images-hidden is kept in sync) #}
                 {% if form.images %}
                   <textarea id="images-hidden"
                             name="{{ form.images.html_name }}"
@@ -289,11 +283,7 @@
               {% if form.rel_blogs %}
               <div class="col-12">
                 <label for="{{ form.rel_blogs.id_for_label }}" class="form-label">{{ form.rel_blogs.label }}</label>
-                <div class="d-flex gap-2">
-                  <div class="flex-grow-1">{{ form.rel_blogs }}</div>
-                  <button type="button" class="btn btn-outline-primary"
-                          data-open-select="#{{ form.rel_blogs.id_for_label }}">افزودن</button>
-                </div>
+                <div class="flex-grow-1">{{ form.rel_blogs }}</div>
                 {% for e in form.rel_blogs.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -301,11 +291,7 @@
               {% if form.rel_news %}
               <div class="col-12">
                 <label for="{{ form.rel_news.id_for_label }}" class="form-label">{{ form.rel_news.label }}</label>
-                <div class="d-flex gap-2">
-                  <div class="flex-grow-1">{{ form.rel_news }}</div>
-                  <button type="button" class="btn btn-outline-primary"
-                          data-open-select="#{{ form.rel_news.id_for_label }}">افزودن</button>
-                </div>
+                <div class="flex-grow-1">{{ form.rel_news }}</div>
                 {% for e in form.rel_news.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -313,11 +299,7 @@
               {% if form.rel_products %}
               <div class="col-12">
                 <label for="{{ form.rel_products.id_for_label }}" class="form-label">{{ form.rel_products.label }}</label>
-                <div class="d-flex gap-2">
-                  <div class="flex-grow-1">{{ form.rel_products }}</div>
-                  <button type="button" class="btn btn-outline-primary"
-                          data-open-select="#{{ form.rel_products.id_for_label }}">افزودن</button>
-                </div>
+                <div class="flex-grow-1">{{ form.rel_products }}</div>
                 {% for e in form.rel_products.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -370,6 +352,12 @@
   .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
   .is-invalid { border-color:#dc3545 !important; }
   .thumb { height:72px;width:72px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef; }
+  .chip {
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.25rem .5rem; border-radius:999px; border:1px solid #dee2e6;
+    background:#f8f9fa; font-size:.875rem;
+  }
+  .chip button { border:0; background:transparent; line-height:1; cursor:pointer; }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -386,15 +374,12 @@
     });
   })();
 
-  // ---------- Select2 init (category wired EXACTLY like related products)
+  // ---------- Select2 init
   function initAjaxSelect2(selector, url, isMultiple){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
     if (!$el.length) return;
 
-    if (!isMultiple && !$el.find('option[value=""]').length) {
-      $el.prepend(new Option('', '', false, false));
-    }
     if (isMultiple) $el.prop('multiple', true);
 
     $el.select2({
@@ -427,32 +412,46 @@
 
     $el.on('select2:unselect', function (e) {
       const data = e.params && e.params.data;
-      if (data) {
-        const opt = this.querySelector("option[value='" + data.id + "']");
-        if (opt) opt.selected = false;
-      }
+      if (!data) return;
+      const opt = this.querySelector("option[value='" + data.id + "']");
+      if (opt) opt.selected = false;
+      $el.trigger('change.select2');
     });
   }
 
-  // Delegated open/clear like your related selectors (use data-* with a CSS target)
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('[data-open-select]');
-    if (btn && window.jQuery && jQuery.fn.select2) {
-      const sel = document.querySelector(btn.getAttribute('data-open-select'));
-      if (sel) jQuery(sel).select2('open');
-    }
-  });
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('[data-clear-select]');
-    if (!btn) return;
-    const sel = document.querySelector(btn.getAttribute('data-clear-select'));
-    if (!sel) return;
-    if (window.jQuery && jQuery.fn.select2) jQuery(sel).val(null).trigger('change');
-    Array.from(sel.options).forEach(o => o.selected = false);
-  });
+  // ---------- دسته‌بندی: multi + chips (no buttons)
+  const catSelect = '#{{ form.category_id.id_for_label }}';
+  initAjaxSelect2(catSelect, "{% url 'admin_dashboard:api_search_categories' %}", true);
 
-  // Initialize Select2s (category now identical to rel_* pattern)
-  initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", false);
+  const chipsWrap = document.getElementById('category-chips');
+  function rebuildCategoryChips(){
+    if (!chipsWrap) return;
+    const sel = document.querySelector(catSelect);
+    if (!sel) return;
+    chipsWrap.innerHTML = '';
+
+    Array.from(sel.options).forEach(function(o){
+      if (!o.selected) return;
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.dataset.value = o.value;
+      chip.innerHTML = `<span>${o.text}</span><button type="button" aria-label="remove">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', function(){
+        o.selected = false;
+        if (window.jQuery && jQuery.fn.select2) jQuery(sel).trigger('change.select2');
+        rebuildCategoryChips();
+      });
+      chipsWrap.appendChild(chip);
+    });
+  }
+
+  if (window.jQuery && jQuery.fn.select2) {
+    jQuery(document).on('change', catSelect, rebuildCategoryChips);
+    // build once for initial values
+    setTimeout(rebuildCategoryChips, 0);
+  }
+
+  // ---------- Other select2 (rel_* keep as-is, multi)
   initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true);
   initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true);
   initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true);
@@ -483,7 +482,7 @@
     }catch(e){ initialObj = {}; }
     const keys = Object.keys(initialObj);
     if (keys.length){ keys.forEach(k=> addFeatureRow(k, initialObj[k])); } else { addFeatureRow(); }
-    hidden.value = JSON.stringify(initialObj); // ensure not empty
+    hidden.value = JSON.stringify(initialObj);
 
     addBtn.addEventListener('click', ()=> addFeatureRow());
   }
@@ -500,28 +499,10 @@
     hidden.value = json && json.length ? json : '{}';
   }
 
-  // ---------- Images: input = extra_images (matches views.py), keep hidden JSON for form.images
-  const imagesWrap = document.getElementById('images-field-wrap');
+  // ---------- Images
   const previews = document.getElementById('extra-images-preview');
-  const existing = document.getElementById('existing-images-preview');
-  const openBtn = document.getElementById('add-extra-image');
   const imagesHidden = document.getElementById('images-hidden');
-
-  function ensureImagesInput(){
-    if (!imagesWrap) return null;
-    let input = document.getElementById('id_extra_images');
-    if (!input) {
-      input = document.createElement('input');
-      input.type = 'file';
-      input.name = 'extra_images';
-      input.id = 'id_extra_images';
-      input.accept = 'image/*';
-      input.multiple = true;
-      input.className = 'form-control';
-      imagesWrap.appendChild(input);
-    }
-    return input;
-  }
+  const imagesInput = document.getElementById('id_extra_images');
 
   function renderPreviews(fileList){
     if (!previews) return;
@@ -538,19 +519,9 @@
       r.readAsDataURL(file);
     });
   }
-
-  const imagesInput = ensureImagesInput();
   if (imagesInput){
     imagesInput.addEventListener('change', ()=> renderPreviews(imagesInput.files));
   }
-  if (openBtn){
-    openBtn.addEventListener('click', ()=> {
-      const input = ensureImagesInput();
-      if (input) input.click();
-    });
-  }
-
-  // Ensure hidden images JSON has at least [] so validation passes
   if (imagesHidden && !imagesHidden.value.trim()){
     imagesHidden.value = '[]';
   }
@@ -577,7 +548,6 @@
     formEl.addEventListener('submit', function () {
       featuresToHidden();
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
-      // keep imagesHidden as JSON string; backend will append uploaded extra_images to product.images
       if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
     });
   }
