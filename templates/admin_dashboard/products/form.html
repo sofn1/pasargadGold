@@ -48,6 +48,7 @@
 
     <div class="row g-4">
 
+      <!-- Main specs -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -72,15 +73,13 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — multi-select with chips, no buttons #}
+              {# Categories — Select2 multiple + chips #}
               {% if form.categories %}
               <div class="col-12">
                 <label for="{{ form.categories.id_for_label }}" class="form-label">{{ form.categories.label }}</label>
                 <div class="flex-grow-1">{{ form.categories }}</div>
                 <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید و انتخاب کنید. می‌توانید چند مورد را انتخاب کنید.</small>
-
                 <div id="category-chips" class="d-flex flex-wrap gap-2 mt-2"></div>
-
                 {% for e in form.categories.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
@@ -125,6 +124,7 @@
         </div>
       </div>
 
+      <!-- Owner & descriptions -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -170,6 +170,7 @@
         </div>
       </div>
 
+      <!-- Features (JSON) -->
       {% if form.features %}
       <div class="col-12">
         <div class="card shadow-sm h-100">
@@ -195,6 +196,7 @@
       </div>
       {% endif %}
 
+      <!-- Images -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -203,7 +205,7 @@
           <div class="card-body">
             <div class="row g-4">
 
-              {# تصویر اصلی #}
+              {# Main image #}
               {% if form.view_image %}
               <div class="col-md-6">
                 <label for="{{ form.view_image.id_for_label }}" class="form-label">{{ form.view_image.label }}</label>
@@ -219,7 +221,7 @@
               </div>
               {% endif %}
 
-              {# گالری تصاویر #}
+              {# Gallery images #}
               <div class="col-md-6">
                 <label class="form-label d-block">
                   {% if form.images %}{{ form.images.label|default:"تصاویر اضافی" }}{% else %}تصاویر اضافی{% endif %}
@@ -243,7 +245,7 @@
                     {% for url in form.instance.images %}
                       <div class="thumb-wrap position-relative" data-url="{{ url }}">
                         <img src="{{ url }}" class="thumb" alt="img">
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-1 m-1" style="border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 1;">&times;</button>
+                        <button type="button" class="remove-btn btn btn-danger btn-sm position-absolute top-0 end-0 p-1 m-1" style="border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 1;">&times;</button>
                       </div>
                     {% endfor %}
                   {% endif %}
@@ -268,6 +270,7 @@
         </div>
       </div>
 
+      <!-- Relations -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -305,7 +308,6 @@
         </div>
       </div>
 
-
       {% for field in form.hidden_fields %}{{ field }}{% endfor %}
 
       <div class="col-12">
@@ -324,10 +326,9 @@
 
 
 {% block extra_js %}
-
 <script>
 (function(){
-  // ---------- Error highlighting
+  // ---------------- Error highlighting
   (function highlightInvalids(){
     if (!window.__form_has_errors__) return;
     document.querySelectorAll('.text-danger.small').forEach(function(err){
@@ -337,7 +338,7 @@
     });
   })();
 
-  // Utility function to initialize a Select2 field
+  // ---------------- Select2 init helper (with AJAX)
   function initAjaxSelect2(selector, url, isMultiple, initialData = []){
     if (!(window.jQuery && jQuery.fn.select2)) return;
     const $el = jQuery(selector);
@@ -372,7 +373,7 @@
       escapeMarkup: m => m
     });
 
-    // Populate with initial data if available
+    // Seed initial items (edit mode)
     if (initialData.length > 0) {
       initialData.forEach(item => {
         let opt = $el.find(`option[value="${item.id}"]`);
@@ -380,21 +381,19 @@
           opt = new Option(item.text, item.id, true, true);
           $el.append(opt);
         } else {
-          opt.selected = true;
+          opt.prop('selected', true);
         }
       });
       $el.trigger('change');
     }
 
-    // Set up event listeners for select and unselect events
+    // Keep <option> state in sync
     $el.on('select2:select', function (e) {
       const data = e.params && e.params.data;
       if (!data || data.id == null) return;
-
       const sel = this;
       const id = String(data.id);
       const text = data.text || id;
-
       let opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
       if (!opt) {
         opt = new Option(text, id, true, true);
@@ -407,7 +406,6 @@
     $el.on('select2:unselect', function (e) {
       const data = e.params && e.params.data;
       if (!data) return;
-
       const sel = this;
       const id = String(data.id);
       const opt = sel.querySelector('option[value="' + id.replace(/"/g, '\\"') + '"]');
@@ -415,15 +413,13 @@
     });
   }
 
-  // Function to handle the category chips UI
+  // ---------------- Category chips
   const chipsWrap = document.getElementById('category-chips');
   function rebuildCategoryChipsFromSelect(sel){
-    if (!chipsWrap) return;
-    if (!sel || sel.tagName !== 'SELECT' || !sel.options) return;
-
+    if (!chipsWrap || !sel || !sel.options) return;
     chipsWrap.innerHTML = '';
     Array.from(sel.options).forEach(function(o){
-      if (!o.selected) return;
+      if (!o.selected || !o.value) return;
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.dataset.value = String(o.value);
@@ -437,7 +433,19 @@
     });
   }
 
-  // Functions for Features repeater
+  // Keep chips rebuilt on selection change
+  function wireCategoryChips(){
+    const catSelectEl = document.querySelector('#{{ form.categories.id_for_label }}');
+    if (!catSelectEl) return;
+    if (window.jQuery && jQuery.fn.select2) {
+      jQuery(catSelectEl).on('change', function(){ rebuildCategoryChipsFromSelect(catSelectEl); });
+    } else {
+      catSelectEl.addEventListener('change', function(){ rebuildCategoryChipsFromSelect(catSelectEl); });
+    }
+    rebuildCategoryChipsFromSelect(catSelectEl);
+  }
+
+  // ---------------- Features (JSON) repeater
   const repeater = document.getElementById('features-repeater');
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
@@ -447,32 +455,52 @@
     const row = document.createElement('div');
     row.className = 'row g-2 feature-row';
     row.innerHTML = `
-      <div class="col-md-5"><input type="text" class="form-control feature-key" placeholder="نام ویژگی" value="${k}"></div>
-      <div class="col-md-6"><input type="text" class="form-control feature-val" placeholder="مقدار ویژگی" value="${v}"></div>
-      <div class="col-md-1 d-grid"><button type="button" class="btn btn-outline-danger remove-feature">&times;</button></div>
+      <div class="col-md-5">
+        <input type="text" class="form-control feature-key" placeholder="نام ویژگی" value="${k}">
+      </div>
+      <div class="col-md-6">
+        <input type="text" class="form-control feature-val" placeholder="مقدار ویژگی" value="${v}">
+      </div>
+      <div class="col-md-1 d-grid">
+        <button type="button" class="btn btn-outline-danger remove-feature">&times;</button>
+      </div>
     `;
     rows.appendChild(row);
-    row.querySelector('.remove-feature').addEventListener('click', ()=> row.remove());
+
+    // Any change updates hidden JSON
+    row.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', featuresToHidden);
+      inp.addEventListener('change', featuresToHidden);
+    });
+
+    row.querySelector('.remove-feature').addEventListener('click', ()=>{
+      row.remove();
+      featuresToHidden();
+    });
   }
 
-
+  // Robust initializer: accepts array, object, string, or empty
   function initializeFeaturesRepeater(initialData) {
-      if (!rows) return;
+    if (!rows) return;
+    rows.innerHTML = '';
 
-      rows.innerHTML = '';
-      let initialObj = {};
-      if (Array.isArray(initialData)) {
-        initialData.forEach(item => {
-          addFeatureRow(item.name || '', item.value || '');
-        });
-      } else {
-        // Fallback for old data structure
-        try{ initialObj = JSON.parse(initialData || "{}") || {}; } catch(e){ initialObj = {}; }
-        const keys = Object.keys(initialObj);
-        if (keys.length){ keys.forEach(k=> addFeatureRow(k, initialObj[k])); } else { addFeatureRow(); }
+    if (Array.isArray(initialData)) {
+      initialData.forEach(item => addFeatureRow(item?.name || '', item?.value || ''));
+    } else if (initialData && typeof initialData === 'object') {
+      Object.keys(initialData).forEach(k => addFeatureRow(k, initialData[k]));
+    } else {
+      let parsed = {};
+      try {
+        const raw = (typeof initialData === 'string') ? initialData : '{}';
+        parsed = JSON.parse(raw || '{}') || {};
+      } catch (e) {
+        parsed = {};
       }
+      Object.keys(parsed).forEach(k => addFeatureRow(k, parsed[k]));
+    }
 
-      featuresToHidden();
+    if (!rows.children.length) addFeatureRow();
+    featuresToHidden();
   }
 
   function featuresToHidden(){
@@ -487,7 +515,12 @@
     hidden.value = json && json.length ? json : '{}';
   }
 
-  // ---------- Images
+  if (addBtn) addBtn.addEventListener('click', function(){
+    addFeatureRow();
+    featuresToHidden();
+  });
+
+  // ---------------- Images
   const newImagesPreview = document.getElementById('extra-images-preview');
   const existingImagesPreview = document.getElementById('existing-images-preview');
   const imagesHidden = document.getElementById('images-hidden');
@@ -524,11 +557,11 @@
 
   if (existingImagesPreview) {
     existingImagesPreview.addEventListener('click', function(e) {
-      const removeBtn = e.target.closest('.thumb-wrap .remove-btn');
+      const removeBtn = e.target.closest('.remove-btn');
       if (removeBtn) {
         const wrap = removeBtn.closest('.thumb-wrap');
-        const url = wrap.dataset.url;
-        if (imagesHidden) {
+        const url = wrap?.dataset?.url;
+        if (imagesHidden && url) {
           try {
             let currentImages = JSON.parse(imagesHidden.value || '[]');
             currentImages = currentImages.filter(imgUrl => imgUrl !== url);
@@ -537,12 +570,12 @@
             console.error('Failed to parse images JSON:', err);
           }
         }
-        wrap.remove();
+        if (wrap) wrap.remove();
       }
     });
   }
 
-  // ---------- Price formatting + submit handlers
+  // ---------------- Price formatting + submit handlers
   const formEl = document.getElementById('product-form');
   const priceInput = document.getElementById('{{ form.price.id_for_label }}');
 
@@ -562,11 +595,17 @@
 
   if (formEl) {
     formEl.addEventListener('submit', function (event) {
+      // Sync features JSON
       featuresToHidden();
+
+      // Strip commas from price for server
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
+
+      // Ensure images-hidden has valid JSON
       if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
 
-      if (newFiles.length > 0) {
+      // Append new files to the <input type="file"> so Django sees them
+      if (newFiles.length > 0 && imagesInput) {
         const dataTransfer = new DataTransfer();
         newFiles.forEach(file => dataTransfer.items.add(file));
         imagesInput.files = dataTransfer.files;
@@ -574,66 +613,53 @@
     });
   }
 
-  // Main logic to fetch data and initialize fields
-  $(document).ready(function() {
+  // ---------------- Page bootstrap
+  jQuery(function(){
     const productId = "{{ form.instance.pk }}";
 
     {% if form.instance.pk %}
+      // EDIT MODE: fetch current data for select2 seeding and features
       fetch("{% url 'admin_dashboard:api_get_product' product_id=form.instance.pk %}")
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
+        .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
         .then(data => {
-          if (data.error) {
-            console.error('API Error:', data.error);
-            return;
-          }
+          if (data.error) { console.error('API Error:', data.error); return; }
 
-          // Initialize Select2 fields with fetched data
-          initAjaxSelect2('#{{ form.categories.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.categories);
-          initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, data.rel_blogs);
-          initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, data.rel_news);
-          initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, data.rel_products);
+          // Initialize select2 fields with initial data
+          initAjaxSelect2('#{{ form.categories.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.categories || []);
+          initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, data.rel_blogs || []);
+          initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, data.rel_news || []);
+          initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, data.rel_products || []);
 
-          const catSelectEl = document.querySelector('#{{ form.categories.id_for_label }}');
-          if (catSelectEl) {
-            setTimeout(function(){ rebuildCategoryChipsFromSelect(catSelectEl); }, 0);
-          }
-          // The correct call to initialize features with data from API
+          // Category chips
+          wireCategoryChips();
+
+          // Features: accept array/object/string
           initializeFeaturesRepeater(data.features);
 
+          // (Optional) in case name is returned and you want to ensure it shows
           if (data.name) {
-              const nameEl = document.getElementById("{{ form.name.id_for_label }}");
-              if(nameEl) {
-                  nameEl.value = data.name;
-              }
+            const nameEl = document.getElementById("{{ form.name.id_for_label }}");
+            if (nameEl) nameEl.value = data.name;
           }
         })
-        .catch(error => console.error('Error fetching product data:', error));
+        .catch(err => console.error('Error fetching product data:', err));
     {% else %}
-      // This part will only be rendered into the HTML on the create page.
+      // CREATE MODE
       initAjaxSelect2('#{{ form.categories.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, []);
       initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, []);
       initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, []);
       initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, []);
-      // The correct call to initialize features with empty data for new products
-      initializeFeaturesRepeater({});
+      wireCategoryChips();
+      initializeFeaturesRepeater({}); // start empty
     {% endif %}
-
   });
 
 })();
 </script>
-
-
 {% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-
 <style>
   .select2-container .select2-selection--single { height: 38px; }
   .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
@@ -647,6 +673,4 @@
   }
   .chip button { border:0; background:transparent; line-height:1; cursor:pointer; }
 </style>
-
-
 {% endblock %}
