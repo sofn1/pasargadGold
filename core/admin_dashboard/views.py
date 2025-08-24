@@ -821,13 +821,10 @@ def api_get_product_data(request, product_id):
         # Build a dictionary to hold all the data
         data = {
             "name": product.name,
+            # Corrected line: use product.categories instead of product.category_id
             "categories": [
                 {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
                 for c in product.categories.all()
-            ],
-            "category_id": [
-                {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
-                for c in product.category_id.all()
             ],
             "rel_blogs": [
                 {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
@@ -844,7 +841,7 @@ def api_get_product_data(request, product_id):
             # Safely handle the JSON field
             "features": json.loads(product.features) if product.features else []
         }
-        
+
         return JsonResponse(data)
 
     except Product.DoesNotExist:
