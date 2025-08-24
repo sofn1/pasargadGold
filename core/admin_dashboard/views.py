@@ -819,6 +819,34 @@ def api_get_product_data(request, product_id):
         product = Product.objects.get(pk=product_id)
         print("Product found:", product.name)
 
+        print([
+                {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
+                for c in product.categories.all()
+            ])
+        print("**********")
+
+        print([
+                {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
+                for b in Blog.objects.filter(pk__in=product.rel_blogs) if isinstance(product.rel_blogs, list)
+            ])
+        print("**********")
+
+        print([
+                {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
+                for n in News.objects.filter(pk__in=product.rel_news) if isinstance(product.rel_news, list)
+            ])
+        print("**********")
+
+        print([
+                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
+                for p in Product.objects.filter(pk__in=product.rel_products) if isinstance(product.rel_products, list)
+            ])
+        print("**********")
+
+        print(json.loads(product.features) if product.features else [])
+        print("**********")
+
+
         # Build a dictionary to hold all the data
         data = {
             "name": product.name,
