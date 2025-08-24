@@ -808,12 +808,6 @@ def brand_delete_view(request, pk):
 
 
 # --- PRODUCT CRUD ---
-# /root/pasargadGold/core/admin_dashboard/views.py
-from blogs.models import Blog  # Make sure to import the Blog model
-
-
-# ...
-
 @staff_required
 def api_get_product_data(request, product_id):
     """
