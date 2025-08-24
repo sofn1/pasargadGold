@@ -74,17 +74,16 @@
               </div>
               {% endif %}
 
-              {# دسته‌بندی — multi-select like محصولات مرتبط, NO buttons, with chips #}
-              {% if form.category_id %}
+              {# دسته‌بندی — multi-select with chips, no buttons #}
+              {% if form.categories %}
               <div class="col-12">
-                <label for="{{ form.category_id.id_for_label }}" class="form-label">{{ form.category_id.label }}</label>
-                <div class="flex-grow-1">{{ form.category_id }}</div>
+                <label for="{{ form.categories.id_for_label }}" class="form-label">{{ form.categories.label }}</label>
+                <div class="flex-grow-1">{{ form.categories }}</div>
                 <small class="text-muted d-block mt-1">برای یافتن دسته تایپ کنید و انتخاب کنید. می‌توانید چند مورد را انتخاب کنید.</small>
 
-                <!-- selected category chips -->
                 <div id="category-chips" class="d-flex flex-wrap gap-2 mt-2"></div>
 
-                {% for e in form.category_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                {% for e in form.categories.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
               </div>
               {% endif %}
 
@@ -600,12 +599,10 @@
   }
 
   // Main logic to fetch data and initialize fields
-  $(document).ready(function() {
+    $(document).ready(function() {
     const productId = "{{ form.instance.pk }}";
 
-    // This is the correct Django template conditional logic.
     {% if form.instance.pk %}
-      // This part will only be rendered into the HTML on the edit page.
       fetch("{% url 'admin_dashboard:api_get_product' product_id=form.instance.pk %}")
         .then(response => {
           if (!response.ok) {
@@ -618,14 +615,14 @@
             console.error('API Error:', data.error);
             return;
           }
+
           // Initialize Select2 fields with fetched data
-          // and other setup for edit view...
-          initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.category_id);
+          initAjaxSelect2('#{{ form.categories.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.categories);
           initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, data.rel_blogs);
           initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, data.rel_news);
           initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, data.rel_products);
 
-          const catSelectEl = document.querySelector('#{{ form.category_id.id_for_label }}');
+          const catSelectEl = document.querySelector('#{{ form.categories.id_for_label }}');
           if (catSelectEl) {
             setTimeout(function(){ rebuildCategoryChipsFromSelect(catSelectEl); }, 0);
           }
@@ -641,15 +638,13 @@
         .catch(error => console.error('Error fetching product data:', error));
     {% else %}
       // This part will only be rendered into the HTML on the create page.
-      // We don't need a fetch call here.
-      initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, []);
+      initAjaxSelect2('#{{ form.categories.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, []);
       initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, []);
       initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, []);
       initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, []);
       initializeFeaturesRepeater();
     {% endif %}
   });
-
 
 })();
 </script>

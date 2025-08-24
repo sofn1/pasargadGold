@@ -821,6 +821,10 @@ def api_get_product_data(request, product_id):
         # Build a dictionary to hold all the data
         data = {
             "name": product.name,
+            "categories": [
+                {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
+                for c in product.categories.all()
+            ],
             "category_id": [
                 {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
                 for c in product.category_id.all()

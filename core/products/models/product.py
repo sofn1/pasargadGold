@@ -1,4 +1,5 @@
 from django.db import models
+from categories.models import Category
 from products.models.brand import Brand
 
 
@@ -6,6 +7,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     english_name = models.CharField(max_length=255)
     category_id = models.CharField(max_length=64)  # MongoDB category ID as string
+    categories = models.ManyToManyField(Category, related_name='products')
 
     price = models.DecimalField(max_digits=15, decimal_places=0, default=0)
     featured = models.BooleanField(default=False)  # ✅ NEW FIELD

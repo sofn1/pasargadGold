@@ -95,12 +95,19 @@ class ProductForm(forms.ModelForm):
         label="دسته‌بندی"
     )
 
+    categories = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-control select2'}),
+        label="دسته‌بندی"
+    )
+
     images = forms.JSONField(required=False)
 
     class Meta:
         model = Product
         fields = "__all__"
-        fields = ['name', 'english_name', 'category_id', 'brand', 'price', 'featured', 'is_active', 'owner_name',
+        fields = ['name', 'english_name', 'categories', 'category_id', 'brand', 'price', 'featured', 'is_active', 'owner_name',
                   'owner_profile', 'short_description', 'description', 'features', 'view_image', 'rel_blogs',
                   'rel_news', 'rel_products']
 
