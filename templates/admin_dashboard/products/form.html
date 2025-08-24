@@ -600,11 +600,12 @@
   }
 
   // Main logic to fetch data and initialize fields
-    $(document).ready(function() {
+  $(document).ready(function() {
     const productId = "{{ form.instance.pk }}";
 
-    if (productId) {
-      // This block will ONLY run on the edit page because productId will be a number.
+    // This is the correct Django template conditional logic.
+    {% if form.instance.pk %}
+      // This part will only be rendered into the HTML on the edit page.
       fetch("{% url 'admin_dashboard:api_get_product' product_id=form.instance.pk %}")
         .then(response => {
           if (!response.ok) {
@@ -617,44 +618,38 @@
             console.error('API Error:', data.error);
             return;
           }
-
           // Initialize Select2 fields with fetched data
+          // and other setup for edit view...
           initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, data.category_id);
           initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, data.rel_blogs);
           initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, data.rel_news);
           initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, data.rel_products);
 
-          // Update the chips UI for categories after Select2 is initialized
           const catSelectEl = document.querySelector('#{{ form.category_id.id_for_label }}');
           if (catSelectEl) {
-            setTimeout(function(){
-              rebuildCategoryChipsFromSelect(catSelectEl);
-            }, 0);
+            setTimeout(function(){ rebuildCategoryChipsFromSelect(catSelectEl); }, 0);
           }
-
-          // Initialize the features repeater with fetched data
           initializeFeaturesRepeater(data.features);
 
-          // Populate the 'name' field
           if (data.name) {
               const nameEl = document.getElementById("{{ form.name.id_for_label }}");
               if(nameEl) {
                   nameEl.value = data.name;
               }
           }
-
-          // You may have other fields to populate here
         })
         .catch(error => console.error('Error fetching product data:', error));
-    } else {
-      // This block will ONLY run on the create page.
+    {% else %}
+      // This part will only be rendered into the HTML on the create page.
+      // We don't need a fetch call here.
       initAjaxSelect2('#{{ form.category_id.id_for_label }}', "{% url 'admin_dashboard:api_search_categories' %}", true, []);
       initAjaxSelect2('#{{ form.rel_blogs.id_for_label }}', "{% url 'admin_dashboard:api_search_blogs' %}", true, []);
       initAjaxSelect2('#{{ form.rel_news.id_for_label }}', "{% url 'admin_dashboard:api_search_news' %}", true, []);
       initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, []);
-      initializeFeaturesRepeater(); // Initialize with one empty row
-    }
+      initializeFeaturesRepeater();
+    {% endif %}
   });
+
 
 })();
 </script>
