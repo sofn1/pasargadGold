@@ -855,8 +855,17 @@ def api_get_product_data(request, product_id):
                 for p in Product.objects.filter(pk__in=product.rel_products)
             ]
 
-        # Safely load features
-        features_data = json.loads(product.features) if product.features else []
+        # Corrected: Handle the features field
+        # Use it directly if it's a dict. If it's a string, then load it.
+        features_data = {}  # Default to an empty dict
+        if isinstance(product.features, dict):
+            features_data = product.features
+        elif isinstance(product.features, str):
+            try:
+                features_data = json.loads(product.features)
+            except json.JSONDecodeError:
+                # Fallback to an empty dict if the JSON is invalid
+                features_data = {}
 
         # Build a dictionary to hold all the data
         data = {
@@ -873,7 +882,6 @@ def api_get_product_data(request, product_id):
     except Exception as e:
         print("Error during API call:", e)
         return JsonResponse({"error": str(e)}, status=500)
-
 
 @staff_required
 def api_search_categories(request):
