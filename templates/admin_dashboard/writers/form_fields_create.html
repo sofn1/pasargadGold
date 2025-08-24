@@ -1,46 +1,223 @@
+{% comment %} Beautiful & responsive create form (Writer) — consistent with update version {% endcomment %}
 {% if form.errors %}
-    <div class="alert alert-danger">لطفاً خطاهای زیر را بررسی کنید.</div>
+  <div class="alert alert-danger mb-4">
+    <i class="fas fa-exclamation-circle me-1"></i>
+    لطفاً خطاهای زیر را بررسی کنید.
+  </div>
 {% endif %}
 
-<div class="row g-3">
-    <div class="col-md-3">
-        {{ form.phone_number.label_tag }}
-        {{ form.phone_number }}
+<div class="row g-4">
+
+  <!-- Account -->
+  <div class="col-12">
+    <div class="section-title">
+      <i class="fas fa-user-lock"></i> حساب کاربری
     </div>
-    <div class="col-md-3">
-        {{ form.password.label_tag }}
-        {{ form.password }}
+    <hr class="mt-1 mb-3">
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label" for="{{ form.phone_number.id_for_label }}">شماره موبایل</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
+      {{ form.phone_number }}
     </div>
-    <div class="col-md-3">
-        {{ form.first_name.label_tag }}
-        {{ form.first_name }}
+    <div class="field-note mt-1">با فرمت استاندارد وارد کنید. مثال: 0912xxxxxxx</div>
+    {% if form.phone_number.errors %}{% for e in form.phone_number.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label" for="{{ form.password.id_for_label }}">رمز عبور</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-key"></i></span>
+      {{ form.password }}
+      <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+        <i class="fas fa-eye"></i>
+      </button>
     </div>
-    <div class="col-md-3">
-        {{ form.last_name.label_tag }}
-        {{ form.last_name }}
+    <div class="field-note mt-1">حداقل 8 کاراکتر پیشنهاد می‌شود.</div>
+    {% if form.password.errors %}{% for e in form.password.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <!-- Basic info -->
+  <div class="col-12 mt-2">
+    <div class="section-title">
+      <i class="fas fa-id-card"></i> مشخصات کاربر
     </div>
-    <div class="col-md-2">
-        {{ form.age.label_tag }}
-        {{ form.age }}
+    <hr class="mt-1 mb-3">
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label" for="{{ form.first_name.id_for_label }}">نام</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-user"></i></span>
+      {{ form.first_name }}
     </div>
-    <div class="col-md-4">
-        {{ form.email.label_tag }}
-        {{ form.email }}
+    {% if form.first_name.errors %}{% for e in form.first_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label" for="{{ form.last_name.id_for_label }}">نام خانوادگی</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+      {{ form.last_name }}
     </div>
-    <div class="col-md-6">
-        {{ form.about_me.label_tag }}
-        {{ form.about_me }}
+    {% if form.last_name.errors %}{% for e in form.last_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-6 col-md-3">
+    <label class="form-label" for="{{ form.age.id_for_label }}">سن</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+      {{ form.age }}
     </div>
-    <div class="col-md-4">
-        {{ form.profile_image.label_tag }}
-        {{ form.profile_image }}
+    {% if form.age.errors %}{% for e in form.age.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-12 col-md-9">
+    <label class="form-label" for="{{ form.email.id_for_label }}">ایمیل</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+      {{ form.email }}
     </div>
-    <div class="col-md-4 form-check mt-4">
-        {{ form.can_write_blogs }}
-        {{ form.can_write_blogs.label_tag }}
+    {% if form.email.errors %}{% for e in form.email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <!-- Profile -->
+  <div class="col-12 mt-2">
+    <div class="section-title">
+      <i class="fas fa-user-circle"></i> پروفایل نویسنده
     </div>
-    <div class="col-md-4 form-check mt-4">
-        {{ form.can_write_news }}
-        {{ form.can_write_news.label_tag }}
+    <hr class="mt-1 mb-3">
+  </div>
+
+  <div class="col-12">
+    <label class="form-label" for="{{ form.about_me.id_for_label }}">درباره من</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+      {{ form.about_me }}
     </div>
+    <div class="field-note mt-1">چند خط دربارهٔ نویسنده…</div>
+    {% if form.about_me.errors %}{% for e in form.about_me.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label d-block" for="{{ form.profile_image.id_for_label }}">تصویر پروفایل</label>
+
+    <!-- new preview -->
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <img src="" alt="" class="avatar-lg d-none" id="new-avatar-preview">
+      <small class="field-note d-block">پیش‌نمایش تصویر جدید</small>
+    </div>
+
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-image"></i></span>
+      {{ form.profile_image }}
+    </div>
+    <div class="field-note mt-1">فرمت‌های مجاز: JPG, PNG, WEBP. اندازه پیشنهادی: مربع (مثلاً 512×512).</div>
+    {% if form.profile_image.errors %}{% for e in form.profile_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <!-- Permissions -->
+  <div class="col-12 mt-2">
+    <div class="section-title">
+      <i class="fas fa-user-shield"></i> دسترسی‌ها
+    </div>
+    <hr class="mt-1 mb-3">
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="form-check form-switch">
+      {{ form.can_write_blogs }}
+      <label class="form-check-label" for="{{ form.can_write_blogs.id_for_label }}">مجوز نوشتن وبلاگ</label>
+    </div>
+    {% if form.can_write_blogs.errors %}{% for e in form.can_write_blogs.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="form-check form-switch">
+      {{ form.can_write_news }}
+      <label class="form-check-label" for="{{ form.can_write_news.id_for_label }}">مجوز نوشتن خبر</label>
+    </div>
+    {% if form.can_write_news.errors %}{% for e in form.can_write_news.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
+  </div>
+
 </div>
+
+{% block extra_js %}
+<script>
+  (function () {
+    // Find the nearest form area (the row itself)
+    const root = document.currentScript.closest('.row');
+    if (!root) return;
+
+    // Add Bootstrap classes to inputs without using as_widget()
+    root.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="password"], textarea').forEach(function(el){
+      el.classList.add('form-control');
+      if (!el.placeholder) {
+        const lbl = root.querySelector('label[for="'+ el.id +'"]');
+        if (lbl) el.placeholder = lbl.textContent.trim();
+      }
+    });
+
+    // File inputs
+    root.querySelectorAll('input[type="file"]').forEach(function(el){
+      el.classList.add('form-control');
+      el.setAttribute('accept', 'image/*');
+    });
+
+    // Switch/checkbox styling
+    root.querySelectorAll('input[type="checkbox"]').forEach(function(el){
+      el.classList.add('form-check-input');
+      el.setAttribute('role','switch');
+    });
+
+    // Live preview for profile image
+    const input = document.getElementById("{{ form.profile_image.id_for_label }}");
+    const preview = document.getElementById("new-avatar-preview");
+    if (input && preview) {
+      input.addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) { preview.classList.add("d-none"); preview.src = ""; return; }
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          preview.src = ev.target.result;
+          preview.classList.remove("d-none");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Password visibility toggle
+    const pwd = document.getElementById("{{ form.password.id_for_label }}");
+    const toggle = document.getElementById("toggle-password");
+    if (pwd && toggle) {
+      toggle.addEventListener('click', function () {
+        const isText = pwd.getAttribute('type') === 'text';
+        pwd.setAttribute('type', isText ? 'password' : 'text');
+        const icon = toggle.querySelector('i');
+        if (icon) icon.className = isText ? 'fas fa-eye' : 'fas fa-eye-slash';
+      });
+    }
+  })();
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .section-title {
+    font-size: .95rem;
+    font-weight: 700;
+    opacity: .85;
+    margin-bottom: .75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .avatar-lg {
+    width: 80px; height: 80px; object-fit: cover; border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,.25);
+  }
+  .field-note { opacity:.75; font-size:.85rem; }
+</style>
+{% endblock %}
