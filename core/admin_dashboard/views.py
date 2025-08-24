@@ -824,18 +824,18 @@ def api_get_product_data(request, product_id):
                 {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
                 for c in product.categories.all()
             ],
-            # Corrected line: Check if rel_blogs is a list before querying
             "rel_blogs": [
                 {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
                 for b in Blog.objects.filter(pk__in=product.rel_blogs) if isinstance(product.rel_blogs, list)
             ],
+            # Corrected line: Check if rel_news is a list before querying
             "rel_news": [
                 {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
-                for n in product.rel_news.all()
+                for n in News.objects.filter(pk__in=product.rel_news) if isinstance(product.rel_news, list)
             ],
             "rel_products": [
                 {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
-                for p in product.rel_products.all()
+                for p in Product.objects.filter(pk__in=product.rel_products) if isinstance(product.rel_products, list)
             ],
             "features": json.loads(product.features) if product.features else []
         }
@@ -846,6 +846,11 @@ def api_get_product_data(request, product_id):
         return JsonResponse({"error": "Product not found"}, status=404)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON data in features field"}, status=500)
+    except Exception as e:
+        # A catch-all for other potential issues, good for debugging
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 
 @staff_required
 def api_search_categories(request):
