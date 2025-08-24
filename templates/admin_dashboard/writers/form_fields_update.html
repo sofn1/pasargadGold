@@ -1,4 +1,3 @@
-{% comment %} Beautiful & responsive update form (Writer) {% endcomment %}
 {% if form.errors %}
   <div class="alert alert-danger mb-4">
     <i class="fas fa-exclamation-circle me-1"></i>
@@ -7,7 +6,6 @@
 {% endif %}
 
 <div class="row g-4">
-
   <!-- Basic info -->
   <div class="col-12">
     <div class="section-title">
@@ -20,60 +18,36 @@
     <label class="form-label" for="{{ form.first_name.id_for_label }}">نام</label>
     <div class="input-group">
       <span class="input-group-text"><i class="fas fa-user"></i></span>
-      {{ form.first_name.as_widget(attrs={
-        'class':'form-control', 'placeholder':'نام'
-      }) }}
+      {{ form.first_name }}
     </div>
-    {% if form.first_name.errors %}
-      {% for e in form.first_name.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.first_name.errors %}{% for e in form.first_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <div class="col-12 col-md-6">
     <label class="form-label" for="{{ form.last_name.id_for_label }}">نام خانوادگی</label>
     <div class="input-group">
       <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-      {{ form.last_name.as_widget(attrs={
-        'class':'form-control', 'placeholder':'نام خانوادگی'
-      }) }}
+      {{ form.last_name }}
     </div>
-    {% if form.last_name.errors %}
-      {% for e in form.last_name.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.last_name.errors %}{% for e in form.last_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <div class="col-6 col-md-3">
     <label class="form-label" for="{{ form.age.id_for_label }}">سن</label>
     <div class="input-group">
       <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
-      {{ form.age.as_widget(attrs={
-        'class':'form-control', 'placeholder':'سن'
-      }) }}
+      {{ form.age }}
     </div>
-    {% if form.age.errors %}
-      {% for e in form.age.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.age.errors %}{% for e in form.age.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <div class="col-12 col-md-9">
     <label class="form-label" for="{{ form.email.id_for_label }}">ایمیل</label>
     <div class="input-group">
       <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-      {{ form.email.as_widget(attrs={
-        'class':'form-control', 'placeholder':'example@email.com'
-      }) }}
+      {{ form.email }}
     </div>
-    {% if form.email.errors %}
-      {% for e in form.email.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.email.errors %}{% for e in form.email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <!-- Profile -->
@@ -88,22 +62,15 @@
     <label class="form-label" for="{{ form.about_me.id_for_label }}">درباره من</label>
     <div class="input-group">
       <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-      {{ form.about_me.as_widget(attrs={
-        'class':'form-control', 'rows':'4', 'placeholder':'چند خط دربارهٔ نویسنده...'
-      }) }}
+      {{ form.about_me }}
     </div>
-    <div class="field-note mt-1">می‌توانید توضیحات کوتاهی درباره مهارت‌ها و زمینه‌های فعالیت بنویسید.</div>
-    {% if form.about_me.errors %}
-      {% for e in form.about_me.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    <div class="field-note mt-1">چند خط دربارهٔ نویسنده…</div>
+    {% if form.about_me.errors %}{% for e in form.about_me.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <div class="col-12 col-md-6">
     <label class="form-label d-block" for="{{ form.profile_image.id_for_label }}">تصویر پروفایل</label>
     <div class="d-flex align-items-center gap-3 flex-wrap">
-
       <!-- current image -->
       <div class="d-flex align-items-center gap-2">
         {% if writer and writer.profile_image %}
@@ -125,16 +92,10 @@
 
     <div class="input-group mt-2">
       <span class="input-group-text"><i class="fas fa-image"></i></span>
-      {{ form.profile_image.as_widget(attrs={
-        'class':'form-control', 'accept':'image/*'
-      }) }}
+      {{ form.profile_image }}
     </div>
     <div class="field-note mt-1">فرمت‌های مجاز: JPG, PNG, WEBP. اندازه پیشنهادی: مربع (مثلاً 512×512).</div>
-    {% if form.profile_image.errors %}
-      {% for e in form.profile_image.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.profile_image.errors %}{% for e in form.profile_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <!-- Permissions -->
@@ -147,46 +108,68 @@
 
   <div class="col-12 col-md-6">
     <div class="form-check form-switch">
-      {{ form.can_write_blogs.as_widget(attrs={'class':'form-check-input', 'role':'switch'}) }}
+      {{ form.can_write_blogs }}
       <label class="form-check-label" for="{{ form.can_write_blogs.id_for_label }}">مجوز نوشتن وبلاگ</label>
     </div>
-    {% if form.can_write_blogs.errors %}
-      {% for e in form.can_write_blogs.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.can_write_blogs.errors %}{% for e in form.can_write_blogs.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
   <div class="col-12 col-md-6">
     <div class="form-check form-switch">
-      {{ form.can_write_news.as_widget(attrs={'class':'form-check-input', 'role':'switch'}) }}
+      {{ form.can_write_news }}
       <label class="form-check-label" for="{{ form.can_write_news.id_for_label }}">مجوز نوشتن خبر</label>
     </div>
-    {% if form.can_write_news.errors %}
-      {% for e in form.can_write_news.errors %}
-        <div class="text-danger small mt-1">{{ e }}</div>
-      {% endfor %}
-    {% endif %}
+    {% if form.can_write_news.errors %}{% for e in form.can_write_news.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}{% endif %}
   </div>
 
 </div>
 
+
+
 {% block extra_js %}
 <script>
   (function () {
+    // Add Bootstrap classes & placeholders without as_widget()
+    const root = document.currentScript.closest('.row');
+    if (!root) return;
+
+    // Text-like inputs
+    root.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(function(el){
+      el.classList.add('form-control');
+      if (!el.placeholder) {
+        // Use associated label text (if exists) as a soft placeholder
+        const lbl = root.querySelector('label[for="'+ el.id +'"]');
+        if (lbl) el.placeholder = lbl.textContent.trim();
+      }
+    });
+
+    // File inputs
+    root.querySelectorAll('input[type="file"]').forEach(function(el){
+      el.classList.add('form-control');
+      el.setAttribute('accept', 'image/*');
+    });
+
+    // Switch/checkbox styling
+    root.querySelectorAll('input[type="checkbox"]').forEach(function(el){
+      el.classList.add('form-check-input');
+      el.setAttribute('role','switch');
+    });
+
+    // Live preview for profile image
     const input = document.getElementById("{{ form.profile_image.id_for_label }}");
     const preview = document.getElementById("new-avatar-preview");
-    if (!input || !preview) return;
-    input.addEventListener("change", function (e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) { preview.classList.add("d-none"); preview.src = ""; return; }
-      const reader = new FileReader();
-      reader.onload = function (ev) {
-        preview.src = ev.target.result;
-        preview.classList.remove("d-none");
-      };
-      reader.readAsDataURL(file);
-    });
+    if (input && preview) {
+      input.addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) { preview.classList.add("d-none"); preview.src = ""; return; }
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          preview.src = ev.target.result;
+          preview.classList.remove("d-none");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   })();
 </script>
 {% endblock %}
@@ -194,7 +177,6 @@
 
 {% block extra_css %}
 <style>
-  /* scoped styles for this partial */
   .section-title {
     font-size: .95rem;
     font-weight: 700;
