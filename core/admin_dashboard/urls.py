@@ -37,6 +37,8 @@ urlpatterns = [
     path('api/search/blogs/', views.api_search_blogs, name='api_search_blogs'),
     path('api/search/news/', views.api_search_news, name='api_search_news'),
     path('api/search/products/', views.api_search_products, name='api_search_products'),
+    path('api/get-product/<int:product_id>/', views.api_get_product_data, name='api_get_product'),
+
 
     # Products
     path('products/', views.ProductListView.as_view(), name='admin_products'),

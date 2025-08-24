@@ -604,7 +604,7 @@
     const productId = "{{ form.instance.pk }}";
 
     if (productId) {
-      fetch(`/admin-dashboard/api/get-product/${productId}/`)
+      fetch("{% url 'admin_dashboard:api_get_product' pk=form.instance.pk %}")
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
