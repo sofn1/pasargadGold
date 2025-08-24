@@ -39,13 +39,23 @@ urlpatterns = [
     path('api/search/products/', views.api_search_products, name='api_search_products'),
     path('api/get-product/<int:product_id>/', views.api_get_product_data, name='api_get_product'),
 
-
     # Products
     path('products/', views.ProductListView.as_view(), name='admin_products'),
     path('products/create/', views.product_create_view, name='admin_product_create'),
     path('products/<int:pk>/edit/', views.product_edit_view, name='admin_product_edit'),
     path('products/<int:pk>/delete/', views.product_delete_view, name='admin_product_delete'),
 
+    # Writers
+    path("writers/", views.admin_writers_list, name="admin_writers"),
+    path("writers/create/", views.admin_writers_create, name="admin_writers_create"),
+    path("writers/<int:pk>/edit/", views.admin_writers_edit, name="admin_writers_edit"),
+    path("writers/<int:pk>/delete/", views.admin_writers_delete, name="admin_writers_delete"),
+
+    # Sellers
+    path("sellers/", views.admin_sellers_list, name="admin_sellers"),
+    path("sellers/create/", views.admin_sellers_create, name="admin_sellers_create"),
+    path("sellers/<int:pk>/edit/", views.admin_sellers_edit, name="admin_sellers_edit"),
+    path("sellers/<int:pk>/delete/", views.admin_sellers_delete, name="admin_sellers_delete"),
 
 
 

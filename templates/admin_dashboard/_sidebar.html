@@ -50,7 +50,7 @@
     <li class="nav-item">
       <a class="nav-link" href="{% url 'admin_dashboard:admin_products' %}">
         <i class="fas fa-box"></i>
-        مدیریت محصولات
+        محصولات
       </a>
     </li>
     <li class="nav-item">
@@ -103,6 +103,22 @@
       <a class="nav-link" href="{% url 'admin_dashboard:admin_users_list' %}">
         <i class="fas fa-user-friends"></i>
         لیست کاربران
+      </a>
+    </li>
+
+    <!-- NEW: Writers -->
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_writers' %}">
+        <i class="fas fa-pen-nib me-2"></i>
+        نویسندگان
+      </a>
+    </li>
+
+    <!-- NEW: Sellers -->
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_dashboard:admin_sellers' %}">
+        <i class="fas fa-store me-2"></i>
+        فروشندگان
       </a>
     </li>
   </ul>

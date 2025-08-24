@@ -3,7 +3,9 @@ import json
 from django.views import View
 from django.conf import settings
 from django.utils import timezone
+from django.db import transaction
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.db.models.functions import Cast
 from django.db.models import Sum, Q, CharField
 from django.contrib.auth import get_user_model
@@ -20,6 +22,7 @@ from django.urls import reverse
 from accounts.models import User
 from banners.models import Banner
 from news.models.news import News
+from .utils import admin_required
 from blogs.models.blog import Blog
 from django.contrib import messages
 from comments.models import Comment
@@ -29,8 +32,9 @@ from products.models.brand import Brand
 from orders.models import Order, CartItem
 from payments.models import FailedPayment
 from products.models.product import Product
-from .forms import (BlogForm, NewsForm, BannerForm, HeroForm,
-                    BrandForm, ProductForm, CategoryForm, CategoryCreateForm)
+from accounts.models import Writer, WriterPermission, Seller
+from .forms import (BlogForm, NewsForm, BannerForm, HeroForm, BrandForm, ProductForm, CategoryForm, CategoryCreateForm,
+                    AdminCreateWriterForm, AdminUpdateWriterForm, AdminCreateSellerForm, AdminUpdateSellerForm, )
 
 # Shortcut to check if user is staff
 staff_required = user_passes_test(lambda u: u.is_staff, login_url='/accounts/login/')
@@ -275,6 +279,7 @@ class BrandListView(ListView):
 try:
     # Optional fuzzy search if Postgres + pg_trgm is available
     from django.contrib.postgres.search import TrigramSimilarity
+
     HAS_TRIGRAM = True
 except Exception:
     HAS_TRIGRAM = False
@@ -309,16 +314,19 @@ class ProductListView(ListView):
                 if HAS_TRIGRAM:
                     # fuzzy similarity on selected field(s)
                     if field == 'name':
-                        qs = qs.annotate(sim=TrigramSimilarity('name', q)).filter(Q(sim__gte=0.2) | Q(name__icontains=q)).order_by('-sim', '-created_at')
+                        qs = qs.annotate(sim=TrigramSimilarity('name', q)).filter(
+                            Q(sim__gte=0.2) | Q(name__icontains=q)).order_by('-sim', '-created_at')
                     elif field == 'english_name':
-                        qs = qs.annotate(sim=TrigramSimilarity('english_name', q)).filter(Q(sim__gte=0.2) | Q(english_name__icontains=q)).order_by('-sim', '-created_at')
+                        qs = qs.annotate(sim=TrigramSimilarity('english_name', q)).filter(
+                            Q(sim__gte=0.2) | Q(english_name__icontains=q)).order_by('-sim', '-created_at')
                     else:
                         # both fields
                         qs = qs.annotate(
                             sim_name=TrigramSimilarity('name', q),
                             sim_en=TrigramSimilarity('english_name', q),
                         ).filter(
-                            Q(sim_name__gte=0.2) | Q(sim_en__gte=0.2) | Q(name__icontains=q) | Q(english_name__icontains=q)
+                            Q(sim_name__gte=0.2) | Q(sim_en__gte=0.2) | Q(name__icontains=q) | Q(
+                                english_name__icontains=q)
                         ).order_by('-sim_name', '-sim_en', '-created_at')
                 else:
                     # fallback icontains
@@ -975,7 +983,6 @@ def api_search_categories(request):
     return JsonResponse({"results": data})
 
 
-
 @staff_required
 def api_search_blogs(request):
     q = (request.GET.get("q") or "").strip()
@@ -1143,3 +1150,205 @@ def product_delete_view(request, pk):
             return JsonResponse({'success': True})
         return redirect('admin_dashboard:admin_products')
     return render(request, 'admin_dashboard/products/confirm_delete.html', {'product': product})
+
+
+# ---------------- Writers ----------------
+@admin_required
+def admin_writers_list(request):
+    q = request.GET.get("q", "").strip()
+    writers = Writer.objects.select_related("user").all().order_by("-id")
+    if q:
+        writers = writers.filter(user__phone_number__icontains=q) | writers.filter(
+            first_name__icontains=q) | writers.filter(last_name__icontains=q) | writers.filter(email__icontains=q)
+    paginator = Paginator(writers, 20)
+    page = request.GET.get("page")
+    page_obj = paginator.get_page(page)
+    return render(request, "admin_dashboard/writers/list.html", {"page_obj": page_obj, "q": q})
+
+
+@admin_required
+@transaction.atomic
+def admin_writers_create(request):
+    if request.method == "POST":
+        form = AdminCreateWriterForm(request.POST, request.FILES)
+        if form.is_valid():
+            # create user
+            user = User.objects.create_user(
+                phone_number=form.cleaned_data["phone_number"],
+                password=form.cleaned_data["password"],
+                role="writer",
+                is_staff=True,  # allow panel login
+            )
+            # create writer profile
+            writer = Writer.objects.create(
+                user=user,
+                first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"],
+                age=form.cleaned_data["age"],
+                email=form.cleaned_data["email"],
+                about_me=form.cleaned_data.get("about_me", ""),
+                profile_image=form.cleaned_data.get("profile_image"),
+            )
+            # set permissions
+            WriterPermission.objects.create(
+                user=user,
+                can_write_blogs=form.cleaned_data.get("can_write_blogs", False),
+                can_write_news=form.cleaned_data.get("can_write_news", False),
+            )
+            messages.success(request, "نویسنده جدید ایجاد شد.")
+            return redirect("admin_dashboard:admin_writers")
+        else:
+            messages.error(request, "لطفاً خطاهای فرم را بررسی کنید.")
+    else:
+        form = AdminCreateWriterForm()
+    return render(request, "admin_dashboard/writers/create.html", {"form": form})
+
+
+@admin_required
+@transaction.atomic
+def admin_writers_edit(request, pk):
+    writer = get_object_or_404(Writer, pk=pk)
+    perm = getattr(writer.user, "writer_permission", None)
+    initial = {
+        "first_name": writer.first_name,
+        "last_name": writer.last_name,
+        "age": writer.age,
+        "email": writer.email,
+        "about_me": writer.about_me,
+        "can_write_blogs": perm.can_write_blogs if perm else False,
+        "can_write_news": perm.can_write_news if perm else False,
+    }
+    if request.method == "POST":
+        form = AdminUpdateWriterForm(request.POST, request.FILES)
+        if form.is_valid():
+            writer.first_name = form.cleaned_data["first_name"]
+            writer.last_name = form.cleaned_data["last_name"]
+            writer.age = form.cleaned_data["age"]
+            writer.email = form.cleaned_data["email"]
+            writer.about_me = form.cleaned_data.get("about_me", "")
+            if form.cleaned_data.get("profile_image"):
+                writer.profile_image = form.cleaned_data.get("profile_image")
+            writer.save()
+            # update permissions
+            perm_obj, _ = WriterPermission.objects.get_or_create(user=writer.user)
+            perm_obj.can_write_blogs = form.cleaned_data.get("can_write_blogs", False)
+            perm_obj.can_write_news = form.cleaned_data.get("can_write_news", False)
+            perm_obj.save()
+            messages.success(request, "اطلاعات نویسنده به‌روزرسانی شد.")
+            return redirect("admin_dashboard:admin_writers")
+        else:
+            messages.error(request, "لطفاً خطاهای فرم را بررسی کنید.")
+    else:
+        form = AdminUpdateWriterForm(initial=initial)
+    return render(request, "admin_dashboard/writers/edit.html", {"form": form, "writer": writer})
+
+
+@admin_required
+@transaction.atomic
+def admin_writers_delete(request, pk):
+    writer = get_object_or_404(Writer, pk=pk)
+    if request.method == "POST":
+        # deleting the user cascades to Writer (OneToOne)
+        writer.user.delete()
+        messages.success(request, "نویسنده حذف شد.")
+        return redirect("admin_dashboard:admin_writers")
+    return render(request, "admin_dashboard/writers/delete.html", {"writer": writer})
+
+
+# ---------------- Sellers ----------------
+@admin_required
+def admin_sellers_list(request):
+    q = request.GET.get("q", "").strip()
+    sellers = Seller.objects.select_related("user").all().order_by("-id")
+    if q:
+        sellers = sellers.filter(user__phone_number__icontains=q) | sellers.filter(
+            first_name__icontains=q) | sellers.filter(last_name__icontains=q) | sellers.filter(
+            email__icontains=q) | sellers.filter(business_name__icontains=q)
+    paginator = Paginator(sellers, 20)
+    page = request.GET.get("page")
+    page_obj = paginator.get_page(page)
+    return render(request, "admin_dashboard/sellers/list.html", {"page_obj": page_obj, "q": q})
+
+
+@admin_required
+@transaction.atomic
+def admin_sellers_create(request):
+    if request.method == "POST":
+        form = AdminCreateSellerForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = User.objects.create_user(
+                phone_number=form.cleaned_data["phone_number"],
+                password=form.cleaned_data["password"],
+                role="seller",
+                is_staff=True,
+            )
+            seller = Seller.objects.create(
+                user=user,
+                first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"],
+                age=form.cleaned_data["age"],
+                email=form.cleaned_data["email"],
+                about_us=form.cleaned_data.get("about_us", ""),
+                profile_image=form.cleaned_data.get("profile_image"),
+                address=form.cleaned_data["address"],
+                location=form.cleaned_data.get("location"),
+                business_name=form.cleaned_data["business_name"],
+                business_code=form.cleaned_data["business_code"],
+            )
+            messages.success(request, "فروشنده جدید ایجاد شد.")
+            return redirect("admin_dashboard:admin_sellers")
+        else:
+            messages.error(request, "لطفاً خطاهای فرم را بررسی کنید.")
+    else:
+        form = AdminCreateSellerForm()
+    return render(request, "admin_dashboard/sellers/create.html", {"form": form})
+
+
+@admin_required
+@transaction.atomic
+def admin_sellers_edit(request, pk):
+    seller = get_object_or_404(Seller, pk=pk)
+    initial = {
+        "first_name": seller.first_name,
+        "last_name": seller.last_name,
+        "age": seller.age,
+        "email": seller.email,
+        "about_us": seller.about_us,
+        "address": seller.address,
+        "location": seller.location,
+        "business_name": seller.business_name,
+        "business_code": seller.business_code,
+    }
+    if request.method == "POST":
+        form = AdminUpdateSellerForm(request.POST, request.FILES)
+        if form.is_valid():
+            seller.first_name = form.cleaned_data["first_name"]
+            seller.last_name = form.cleaned_data["last_name"]
+            seller.age = form.cleaned_data["age"]
+            seller.email = form.cleaned_data["email"]
+            seller.about_us = form.cleaned_data.get("about_us", "")
+            if form.cleaned_data.get("profile_image"):
+                seller.profile_image = form.cleaned_data.get("profile_image")
+            seller.address = form.cleaned_data["address"]
+            seller.location = form.cleaned_data.get("location")
+            seller.business_name = form.cleaned_data["business_name"]
+            seller.business_code = form.cleaned_data["business_code"]
+            seller.save()
+            messages.success(request, "اطلاعات فروشنده به‌روزرسانی شد.")
+            return redirect("admin_dashboard:admin_sellers")
+        else:
+            messages.error(request, "لطفاً خطاهای فرم را بررسی کنید.")
+    else:
+        form = AdminUpdateSellerForm(initial=initial)
+    return render(request, "admin_dashboard/sellers/edit.html", {"form": form, "seller": seller})
+
+
+@admin_required
+@transaction.atomic
+def admin_sellers_delete(request, pk):
+    seller = get_object_or_404(Seller, pk=pk)
+    if request.method == "POST":
+        seller.user.delete()
+        messages.success(request, "فروشنده حذف شد.")
+        return redirect("admin_dashboard:admin_sellers")
+    return render(request, "admin_dashboard/sellers/delete.html", {"seller": seller})

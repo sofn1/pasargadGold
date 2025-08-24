@@ -1,0 +1,38 @@
+{% if form.errors %}
+    <div class="alert alert-danger">لطفاً خطاهای زیر را بررسی کنید.</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-md-3">
+        {{ form.first_name.label_tag }}
+        {{ form.first_name }}
+    </div>
+    <div class="col-md-3">
+        {{ form.last_name.label_tag }}
+        {{ form.last_name }}
+    </div>
+    <div class="col-md-2">
+        {{ form.age.label_tag }}
+        {{ form.age }}
+    </div>
+    <div class="col-md-4">
+        {{ form.email.label_tag }}
+        {{ form.email }}
+    </div>
+    <div class="col-md-6">
+        {{ form.about_me.label_tag }}
+        {{ form.about_me }}
+    </div>
+    <div class="col-md-4">
+        {{ form.profile_image.label_tag }}
+        {{ form.profile_image }}
+    </div>
+    <div class="col-md-4 form-check mt-4">
+        {{ form.can_write_blogs }}
+        {{ form.can_write_blogs.label_tag }}
+    </div>
+    <div class="col-md-4 form-check mt-4">
+        {{ form.can_write_news }}
+        {{ form.can_write_news.label_tag }}
+    </div>
+</div>

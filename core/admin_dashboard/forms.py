@@ -8,6 +8,68 @@ from blogs.models.blog import Blog
 from categories.models import Category
 from products.models.brand import Brand
 from products.models.product import Product
+from django.core.exceptions import ValidationError
+from accounts.models import User, Writer, WriterPermission, Seller
+
+
+# --- sellers and writers ---
+class AdminCreateUserBaseForm(forms.Form):
+    phone_number = forms.CharField(label="شماره موبایل", max_length=15)
+    password = forms.CharField(label="رمز عبور", widget=forms.PasswordInput)
+    first_name = forms.CharField(label="نام", max_length=64)
+    last_name = forms.CharField(label="نام خانوادگی", max_length=64)
+    age = forms.IntegerField(label="سن", min_value=0)
+
+
+def clean_phone_number(self):
+    phone = self.cleaned_data["phone_number"].strip()
+    if User.objects.filter(phone_number=phone).exists():
+        raise ValidationError("این شماره موبایل قبلاً ثبت شده است.")
+    return phone
+
+
+class AdminUpdateUserBaseForm(forms.Form):
+    first_name = forms.CharField(label="نام", max_length=64)
+    last_name = forms.CharField(label="نام خانوادگی", max_length=64)
+    age = forms.IntegerField(label="سن", min_value=0)
+
+
+# ---------------------- Writer ----------------------
+class AdminCreateWriterForm(AdminCreateUserBaseForm):
+    email = forms.EmailField(label="ایمیل")
+    about_me = forms.CharField(label="درباره من", widget=forms.Textarea, required=False)
+    profile_image = forms.ImageField(label="تصویر پروفایل", required=False)
+    can_write_blogs = forms.BooleanField(label="مجوز نوشتن وبلاگ", required=False)
+    can_write_news = forms.BooleanField(label="مجوز نوشتن خبر", required=False)
+
+
+class AdminUpdateWriterForm(AdminUpdateUserBaseForm):
+    email = forms.EmailField(label="ایمیل")
+    about_me = forms.CharField(label="درباره من", widget=forms.Textarea, required=False)
+    profile_image = forms.ImageField(label="تصویر پروفایل", required=False)
+    can_write_blogs = forms.BooleanField(label="مجوز نوشتن وبلاگ", required=False)
+    can_write_news = forms.BooleanField(label="مجوز نوشتن خبر", required=False)
+
+
+# ---------------------- Seller ----------------------
+class AdminCreateSellerForm(AdminCreateUserBaseForm):
+    email = forms.EmailField(label="ایمیل")
+    about_us = forms.CharField(label="درباره ما", widget=forms.Textarea, required=False)
+    profile_image = forms.ImageField(label="تصویر پروفایل", required=False)
+    address = forms.CharField(label="آدرس", widget=forms.Textarea)
+    location = forms.CharField(label="موقعیت (اختیاری)", required=False)
+    business_name = forms.CharField(label="نام کسب‌وکار", max_length=128)
+    business_code = forms.CharField(label="کد کسب‌وکار", max_length=64)
+
+
+class AdminUpdateSellerForm(AdminUpdateUserBaseForm):
+    email = forms.EmailField(label="ایمیل")
+    about_us = forms.CharField(label="درباره ما", widget=forms.Textarea, required=False)
+    profile_image = forms.ImageField(label="تصویر پروفایل", required=False)
+    address = forms.CharField(label="آدرس", widget=forms.Textarea)
+    location = forms.CharField(label="موقعیت (اختیاری)", required=False)
+    business_name = forms.CharField(label="نام کسب‌وکار", max_length=128)
+    business_code = forms.CharField(label="کد کسب‌وکار", max_length=64)
 
 
 # --- Shared Widgets ---
@@ -107,7 +169,8 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = "__all__"
-        fields = ['name', 'english_name', 'categories', 'category_id', 'brand', 'price', 'featured', 'is_active', 'owner_name',
+        fields = ['name', 'english_name', 'categories', 'category_id', 'brand', 'price', 'featured', 'is_active',
+                  'owner_name',
                   'owner_profile', 'short_description', 'description', 'features', 'view_image', 'rel_blogs',
                   'rel_news', 'rel_products']
 

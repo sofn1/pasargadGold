@@ -1,0 +1,88 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}مدیریت نویسندگان{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2 class="text-white mb-0">نویسندگان</h2>
+        <a href="{% url 'admin_dashboard:admin_writers_create' %}" class="btn btn-primary">ایجاد نویسنده</a>
+    </div>
+
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="جستجو بر اساس نام، نام‌خانوادگی، ایمیل یا موبایل">
+            <button class="btn btn-outline-secondary" type="submit">جستجو</button>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>تصویر</th>
+                        <th>نام</th>
+                        <th>ایمیل</th>
+                        <th>موبایل</th>
+                        <th>مجوزها</th>
+                        <th>اقدامات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in page_obj.object_list %}
+                    <tr>
+                        <td>{{ w.id }}</td>
+                        <td>
+                            {% if w.profile_image %}
+                                <img src="{{ w.profile_image.url }}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ w.first_name }} {{ w.last_name }}</td>
+                        <td>{{ w.email }}</td>
+                        <td>{{ w.user.phone_number }}</td>
+                        <td>
+                            {% if w.user.writer_permission %}
+                                <span class="badge bg-{% if w.user.writer_permission.can_write_blogs %}success{% else %}secondary{% endif %}">وبلاگ</span>
+                                <span class="badge bg-{% if w.user.writer_permission.can_write_news %}success{% else %}secondary{% endif %}">خبر</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-info" href="{% url 'admin_dashboard:admin_writers_edit' w.id %}">ویرایش</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'admin_dashboard:admin_writers_delete' w.id %}">حذف</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">موردی یافت نشد.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}">قبلی</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}">بعدی</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

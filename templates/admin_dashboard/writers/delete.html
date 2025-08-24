@@ -1,0 +1,17 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}حذف نویسنده{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="mb-3">حذف نویسنده: {{ writer.first_name }} {{ writer.last_name }}</h5>
+            <p class="text-danger">با حذف نویسنده، حساب کاربری مرتبط نیز حذف می‌شود. مطمئن هستید؟</p>
+            <form method="post">
+                {% csrf_token %}
+                <a href="{% url 'admin_dashboard:admin_writers' %}" class="btn btn-secondary">انصراف</a>
+                <button class="btn btn-danger" type="submit">حذف</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

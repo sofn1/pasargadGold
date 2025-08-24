@@ -1,0 +1,19 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}ایجاد فروشنده{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2 class="text-white mb-0">ایجاد فروشنده</h2>
+        <a href="{% url 'admin_dashboard:admin_sellers' %}" class="btn btn-secondary">بازگشت</a>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% include "admin_dashboard/sellers/form_fields_create.html" %}
+                <button class="btn btn-primary" type="submit">ایجاد</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
