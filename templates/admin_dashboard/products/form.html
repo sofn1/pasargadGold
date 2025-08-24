@@ -455,23 +455,31 @@
     row.querySelector('.remove-feature').addEventListener('click', ()=> row.remove());
   }
 
-  function initializeFeaturesRepeater(initialData) {
-    if (!rows) return;
 
-    rows.innerHTML = '';
-    let initialObj = {};
-    if (Array.isArray(initialData)) {
-      initialData.forEach(item => {
-        addFeatureRow(item.name || '', item.value || '');
-      });
-    } else {
-      // Fallback for old data structure
-      try{ initialObj = JSON.parse(initialData || "{}") || {}; } catch(e){ initialObj = {}; }
-      const keys = Object.keys(initialObj);
-      if (keys.length){ keys.forEach(k=> addFeatureRow(k, initialObj[k])); } else { addFeatureRow(); }
-    }
+  function initializeFeaturesRepeater() {
+      if (!rows) return;
 
-    featuresToHidden();
+      // Get the data from the script tag
+      const scriptTag = document.getElementById('features-data');
+      let initialData = {};
+      if (scriptTag && scriptTag.textContent) {
+          try {
+              initialData = JSON.parse(scriptTag.textContent) || {};
+          } catch (e) {
+              console.error('Failed to parse features JSON data:', e);
+          }
+      }
+
+      rows.innerHTML = '';
+      const keys = Object.keys(initialData);
+      if (keys.length) {
+          keys.forEach(k => addFeatureRow(k, initialData[k]));
+      } else {
+          // If no data, add one empty row
+          addFeatureRow();
+      }
+
+      featuresToHidden();
   }
 
   function featuresToHidden(){
@@ -619,6 +627,7 @@
       initAjaxSelect2('#{{ form.rel_products.id_for_label }}', "{% url 'admin_dashboard:api_search_products' %}", true, []);
       initializeFeaturesRepeater();
     {% endif %}
+    initializeFeaturesRepeater();
   });
 
 })();
