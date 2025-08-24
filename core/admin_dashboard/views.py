@@ -814,8 +814,10 @@ def api_get_product_data(request, product_id):
     Fetches a single product's data by ID and returns it as JSON.
     This API is used to dynamically populate the product form.
     """
+    print("Attempting to get product with ID:", product_id)
     try:
         product = Product.objects.get(pk=product_id)
+        print("Product found:", product.name)
 
         # Build a dictionary to hold all the data
         data = {
@@ -842,12 +844,13 @@ def api_get_product_data(request, product_id):
 
         return JsonResponse(data)
 
-    except Product.DoesNotExist:
-        return JsonResponse({"error": "Product not found"}, status=404)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON data in features field"}, status=500)
+    # except Product.DoesNotExist:
+    #     return JsonResponse({"error": "Product not found"}, status=404)
+    # except json.JSONDecodeError:
+    #     return JsonResponse({"error": "Invalid JSON data in features field"}, status=500)
     except Exception as e:
         # A catch-all for other potential issues, good for debugging
+        print("Error during API call:", e)
         return JsonResponse({"error": str(e)}, status=500)
 
 
