@@ -1,48 +1,187 @@
 {% extends "admin_dashboard/dashboard.html" %}
+{% load humanize %}
 
 {% block title %}مدیریت محصولات{% endblock %}
 
 {% block mainContent %}
 <div class="container-fluid px-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-white">محصولات</h2>
+
+  <!-- Header -->
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-2">
+      <h2 class="text-white mb-0">محصولات</h2>
+      {% if products %}
+      <span class="badge bg-secondary">{{ page_obj.paginator.count|intcomma }} مورد</span>
+      {% endif %}
+    </div>
     <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">
       <i class="fas fa-plus"></i> افزودن محصول جدید
     </a>
   </div>
 
-  <div class="mb-3">
-    <input type="text" id="productSearch" class="form-control" placeholder="جستجو در محصولات..." />
-  </div>
+  <!-- Search / Filters (GET so it plays nicely with pagination) -->
+  <form method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-8">
+          <label for="id_q" class="form-label mb-1">جستجو</label>
+          <input type="text"
+                 class="form-control"
+                 id="id_q"
+                 name="q"
+                 value="{{ request.GET.q|default_if_none:'' }}"
+                 placeholder="نام یا نام انگلیسی محصول را وارد کنید...">
+        </div>
+        <div class="col-12 col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-search"></i> جستجو</button>
+          <a class="btn btn-outline-secondary" href="{% url 'admin_dashboard:admin_products' %}">پاک‌سازی</a>
+        </div>
+      </div>
+    </div>
+  </form>
 
   {% if products %}
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0 align-middle">
-        <thead class="table-dark">
+
+  <!-- Mobile / Tablet: Card grid (visible < lg) -->
+  <div class="d-lg-none">
+    <div class="row g-3">
+      {% for product in products %}
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex gap-3">
+              <div>
+                {% if product.view_image %}
+                  <img src="{{ product.view_image.url }}" alt="{{ product.name }}"
+                       style="height:72px;width:72px;object-fit:cover;border-radius:.75rem;border:1px solid #e9ecef;">
+                {% elif product.image %}
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                       style="height:72px;width:72px;object-fit:cover;border-radius:.75rem;border:1px solid #e9ecef;">
+                {% elif product.images and product.images.0 %}
+                  <img src="{{ product.images.0 }}" alt="{{ product.name }}"
+                       style="height:72px;width:72px;object-fit:cover;border-radius:.75rem;border:1px solid #e9ecef;">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center bg-light"
+                       style="height:72px;width:72px;border-radius:.75rem;border:1px solid #e9ecef;">
+                    <i class="fas fa-image text-muted"></i>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="flex-grow-1">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <div class="fw-semibold">{{ product.name|default:"—" }}</div>
+                  {% if product.is_active %}
+                    <span class="badge bg-success">فعال</span>
+                  {% else %}
+                    <span class="badge bg-danger">غیرفعال</span>
+                  {% endif %}
+                  {% if product.featured %}
+                    <span class="badge bg-warning text-dark">ویژه</span>
+                  {% endif %}
+                </div>
+                {% if product.english_name %}
+                  <div class="text-muted small mt-1">{{ product.english_name }}</div>
+                {% endif %}
+
+                <div class="mt-2 d-flex flex-wrap gap-2">
+                  <span class="badge bg-dark-subtle text-dark border" title="برند">
+                    <i class="fas fa-tag me-1"></i>
+                    {% if product.brand %}{{ product.brand.name|default:product.brand }}{% else %}—{% endif %}
+                  </span>
+
+                  {% with cats=product.categories.all %}
+                    {% if cats %}
+                      {% for c in cats|slice:":3" %}
+                        <span class="badge bg-light text-dark border" title="دسته">
+                          <i class="fas fa-folder me-1"></i>{{ c.name|default:c.english_name|default:c.slug }}
+                        </span>
+                      {% endfor %}
+                      {% if cats|length > 3 %}
+                        <span class="badge bg-secondary">+{{ cats|length|add:"-3" }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge bg-light text-muted border">بدون دسته</span>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+
+                <div class="mt-2">
+                  <span class="fw-semibold">
+                    {% if product.price %}{{ product.price|intcomma }}{% else %}—{% endif %}
+                  </span>
+                </div>
+
+                <div class="text-muted small mt-1">
+                  <i class="far fa-clock"></i>
+                  {{ product.created_at|date:"Y/m/d H:i" }}
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+              <a href="{% url 'admin_dashboard:admin_product_edit' product.pk %}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit"></i> ویرایش
+              </a>
+              <button type="button"
+                      class="btn btn-sm btn-danger"
+                      data-bs-toggle="modal"
+                      data-bs-target="#deleteModal"
+                      data-id="{{ product.pk }}"
+                      data-name="{{ product.name }}">
+                <i class="fas fa-trash"></i> حذف
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% include 'admin_dashboard/_pagination.html' %}
+  </div>
+
+  <!-- Desktop: Table (visible >= lg) -->
+  <div class="card shadow-sm d-none d-lg-block">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
           <tr>
-            <th style="width:72px;">تصویر</th>
+            <th style="width:80px;">تصویر</th>
             <th>نام</th>
             <th>برند</th>
-            <th>دسته</th>
-            <th>قیمت</th>
-            <th>فعال</th>
-            <th>عملیات</th>
+            <th style="min-width:220px;">دسته‌ها</th>
+            <th style="width:140px;">قیمت</th>
+            <th style="width:120px;">وضعیت</th>
+            <th style="width:160px;">ایجاد</th>
+            <th style="width:160px;">عملیات</th>
           </tr>
         </thead>
-        <tbody id="productTableBody">
+        <tbody>
           {% for product in products %}
           <tr>
             <td>
-              {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% if product.view_image %}
+                <img src="{{ product.view_image.url }}" alt="{{ product.name }}"
+                     style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% elif product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                     style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
+              {% elif product.images and product.images.0 %}
+                <img src="{{ product.images.0 }}" alt="{{ product.name }}"
+                     style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef;">
               {% else %}
                 <span class="text-muted">—</span>
               {% endif %}
             </td>
 
             <td>
-              <div class="fw-semibold">{{ product.name }}</div>
+              <div class="fw-semibold d-flex align-items-center gap-2">
+                {{ product.name|default:"—" }}
+                {% if product.featured %}
+                  <span class="badge bg-warning text-dark">ویژه</span>
+                {% endif %}
+              </div>
               {% if product.english_name %}
                 <div class="text-muted small">{{ product.english_name }}</div>
               {% endif %}
@@ -57,17 +196,24 @@
             </td>
 
             <td>
-              {% if product.category %}
-                {{ product.category.name|default:product.category }}
-              {% else %}
-                <span class="text-muted">—</span>
-              {% endif %}
+              <div class="d-flex flex-wrap gap-1">
+                {% with cats=product.categories.all %}
+                  {% if cats %}
+                    {% for c in cats|slice:":4" %}
+                      <span class="badge bg-light text-dark border">{{ c.name|default:c.english_name|default:c.slug }}</span>
+                    {% endfor %}
+                    {% if cats|length > 4 %}
+                      <span class="badge bg-secondary">+{{ cats|length|add:"-4" }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                {% endwith %}
+              </div>
             </td>
 
-            <td>
-              {% if product.price %}{{ product.price }}{% else %}
-                <span class="text-muted">—</span>
-              {% endif %}
+            <td class="fw-semibold">
+              {% if product.price %}{{ product.price|intcomma }}{% else %}<span class="text-muted">—</span>{% endif %}
             </td>
 
             <td>
@@ -78,16 +224,22 @@
               {% endif %}
             </td>
 
+            <td class="text-muted small">
+              {{ product.created_at|date:"Y/m/d H:i" }}
+            </td>
+
             <td>
               <div class="btn-group">
-                <a href="{% url 'admin_dashboard:admin_product_edit' product.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                <a href="{% url 'admin_dashboard:admin_product_edit' product.pk %}" class="btn btn-sm btn-warning">
+                  <i class="fas fa-edit"></i> ویرایش
+                </a>
                 <button type="button"
                         class="btn btn-sm btn-danger"
                         data-bs-toggle="modal"
                         data-bs-target="#deleteModal"
                         data-id="{{ product.pk }}"
                         data-name="{{ product.name }}">
-                  حذف
+                  <i class="fas fa-trash"></i> حذف
                 </button>
               </div>
             </td>
@@ -99,19 +251,42 @@
   </div>
 
   {% include 'admin_dashboard/_pagination.html' %}
+
   {% else %}
-  <div class="alert alert-info">محصولی یافت نشد.</div>
+    <div class="alert alert-info">محصولی یافت نشد.</div>
   {% endif %}
 
   {% include 'admin_dashboard/_delete_modal.html' with object_type="محصول" delete_url_name='admin_dashboard:admin_product_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_products' %}
+
 </div>
 
+<!-- Small helper to pass id/name into the shared delete modal -->
 <script>
-  document.getElementById('productSearch').addEventListener('keyup', function () {
-    const term = this.value.toLowerCase();
-    document.querySelectorAll('#productTableBody tr').forEach(tr => {
-      tr.style.display = tr.textContent.toLowerCase().includes(term) ? '' : 'none';
+  (function(){
+    const modal = document.getElementById('deleteModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const id = button?.getAttribute('data-id');
+      const name = button?.getAttribute('data-name') || '—';
+
+      // Fill modal placeholders (depends on your _delete_modal.html structure)
+      const nameHolder = modal.querySelector('[data-delete-name]');
+      if (nameHolder) nameHolder.textContent = name;
+
+      // Update form action
+      const form = modal.querySelector('form');
+      if (form && id) {
+        const base = form.getAttribute('data-action-base'); // recommend set this in your partial once
+        if (base) {
+          form.action = base.replace('__ID__', id);
+        } else {
+          // Fallback: build via dataset on modal (if you prefer)
+          const urlTemplate = modal.getAttribute('data-delete-url-template'); // e.g. "/admin-dashboard/products/__ID__/delete/"
+          if (urlTemplate) form.action = urlTemplate.replace('__ID__', id);
+        }
+      }
     });
-  });
+  })();
 </script>
 {% endblock %}
