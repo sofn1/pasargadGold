@@ -18,7 +18,7 @@
     </a>
   </div>
 
-  <!-- Search / Filters (GET so it plays nicely with pagination) -->
+  <!-- Search (GET; works with pagination) -->
   <form method="get" class="card shadow-sm mb-3">
     <div class="card-body">
       <div class="row g-2 align-items-end">
@@ -41,7 +41,7 @@
 
   {% if products %}
 
-  <!-- Mobile / Tablet: Card grid (visible < lg) -->
+  <!-- Mobile / Tablet: Card layout -->
   <div class="d-lg-none">
     <div class="row g-3">
       {% for product in products %}
@@ -79,8 +79,13 @@
                     <span class="badge bg-warning text-dark">ویژه</span>
                   {% endif %}
                 </div>
+
                 {% if product.english_name %}
                   <div class="text-muted small mt-1">{{ product.english_name }}</div>
+                {% endif %}
+
+                {% if product.short_description %}
+                  <div class="text-muted small mt-1">{{ product.short_description|truncatechars:120 }}</div>
                 {% endif %}
 
                 <div class="mt-2 d-flex flex-wrap gap-2">
@@ -106,7 +111,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <span class="fw-semibold">
+                  <span class="fw-semibold price-m" data-price="{{ product.price|default_if_none:'' }}">
                     {% if product.price %}{{ product.price }}{% else %}—{% endif %}
                   </span>
                 </div>
@@ -140,7 +145,7 @@
     {% include 'admin_dashboard/_pagination.html' %}
   </div>
 
-  <!-- Desktop: Table (visible >= lg) -->
+  <!-- Desktop: Table layout -->
   <div class="card shadow-sm d-none d-lg-block">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
@@ -184,6 +189,9 @@
               {% if product.english_name %}
                 <div class="text-muted small">{{ product.english_name }}</div>
               {% endif %}
+              {% if product.short_description %}
+                <div class="text-muted small">{{ product.short_description|truncatechars:120 }}</div>
+              {% endif %}
             </td>
 
             <td>
@@ -212,7 +220,9 @@
             </td>
 
             <td class="fw-semibold">
-              {% if product.price %}{{ product.price }}{% else %}<span class="text-muted">—</span>{% endif %}
+              <span class="price-m" data-price="{{ product.price|default_if_none:'' }}">
+                {% if product.price %}{{ product.price }}{% else %}—{% endif %}
+              </span>
             </td>
 
             <td>
@@ -259,9 +269,57 @@
 
 </div>
 
-<!-- Small helper to pass id/name into the shared delete modal -->
+<!-- JS: price formatting (no humanize needed) + delete modal wiring -->
 <script>
   (function(){
+    // Price formatter:
+    // - >= 1,000,000 → "X M" or "X/YYY M" (e.g., 1,000,000 -> 1M; 1,235,000 -> 1/235 M)
+    // - < 1,000,000 → standard thousands separators
+    function formatCompact(n) {
+      if (n === null || n === undefined || n === '') return null;
+      const num = Number(String(n).replace(/[^\d.-]/g, ''));
+      if (isNaN(num)) return null;
+
+      // Billions
+      if (num >= 1_000_000_000) {
+        const whole = Math.floor(num / 1_000_000_000);                 // billions
+        const remainderM = Math.floor((num % 1_000_000_000) / 1_000_000); // next 3 digits (millions)
+        if (remainderM <= 0) return `${whole}B`;
+        const pad = String(remainderM).padStart(3, '0');
+        return `${whole}/${pad} B`;
+      }
+
+      // Millions
+      if (num >= 1_000_000) {
+        const whole = Math.floor(num / 1_000_000);               // millions
+        const remainderK = Math.floor((num % 1_000_000) / 1000); // thousands remainder
+        if (remainderK <= 0) return `${whole}M`;
+        const pad = String(remainderK).padStart(3, '0');
+        return `${whole}/${pad} M`;
+      }
+
+      // Thousands
+      if (num >= 1_000) {
+        const whole = Math.floor(num / 1000);             // thousands
+        const remainder = num % 1000;                     // remainder in units
+        if (remainder <= 0) return `${whole}K`;
+        const pad = String(remainder).padStart(3, '0');
+        return `${whole}/${pad} K`;
+      }
+
+      // < 1000 → show plain number
+      return num.toString();
+    }
+
+
+    // Apply formatter to all price cells
+    document.querySelectorAll('.price-m').forEach(function(el){
+      const raw = el.getAttribute('data-price');
+      const fmt = formatCompact(raw);
+      if (fmt !== null) el.textContent = fmt;
+    });
+
+    // Delete modal wiring (if your partial expects dynamic action)
     const modal = document.getElementById('deleteModal');
     if (!modal) return;
     modal.addEventListener('show.bs.modal', function (event) {
@@ -269,20 +327,19 @@
       const id = button?.getAttribute('data-id');
       const name = button?.getAttribute('data-name') || '—';
 
-      // Fill modal placeholders (depends on your _delete_modal.html structure)
+      // Put product name into a placeholder inside modal (if exists)
       const nameHolder = modal.querySelector('[data-delete-name]');
       if (nameHolder) nameHolder.textContent = name;
 
-      // Update form action
+      // Set form action from a template if your partial provides it
       const form = modal.querySelector('form');
       if (form && id) {
-        const base = form.getAttribute('data-action-base'); // recommend set this in your partial once
+        const base = form.getAttribute('data-action-base'); // e.g., "/admin-dashboard/products/__ID__/delete/"
         if (base) {
           form.action = base.replace('__ID__', id);
         } else {
-          // Fallback: build via dataset on modal (if you prefer)
-          const urlTemplate = modal.getAttribute('data-delete-url-template'); // e.g. "/admin-dashboard/products/__ID__/delete/"
-          if (urlTemplate) form.action = urlTemplate.replace('__ID__', id);
+          const tmpl = modal.getAttribute('data-delete-url-template');
+          if (tmpl) form.action = tmpl.replace('__ID__', id);
         }
       }
     });
