@@ -3,8 +3,9 @@ import json
 from django.views import View
 from django.conf import settings
 from django.utils import timezone
-from django.db.models import Sum, Q
 from django.http import JsonResponse
+from django.db.models.functions import Cast
+from django.db.models import Sum, Q, CharField
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.utils.decorators import method_decorator
@@ -271,17 +272,112 @@ class BrandListView(ListView):
     context_object_name = 'brands'
 
 
+try:
+    # Optional fuzzy search if Postgres + pg_trgm is available
+    from django.contrib.postgres.search import TrigramSimilarity
+    HAS_TRIGRAM = True
+except Exception:
+    HAS_TRIGRAM = False
+
+
+@method_staff_required
 class ProductListView(ListView):
     model = Product
-    template_name = 'admin_dashboard/products/products.html'
+    template_name = 'admin_dashboard/products/list.html'
     context_object_name = 'products'
-    paginate_by = 20
+    paginate_by = 10
 
     def get_queryset(self):
-        qs = Product.objects.select_related('brand').all().order_by('-created_at')
-        q = self.request.GET.get('q')
-        if q:
-            qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
+        qs = (
+            Product.objects
+            .select_related('brand')
+            .prefetch_related('categories')
+            .order_by('-created_at')
+        )
+
+        q = (self.request.GET.get('q') or '').strip()
+        field = (self.request.GET.get('field') or '').strip()
+        status = (self.request.GET.get('status') or '').strip()
+
+        # Status filter
+        if field == 'status' and status in ('active', 'inactive'):
+            qs = qs.filter(is_active=(status == 'active'))
+
+        # Name / English name / default (both with fuzzy)
+        elif field in ('', 'name', 'english_name'):
+            if q:
+                if HAS_TRIGRAM:
+                    # fuzzy similarity on selected field(s)
+                    if field == 'name':
+                        qs = qs.annotate(sim=TrigramSimilarity('name', q)).filter(Q(sim__gte=0.2) | Q(name__icontains=q)).order_by('-sim', '-created_at')
+                    elif field == 'english_name':
+                        qs = qs.annotate(sim=TrigramSimilarity('english_name', q)).filter(Q(sim__gte=0.2) | Q(english_name__icontains=q)).order_by('-sim', '-created_at')
+                    else:
+                        # both fields
+                        qs = qs.annotate(
+                            sim_name=TrigramSimilarity('name', q),
+                            sim_en=TrigramSimilarity('english_name', q),
+                        ).filter(
+                            Q(sim_name__gte=0.2) | Q(sim_en__gte=0.2) | Q(name__icontains=q) | Q(english_name__icontains=q)
+                        ).order_by('-sim_name', '-sim_en', '-created_at')
+                else:
+                    # fallback icontains
+                    if field == 'name':
+                        qs = qs.filter(name__icontains=q)
+                    elif field == 'english_name':
+                        qs = qs.filter(english_name__icontains=q)
+                    else:
+                        qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
+
+        # Category (name / english_name / slug)
+        elif field == 'category' and q:
+            qs = qs.filter(
+                Q(categories__name__icontains=q) |
+                Q(categories__english_name__icontains=q) |
+                Q(categories__slug__icontains=q)
+            ).distinct()
+
+        # Brand
+        elif field == 'brand' and q:
+            qs = qs.filter(brand__name__icontains=q)
+
+        # Price: supports "min-max", ">n", "<n", or exact "n"
+        elif field == 'price' and q:
+            s = q.replace(',', '').replace(' ', '')
+            if '-' in s:
+                try:
+                    lo, hi = s.split('-', 1)
+                    lo = int(lo) if lo else None
+                    hi = int(hi) if hi else None
+                    if lo is not None and hi is not None:
+                        qs = qs.filter(price__gte=lo, price__lte=hi)
+                    elif lo is not None:
+                        qs = qs.filter(price__gte=lo)
+                    elif hi is not None:
+                        qs = qs.filter(price__lte=hi)
+                except ValueError:
+                    pass
+            elif s.startswith('>'):
+                try:
+                    qs = qs.filter(price__gt=int(s[1:]))
+                except ValueError:
+                    pass
+            elif s.startswith('<'):
+                try:
+                    qs = qs.filter(price__lt=int(s[1:]))
+                except ValueError:
+                    pass
+            else:
+                try:
+                    qs = qs.filter(price=int(s))
+                except ValueError:
+                    pass
+
+        # Features (search in keys/values by casting JSON to text)
+        elif field == 'features' and q:
+            # Cast JSONField to text for icontains search (Postgres)
+            qs = qs.annotate(features_text=Cast('features', CharField())).filter(features_text__icontains=q)
+
         return qs
 
 

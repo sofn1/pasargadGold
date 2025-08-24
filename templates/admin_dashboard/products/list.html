@@ -22,17 +22,47 @@
   <form method="get" class="card shadow-sm mb-3">
     <div class="card-body">
       <div class="row g-2 align-items-end">
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-3">
+          <label for="id_field" class="form-label mb-1">فیلد</label>
+          <select class="form-select" id="id_field" name="field">
+            {% with f=request.GET.field|default_if_none:'' %}
+            <option value="" {% if not f %}selected{% endif %}>همه (نام/نام انگلیسی)</option>
+            <option value="name" {% if f == 'name' %}selected{% endif %}>نام</option>
+            <option value="english_name" {% if f == 'english_name' %}selected{% endif %}>نام انگلیسی</option>
+            <option value="category" {% if f == 'category' %}selected{% endif %}>دسته</option>
+            <option value="brand" {% if f == 'brand' %}selected{% endif %}>برند</option>
+            <option value="price" {% if f == 'price' %}selected{% endif %}>قیمت</option>
+            <option value="features" {% if f == 'features' %}selected{% endif %}>ویژگی‌ها</option>
+            <option value="status" {% if f == 'status' %}selected{% endif %}>وضعیت</option>
+            {% endwith %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-7" id="text-search-wrap">
           <label for="id_q" class="form-label mb-1">جستجو</label>
           <input type="text"
                  class="form-control"
                  id="id_q"
                  name="q"
                  value="{{ request.GET.q|default_if_none:'' }}"
-                 placeholder="نام یا نام انگلیسی محصول را وارد کنید...">
+                 placeholder="عبارت را وارد کنید… (برای قیمت: 1000000 یا 500000-2000000)">
         </div>
-        <div class="col-12 col-md-4 d-flex gap-2">
-          <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-search"></i> جستجو</button>
+
+        <div class="col-12 col-md-7 d-none" id="status-search-wrap">
+          <label for="id_status" class="form-label mb-1">وضعیت</label>
+          <select class="form-select" id="id_status" name="status">
+            {% with s=request.GET.status|default_if_none:'' %}
+            <option value="" {% if not s %}selected{% endif %}>همه</option>
+            <option value="active" {% if s == 'active' %}selected{% endif %}>فعال</option>
+            <option value="inactive" {% if s == 'inactive' %}selected{% endif %}>غیرفعال</option>
+            {% endwith %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="fas fa-search"></i> جستجو
+          </button>
           <a class="btn btn-outline-secondary" href="{% url 'admin_dashboard:admin_products' %}">پاک‌سازی</a>
         </div>
       </div>
@@ -272,6 +302,34 @@
 <!-- JS: price formatting (no humanize needed) + delete modal wiring -->
 <script>
   (function(){
+    const fieldEl = document.getElementById('id_field');
+    const textWrap = document.getElementById('text-search-wrap');
+    const statusWrap = document.getElementById('status-search-wrap');
+    const qEl = document.getElementById('id_q');
+
+    function syncUI(){
+      const v = fieldEl.value || '';
+      const statusMode = (v === 'status');
+      statusWrap.classList.toggle('d-none', !statusMode);
+      textWrap.classList.toggle('d-none', statusMode);
+
+      if (v === 'price') {
+        qEl.placeholder = 'مثال: 1000000 یا 500000-2000000 یا >1000000 یا <2000000';
+      } else if (v === 'category') {
+        qEl.placeholder = 'نام دسته / اسلاگ…';
+      } else if (v === 'brand') {
+        qEl.placeholder = 'نام برند…';
+      } else if (v === 'features') {
+        qEl.placeholder = 'نام یا مقدار ویژگی (مانند: Color یا Gold)…';
+      } else {
+        qEl.placeholder = 'عبارت را وارد کنید…';
+      }
+    }
+    if (fieldEl) {
+      fieldEl.addEventListener('change', syncUI);
+      syncUI(); // on load
+    }
+
     // Price formatter:
     // - >= 1,000,000 → "X M" or "X/YYY M" (e.g., 1,000,000 -> 1M; 1,235,000 -> 1/235 M)
     // - < 1,000,000 → standard thousands separators
