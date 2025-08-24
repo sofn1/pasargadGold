@@ -10,7 +10,7 @@
     <div class="d-flex align-items-center gap-2">
       <h2 class="text-white mb-0">محصولات</h2>
       {% if products %}
-      <span class="badge bg-secondary">{{ page_obj.paginator.count|intcomma }} مورد</span>
+      <span class="badge bg-secondary">{{ page_obj.paginator.count }} مورد</span>
       {% endif %}
     </div>
     <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">
@@ -107,7 +107,7 @@
 
                 <div class="mt-2">
                   <span class="fw-semibold">
-                    {% if product.price %}{{ product.price|intcomma }}{% else %}—{% endif %}
+                    {% if product.price %}{{ product.price }}{% else %}—{% endif %}
                   </span>
                 </div>
 
@@ -212,7 +212,7 @@
             </td>
 
             <td class="fw-semibold">
-              {% if product.price %}{{ product.price|intcomma }}{% else %}<span class="text-muted">—</span>{% endif %}
+              {% if product.price %}{{ product.price }}{% else %}<span class="text-muted">—</span>{% endif %}
             </td>
 
             <td>
