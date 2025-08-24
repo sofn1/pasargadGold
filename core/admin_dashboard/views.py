@@ -808,6 +808,12 @@ def brand_delete_view(request, pk):
 
 
 # --- PRODUCT CRUD ---
+# /root/pasargadGold/core/admin_dashboard/views.py
+from blogs.models import Blog  # Make sure to import the Blog model
+
+
+# ...
+
 @staff_required
 def api_get_product_data(request, product_id):
     """
@@ -815,20 +821,19 @@ def api_get_product_data(request, product_id):
     This API is used to dynamically populate the product form.
     """
     try:
-        # Fetch the product instance
         product = Product.objects.get(pk=product_id)
 
         # Build a dictionary to hold all the data
         data = {
             "name": product.name,
-            # Corrected line: use product.categories instead of product.category_id
             "categories": [
                 {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
                 for c in product.categories.all()
             ],
+            # Corrected line: Check if rel_blogs is a list before querying
             "rel_blogs": [
                 {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
-                for b in product.rel_blogs.all()
+                for b in Blog.objects.filter(pk__in=product.rel_blogs) if isinstance(product.rel_blogs, list)
             ],
             "rel_news": [
                 {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
@@ -838,7 +843,6 @@ def api_get_product_data(request, product_id):
                 {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
                 for p in product.rel_products.all()
             ],
-            # Safely handle the JSON field
             "features": json.loads(product.features) if product.features else []
         }
 
@@ -848,7 +852,6 @@ def api_get_product_data(request, product_id):
         return JsonResponse({"error": "Product not found"}, status=404)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON data in features field"}, status=500)
-
 
 @staff_required
 def api_search_categories(request):
