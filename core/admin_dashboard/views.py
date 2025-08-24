@@ -812,76 +812,54 @@ def brand_delete_view(request, pk):
 def api_get_product_data(request, product_id):
     """
     Fetches a single product's data by ID and returns it as JSON.
-    This API is used to dynamically populate the product form.
     """
-    print("Attempting to get product with ID:", product_id)
     try:
         product = Product.objects.get(pk=product_id)
-        print("Product found:", product.name)
-
-        # Get categories and handle the list of dictionaries
-        categories_data = [
-            {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
-            for c in product.categories.all()
-        ]
-
-        # Handle rel_blogs: check if it's a list before querying
-        blogs_data = []
-        if isinstance(product.rel_blogs, list):
-            blogs_data = [
-                {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
-                for b in Blog.objects.filter(pk__in=product.rel_blogs)
-            ]
-
-        # Handle rel_news: check if it's a list before querying
-        news_data = []
-        if isinstance(product.rel_news, list):
-            news_data = [
-                {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
-                for n in News.objects.filter(pk__in=product.rel_news)
-            ]
-
-        # Corrected Logic for rel_products
-        # Check if it's an integer or a list, and convert to a list if needed
-        products_data = []
-        if isinstance(product.rel_products, int):
-            products_data = [
-                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
-                for p in Product.objects.filter(pk=product.rel_products)
-            ]
-        elif isinstance(product.rel_products, list):
-            products_data = [
-                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
-                for p in Product.objects.filter(pk__in=product.rel_products)
-            ]
 
         # Corrected: Handle the features field
-        # Use it directly if it's a dict. If it's a string, then load it.
         features_data = {}  # Default to an empty dict
         if isinstance(product.features, dict):
+            # If the data is already a dictionary, use it directly
             features_data = product.features
         elif isinstance(product.features, str):
             try:
+                # If the data is a string, attempt to parse it as JSON
                 features_data = json.loads(product.features)
             except json.JSONDecodeError:
                 # Fallback to an empty dict if the JSON is invalid
-                features_data = {}
+                pass
 
-        # Build a dictionary to hold all the data
+        # Build the full data dictionary
         data = {
             "name": product.name,
-            "categories": categories_data,
-            "rel_blogs": blogs_data,
-            "rel_news": news_data,
-            "rel_products": products_data,
+            "categories": [
+                {"id": str(c.pk), "text": c.name or c.english_name or c.slug or f"Category #{c.pk}"}
+                for c in product.categories.all()
+            ],
+            "rel_blogs": [
+                {"id": str(b.pk), "text": b.name or b.english_name or f"Blog #{b.pk}"}
+                for b in Blog.objects.filter(pk__in=product.rel_blogs) if isinstance(product.rel_blogs, list)
+            ],
+            "rel_news": [
+                {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
+                for n in News.objects.filter(pk__in=product.rel_news) if isinstance(product.rel_news, list)
+            ],
+            "rel_products": [
+                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
+                for p in Product.objects.filter(pk__in=product.rel_products) if isinstance(product.rel_products, list)
+            ],
             "features": features_data
         }
 
         return JsonResponse(data)
 
+    except Product.DoesNotExist:
+        return JsonResponse({"error": "Product not found"}, status=404)
     except Exception as e:
-        print("Error during API call:", e)
+        # A catch-all for other potential issues, good for debugging
+        print(f"Error during API call for product {product_id}:", e)
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @staff_required
 def api_search_categories(request):
