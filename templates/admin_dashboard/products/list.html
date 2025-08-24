@@ -10,7 +10,7 @@
     <div class="d-flex align-items-center gap-2">
       <h2 class="text-white mb-0">محصولات</h2>
       {% if products %}
-      <span class="badge bg-secondary">{{ page_obj.paginator.count }} مورد</span>
+      <span class="badge bg-secondary">{{ page_obj.paginator.count }} محصول</span>
       {% endif %}
     </div>
     <a href="{% url 'admin_dashboard:admin_product_create' %}" class="btn btn-success">
