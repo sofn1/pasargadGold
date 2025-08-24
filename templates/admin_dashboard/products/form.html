@@ -5,7 +5,6 @@
 {% block mainContent %}
 <div class="container-fluid px-4">
 
-  <!-- Header -->
   <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center my-4">
     <h2 class="text-white mb-0">
       {% if form.instance.pk %}ویرایش محصول{% else %}ایجاد محصول{% endif %}
@@ -49,7 +48,6 @@
 
     <div class="row g-4">
 
-      <!-- ===== مشخصات اصلی ===== -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -127,7 +125,6 @@
         </div>
       </div>
 
-      <!-- ===== مالک و توضیحات ===== -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -173,7 +170,6 @@
         </div>
       </div>
 
-      <!-- ===== ویژگی‌ها (JSON) ===== -->
       {% if form.features %}
       <div class="col-12">
         <div class="card shadow-sm h-100">
@@ -199,7 +195,6 @@
       </div>
       {% endif %}
 
-      <!-- ===== تصاویر ===== -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -273,7 +268,6 @@
         </div>
       </div>
 
-      <!-- ===== ارتباطات ===== -->
       <div class="col-12">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
@@ -311,7 +305,6 @@
         </div>
       </div>
 
-      <!-- ===== سایر فیلدها (fallback امن) ===== -->
       {% with excluded="name|english_name|category_id|brand|price|featured|is_active|owner_name|owner_profile|short_description|description|features|view_image|images|rel_blogs|rel_news|rel_products" %}
         {% for field in form.visible_fields %}
           {% with token="|"|add:field.name|add:"|" all="|"|add:excluded|add:"|" %}
@@ -332,7 +325,6 @@
 
       {% for field in form.hidden_fields %}{{ field }}{% endfor %}
 
-      <!-- ===== Actions ===== -->
       <div class="col-12">
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-success px-4">
@@ -467,7 +459,7 @@
   const rows = document.getElementById('feature-rows');
   const addBtn = document.getElementById('add-feature');
   const hidden = document.getElementById('features-hidden');
-  
+
   function addFeatureRow(k='', v=''){
     const row = document.createElement('div');
     row.className = 'row g-2 feature-row';
@@ -482,7 +474,7 @@
 
   function initializeFeaturesRepeater(initialData) {
     if (!rows) return;
-    
+
     rows.innerHTML = '';
     let initialObj = {};
     if (Array.isArray(initialData)) {
@@ -495,7 +487,7 @@
       const keys = Object.keys(initialObj);
       if (keys.length){ keys.forEach(k=> addFeatureRow(k, initialObj[k])); } else { addFeatureRow(); }
     }
-    
+
     featuresToHidden();
   }
 
@@ -516,7 +508,7 @@
   const existingImagesPreview = document.getElementById('existing-images-preview');
   const imagesHidden = document.getElementById('images-hidden');
   const imagesInput = document.getElementById('id_extra_images');
-  let newFiles = []; 
+  let newFiles = [];
 
   function renderNewPreviews() {
     if (!newImagesPreview) return;
@@ -533,7 +525,7 @@
       r.readAsDataURL(file);
     });
   }
-  
+
   if (imagesInput){
     imagesInput.addEventListener('change', function() {
       Array.from(this.files).forEach(file => {
@@ -589,7 +581,7 @@
       featuresToHidden();
       if (priceInput) priceInput.value = priceInput.value.replace(/,/g, '');
       if (imagesHidden && !imagesHidden.value.trim()) imagesHidden.value = '[]';
-      
+
       if (newFiles.length > 0) {
         const dataTransfer = new DataTransfer();
         newFiles.forEach(file => dataTransfer.items.add(file));
@@ -599,7 +591,7 @@
   }
 
   // Main logic to fetch data and initialize fields
-    $(document).ready(function() {
+  $(document).ready(function() {
     const productId = "{{ form.instance.pk }}";
 
     {% if form.instance.pk %}
@@ -655,7 +647,6 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 
-<!-- Select2 (RTL) -->
 <style>
   .select2-container .select2-selection--single { height: 38px; }
   .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }

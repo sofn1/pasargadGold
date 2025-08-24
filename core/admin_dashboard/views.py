@@ -819,15 +819,25 @@ def api_get_product_data(request, product_id):
         # Corrected: Handle the features field
         features_data = {}  # Default to an empty dict
         if isinstance(product.features, dict):
-            # If the data is already a dictionary, use it directly
             features_data = product.features
         elif isinstance(product.features, str):
             try:
-                # If the data is a string, attempt to parse it as JSON
                 features_data = json.loads(product.features)
             except json.JSONDecodeError:
-                # Fallback to an empty dict if the JSON is invalid
                 pass
+
+        # Corrected: Handle the related products field
+        # Ensure rel_products is always a list before trying to iterate over it
+        rel_products_list = []
+        if isinstance(product.rel_products, list):
+            rel_products_list = product.rel_products
+        elif isinstance(product.rel_products, int):
+            rel_products_list = [product.rel_products]
+
+        rel_products_data = [
+            {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
+            for p in Product.objects.filter(pk__in=rel_products_list)
+        ]
 
         # Build the full data dictionary
         data = {
@@ -844,10 +854,7 @@ def api_get_product_data(request, product_id):
                 {"id": str(n.pk), "text": n.name or n.english_name or f"News #{n.pk}"}
                 for n in News.objects.filter(pk__in=product.rel_news) if isinstance(product.rel_news, list)
             ],
-            "rel_products": [
-                {"id": str(p.pk), "text": p.name or p.english_name or f"Product #{p.pk}"}
-                for p in Product.objects.filter(pk__in=product.rel_products) if isinstance(product.rel_products, list)
-            ],
+            "rel_products": rel_products_data,
             "features": features_data
         }
 
@@ -856,7 +863,6 @@ def api_get_product_data(request, product_id):
     except Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
     except Exception as e:
-        # A catch-all for other potential issues, good for debugging
         print(f"Error during API call for product {product_id}:", e)
         return JsonResponse({"error": str(e)}, status=500)
 
