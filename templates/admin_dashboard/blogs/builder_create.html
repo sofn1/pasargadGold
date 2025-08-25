@@ -50,50 +50,53 @@
       <!-- Meta fields -->
       <div class="row g-3 mb-3">
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.name.label }}</label>
+          <label class="form-label">عنوان</label>
           {{ form.name }}
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.english_name.label }}</label>
+          <label class="form-label">نام انگلیسی</label>
           {{ form.english_name }}
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.category_id.label }}</label>
+          <label class="form-label">شناسه دسته‌بندی</label>
           {{ form.category_id }}
         </div>
 
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.writer.label }}</label>
+          <label class="form-label">نویسنده (کاربر)</label>
           {{ form.writer }}
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.writer_name.label }}</label>
+          <label class="form-label">نام نویسنده</label>
           {{ form.writer_name }}
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.writer_profile.label }}</label>
+          <label class="form-label">پروفایل نویسنده</label>
           {{ form.writer_profile }}
         </div>
 
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.publish_time.label }}</label>
-          {{ form.publish_time }}
+          <label class="form-label">زمان انتشار</label>
+          {{ form.publish_time|add_class:"form-control" }}
+          <small class="text-muted">قالب پیشنهادی: YYYY/MM/DD، HH:MM</small>
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.read_time.label }}</label>
+          <label class="form-label">زمان مطالعه (دقیقه)</label>
           {{ form.read_time }}
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label small text-secondary">{{ form.view_image.label }}</label>
+          <label class="form-label">تصویر نمایشی</label>
           {{ form.view_image }}
         </div>
       </div>
 
+
       <div class="mb-3">
-        <label class="form-label small text-secondary">{{ form.short_description.label }}</label>
+        <label class="form-label">توضیح کوتاه</label>
         {{ form.short_description }}
-        <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا به‌صورت خودکار از اولین پاراگراف پر شود.</small>
+        <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
       </div>
+
 
       <!-- Hidden fields for builder output -->
       {{ form.content }}           <!-- stores HTML -->
@@ -219,14 +222,17 @@
 {% block extra_js %}
 <script>
 (function(){
-  const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
-  // Editor init
+  // Expose edit state to JS
+  {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
+
+  // ---------- GrapesJS Init ----------
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
     height: '70vh',
-    storageManager: { type: null }, // manual save to Django
+    storageManager: { type: null }, // manual save (we post to Django)
     selectorManager: { componentFirst: true },
     deviceManager: {
       devices: [
@@ -245,7 +251,7 @@
     traitManager: { appendTo: '#traits' },
   });
 
-  // Also mirror Blocks/Traits into mobile offcanvas panes
+  // Also mirror Blocks/Traits into mobile offcanvas (safe in most cases)
   const blocksMobile = document.getElementById('blocks-mobile');
   const traitsMobile = document.getElementById('traits-mobile');
   if (blocksMobile) editor.BlockManager.render(blocksMobile);
@@ -257,22 +263,24 @@
   bm.add('section', {
     label: 'سکشن',
     category: 'چیدمان',
-    content: `<section class="container py-4">
-                <div class="row g-3">
-                  <div class="col-12"></div>
-                </div>
-              </section>`
+    content:
+      `<section class="container py-4">
+         <div class="row g-3">
+           <div class="col-12"></div>
+         </div>
+       </section>`
   });
 
   bm.add('cols-2', {
     label: '۲ ستونه',
     category: 'چیدمان',
-    content: `<section class="container py-4">
-                <div class="row g-4">
-                  <div class="col-12 col-md-6"></div>
-                  <div class="col-12 col-md-6"></div>
-                </div>
-              </section>`
+    content:
+      `<section class="container py-4">
+         <div class="row g-4">
+           <div class="col-12 col-md-6"></div>
+           <div class="col-12 col-md-6"></div>
+         </div>
+       </section>`
   });
 
   bm.add('heading', {
@@ -287,14 +295,19 @@
     content: `<p>متن پاراگراف شما اینجاست...</p>`
   });
 
-  bm.add('image', { label: 'تصویر', category: 'رسانه', content: { type: 'image' } });
+  bm.add('image', {
+    label: 'تصویر',
+    category: 'رسانه',
+    content: { type: 'image' }
+  });
 
   bm.add('quote', {
     label: 'نقل‌قول',
     category: 'محتوا',
-    content: `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">
-                نقل‌قول مهم...
-              </blockquote>`
+    content:
+      `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">
+         نقل‌قول مهم...
+       </blockquote>`
   });
 
   bm.add('button', {
@@ -306,34 +319,26 @@
   bm.add('video', {
     label: 'ویدیو',
     category: 'رسانه',
-    content: `<div class="ratio ratio-16x9">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
-              </div>`
+    content:
+      `<div class="ratio ratio-16x9">
+         <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+       </div>`
   });
 
   bm.add('code', {
     label: 'کد',
     category: 'محتوا',
-    content: `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;">
+    content:
+      `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;">
 <code>// کد نمونه</code></pre>`
   });
 
-  bm.add('product-card', {
-    label: 'کارت محصول',
-    category: 'کاتالوگ',
-    content: `<div class="card p-3" data-product-id="">
-                <h5>نام محصول</h5>
-                <img src="" alt="" class="img-fluid mb-2"/>
-                <p class="mb-2">توضیح کوتاه...</p>
-                <a class="btn btn-outline-primary">نمایش محصول</a>
-              </div>`,
-  });
-
-  // Traits for product-card
+  // ---------- Custom Component: product-card ----------
   const domc = editor.DomComponents;
-  const defaultType = domc.getType('default');
+  const defaultType  = domc.getType('default');
   const defaultModel = defaultType.model;
 
+  // Do NOT override 'default' type (this causes the InvalidCharacterError)
   domc.addType('product-card', {
     model: defaultModel.extend({
       defaults: {
@@ -352,56 +357,68 @@
     })
   });
 
+  bm.add('product-card', {
+    label: 'کارت محصول',
+    category: 'کاتالوگ',
+    content:
+      `<div class="card p-3" data-product-id="">
+         <h5>نام محصول</h5>
+         <img src="" alt="" class="img-fluid mb-2"/>
+         <p class="mb-2">توضیح کوتاه...</p>
+         <a class="btn btn-outline-primary">نمایش محصول</a>
+       </div>`
+  });
+
   // ---------- Device buttons ----------
-  document.getElementById('btn-desktop').onclick = () => editor.setDevice('Desktop');
-  document.getElementById('btn-tablet').onclick  = () => editor.setDevice('Tablet');
-  document.getElementById('btn-mobile').onclick  = () => editor.setDevice('Mobile');
+  document.getElementById('btn-desktop')?.addEventListener('click', () => editor.setDevice('Desktop'));
+  document.getElementById('btn-tablet') ?.addEventListener('click', () => editor.setDevice('Tablet'));
+  document.getElementById('btn-mobile') ?.addEventListener('click', () => editor.setDevice('Mobile'));
 
   // ---------- Clear canvas ----------
-  document.getElementById('btn-clear').onclick = () => {
+  document.getElementById('btn-clear')?.addEventListener('click', () => {
     if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
-  };
+  });
 
   // ---------- Preview ----------
-  const previewBtn = document.getElementById('btn-preview');
-  const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+  const previewBtn   = document.getElementById('btn-preview');
+  const previewModal = document.getElementById('previewModal') ? new bootstrap.Modal(document.getElementById('previewModal')) : null;
   const previewFrame = document.getElementById('previewFrame');
 
-  previewBtn.addEventListener('click', () => {
+  previewBtn?.addEventListener('click', () => {
     const html = editor.getHtml();
     const css  = `<style>${editor.getCss()}</style>`;
     const doc  = `<html dir="rtl"><head><meta charset="utf-8">${css}</head><body style="background:#0e0f11;color:#e9ecef;">${html}</body></html>`;
     const blob = new Blob([doc], {type:'text/html'});
     const url  = URL.createObjectURL(blob);
-    previewFrame.src = url;
-    previewModal.show();
+    if (previewFrame) {
+      previewFrame.src = url;
+      previewModal?.show();
+    }
   });
 
   // ---------- Save (button + Ctrl/Cmd+S) ----------
   const submitForm = () => {
     const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
     const contentEl = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('[name="content"]');
-    contentEl.value = html;
+    if (contentEl) contentEl.value = html;
 
-    // Optional project JSON
+    // Optional: project JSON (if you later add a JSONField)
     const pj = editor.getProjectData?.();
     const pjEl = document.querySelector('[name="project_json"]');
     if (pjEl && pj) pjEl.value = JSON.stringify(pj);
 
-    // Auto-fill short_description from first <p>
+    // Auto-fill short_description from first <p> if empty
     const sd = document.getElementById('{{ form.short_description.id_for_label }}') || document.querySelector('[name="short_description"]');
     if (sd && !sd.value) {
       const tmp = document.createElement('div'); tmp.innerHTML = editor.getHtml();
       const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.trim().slice(0, 200);
     }
 
-    // Clear draft once submitting
     try { localStorage.removeItem('blog_builder_draft'); } catch(e){}
-
-    document.getElementById('blog-form').submit();
+    document.getElementById('blog-form')?.submit();
   };
 
-  document.getElementById('btn-save').addEventListener('click', (ev) => {
+  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
     ev.preventDefault();
     submitForm();
   });
@@ -413,32 +430,26 @@
     }
   });
 
-  // ---------- Warn on unsaved changes ----------
+  // ---------- Unsaved changes warning ----------
   let dirty = false;
   editor.on('change', () => { dirty = true; });
   window.addEventListener('beforeunload', function (e) {
-    if (dirty) {
-      e.preventDefault(); e.returnValue = '';
-    }
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  // ---------- Local draft autosave (30s) ----------
+  // ---------- Local draft autosave (every 30s) ----------
   const DRAFT_KEY = 'blog_builder_draft';
   setInterval(() => {
     try {
-      const payload = {
-        html: editor.getHtml(),
-        css: editor.getCss(),
-        time: Date.now(),
-      };
+      const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() };
       localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
     } catch(e){}
   }, 30000);
 
-  // Offer restore if there is a draft and not editing a loaded project
+  // Offer restore if there is a draft and NOT editing an existing post
   try {
     const draftRaw = localStorage.getItem(DRAFT_KEY);
-    if (draftRaw && !{{ is_edit|yesno:"false,false" }}) {
+    if (draftRaw && !IS_EDIT) {
       const draft = JSON.parse(draftRaw);
       if (draft?.html) {
         if (confirm('پیش‌نویس ذخیره‌شده‌ای یافت شد. بازیابی شود؟')) {
@@ -453,9 +464,10 @@
   {% if is_edit and blog and blog.content %}
     editor.setComponents(`{{ blog.content|escapejs }}`);
   {% endif %}
-  // If you later add a JSON field (e.g. blog.content_project), prefer:
+  // If you add a JSON field later (e.g. blog.content_project), prefer:
   // editor.loadProjectData({{ blog.content_project|safe }});
 
 })();
 </script>
+
 {% endblock %}
