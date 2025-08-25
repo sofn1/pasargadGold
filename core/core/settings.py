@@ -229,9 +229,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 #
 # Admin → 09110000003 / admin123
 #
-# Writer → 09110000001 / writer123
+# seller 1 --> 09120000021   seller1seller
+# seller 2 --> 09120000022   seller2seller
+# seller 3 --> 09120000023   seller3seller
 #
-# Seller → 09110000002 / seller123
+# writer 1 --> 09120000031   writer1writer
+# writer 2 --> 09120000032   writer2writer
+# writer 3 --> 09120000033   writer3writer
 #
 # Customer → 09110000004 / customer123
 
