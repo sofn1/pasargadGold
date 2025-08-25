@@ -64,7 +64,7 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
 
     # Blogs
-    path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs'),
+    path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs_list'),
     # path('blogs/create/', views.blog_create_view, name='admin_blog_create'),
 
     path("blogs/create/", views.BlogBuilderCreateView.as_view(), name="admin_blogs_create"),
