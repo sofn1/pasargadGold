@@ -330,25 +330,21 @@
 
   // ---------- Custom Component: product-card (NO default override) ----------
   const domc = editor.DomComponents;
-  const defaultType  = domc.getType('default');
-  const defaultModel = defaultType.model;
-
   domc.addType('product-card', {
-    model: defaultModel.extend({
+    model: {
       defaults: {
         traits: [
           { type: 'text', name: 'data-product-id', label: 'شناسه محصول' },
           { type: 'text', name: 'data-button-label', label: 'متن دکمه' },
         ],
-      }
-    }, {
-      isComponent(el) {
+      },
+      isComponent: (el) => {
         if (el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null) {
           return { type: 'product-card' };
         }
         return false;
       }
-    })
+    }
   });
 
   // ---------- Mobile Offcanvas: move Blocks/Traits (no double render) ----------
