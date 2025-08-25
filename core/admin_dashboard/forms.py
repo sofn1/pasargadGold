@@ -83,21 +83,24 @@ class RichTextarea(forms.Textarea):
 
 # --- BLOG & NEWS ---
 class BlogForm(forms.ModelForm):
+    # Hidden field that will receive the HTML from the builder
+    content = forms.CharField(widget=forms.Textarea(attrs={"hidden": True}), required=False)
+    # Optional: keep the project JSON too (if you decide to add a field later)
+    project_json = forms.CharField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Blog
         fields = [
-            'name', 'english_name', 'category_id',
-            'writer', 'writer_name', 'writer_profile',
-            'publish_time', 'read_time',
-            'short_description', 'content',
-            'view_image', 'rel_news', 'rel_blogs', 'rel_products'
+            "name", "english_name", "category_id", "writer",
+            "writer_name", "writer_profile", "publish_time", "read_time",
+            "short_description", "content", "view_image",
+            "rel_news", "rel_blogs", "rel_products",
         ]
         widgets = {
-            'content': RichTextarea(),
-            'short_description': forms.Textarea(attrs={'rows': 3}),
-            'rel_news': forms.Textarea(attrs={'rows': 2}),
-            'rel_blogs': forms.Textarea(attrs={'rows': 2}),
-            'rel_products': forms.Textarea(attrs={'rows': 2}),
+            "publish_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "rel_news": forms.HiddenInput(),
+            "rel_blogs": forms.HiddenInput(),
+            "rel_products": forms.HiddenInput(),
         }
 
 

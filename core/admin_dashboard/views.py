@@ -1,5 +1,5 @@
 # admin_dashboard/views.py
-import json
+import json, os
 from django.views import View
 from django.urls import reverse
 from django.conf import settings
@@ -12,9 +12,11 @@ from django.db.models.functions import Cast
 from django.db.models import Sum, Q, CharField
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.files.storage import default_storage
 from django.views.generic import ListView, DetailView
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 
@@ -579,21 +581,55 @@ class AdminBlogListView(ListView):
         return qs
 
 
-@staff_required
-def blog_create_view(request):
-    if request.method == "POST":
+class BlogBuilderCreateView(View):
+    template_name = "admin_dashboard/blogs/builder_create.html"
+
+    def get(self, request):
+        form = BlogForm()
+        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+
+    def post(self, request):
+        # Extract relations if you populate via JS (arrays -> JSON strings)
+        for key in ["rel_news", "rel_blogs", "rel_products"]:
+            if isinstance(request.POST.get(key), list):
+                request.POST = request.POST.copy()
+                request.POST[key] = json.dumps(request.POST.getlist(key))
+
         form = BlogForm(request.POST, request.FILES)
         if form.is_valid():
-            blog = form.save()
-            AdminActionLog.objects.create(
-                admin=request.user,
-                action="Create Blog",
-                details=f"Created blog '{blog.name}' (ID: {blog.id})"
-            )
-            return redirect('admin_dashboard:blogs')
-    else:
-        form = BlogForm()
-    return render(request, 'admin_dashboard/blogs/form.html', {'form': form, 'title': 'Create Blog'})
+            blog = form.save(commit=False)
+            # Optional: if you added content_project JSONField
+            # pj = request.POST.get("project_json")
+            # if pj:
+            #     blog.content_project = json.loads(pj)
+
+            blog.save()
+            form.save_m2m()  # not strictly needed here; kept for future relations
+            return redirect("admin_dashboard:admin_blogs_list")  # adjust to your list route
+        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+
+
+@csrf_exempt
+def grapes_asset_upload(request):
+    # Handles asset uploads from GrapesJS Asset Manager
+    if request.method != "POST" or not request.FILES:
+        return HttpResponseBadRequest("No file uploaded")
+    files = request.FILES.getlist("files")
+    urls = []
+    media_root = settings.MEDIA_ROOT
+    subdir = os.path.join("blogs", "content")
+    os.makedirs(os.path.join(media_root, subdir), exist_ok=True)
+
+    for f in files:
+        path = os.path.join(subdir, f.name)
+        full = os.path.join(media_root, path)
+        with open(full, "wb+") as dest:
+            for chunk in f.chunks():
+                dest.write(chunk)
+        urls.append(settings.MEDIA_URL + path)
+
+    # Grapes expects { data: [{src: "..."}] }
+    return JsonResponse({"data": [{"src": u} for u in urls]})
 
 
 @staff_required

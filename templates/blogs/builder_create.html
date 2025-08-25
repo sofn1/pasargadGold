@@ -1,0 +1,242 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% load static %}
+
+{% block title %}{{ title|default:"ایجاد بلاگ" }}{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-3 py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-white mb-0">سازنده بصری بلاگ (سبک Elementor)</h2>
+    <div class="d-flex gap-2">
+      <button id="btn-desktop" class="btn btn-outline-light">دسکتاپ</button>
+      <button id="btn-tablet" class="btn btn-outline-light">تبلت</button>
+      <button id="btn-mobile" class="btn btn-outline-light">موبایل</button>
+      <button id="btn-clear" class="btn btn-outline-danger">پاک‌سازی</button>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="blog-form" class="card shadow-sm">
+    <div class="card-body">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="alert alert-danger">لطفاً خطاها را بررسی کنید.</div>
+      {% endif %}
+
+      <!-- Top meta fields -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">{{ form.name.label_tag }}{{ form.name }}</div>
+        <div class="col-md-4">{{ form.english_name.label_tag }}{{ form.english_name }}</div>
+        <div class="col-md-4">{{ form.category_id.label_tag }}{{ form.category_id }}</div>
+        <div class="col-md-4">{{ form.writer.label_tag }}{{ form.writer }}</div>
+        <div class="col-md-4">{{ form.writer_name.label_tag }}{{ form.writer_name }}</div>
+        <div class="col-md-4">{{ form.writer_profile.label_tag }}{{ form.writer_profile }}</div>
+        <div class="col-md-4">{{ form.publish_time.label_tag }}{{ form.publish_time }}</div>
+        <div class="col-md-4">{{ form.read_time.label_tag }}{{ form.read_time }}</div>
+        <div class="col-md-4">{{ form.view_image.label_tag }}{{ form.view_image }}</div>
+      </div>
+
+      <div class="mb-3">
+        {{ form.short_description.label_tag }}
+        {{ form.short_description }}
+        <small class="text-muted d-block mt-1">به‌صورت خودکار از اولین پاراگراف هم می‌توان پر کرد.</small>
+      </div>
+
+      <!-- Hidden fields for builder output -->
+      {{ form.content }}           <!-- stores HTML -->
+      {{ form.project_json }}      <!-- optional JSON (string) -->
+
+      <!-- Builder UI -->
+      <div class="row">
+        <div class="col-lg-9 mb-3">
+          <div id="gjs" class="border rounded" style="background: #1e1e1e; min-height:70vh;"></div>
+        </div>
+        <div class="col-lg-3 mb-3">
+          <div id="blocks" class="border rounded mb-3" style="min-height:30vh;"></div>
+          <div class="border rounded p-2">
+            <h6 class="text-muted mb-2">خصوصیات المان</h6>
+            <div id="traits"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button id="btn-save" class="btn btn-primary">ذخیره بلاگ</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% extra_css %}
+<!-- GrapesJS core (CDN) -->
+<link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+<script src="https://unpkg.com/grapesjs"></script>
+
+<style>
+  /* RTL tweaks for editor canvas */
+  .gjs-one-bg { background: #0f0f10; }
+  body { direction: rtl; }
+  #blocks .gjs-block { text-align: center; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  const editor = grapesjs.init({
+    container: '#gjs',
+    fromElement: false,
+    height: '70vh',
+    storageManager: { type: null }, // we'll push to Django on Save
+    selectorManager: { componentFirst: true },
+    deviceManager: {
+      devices: [
+        { name: 'Desktop', width: '' },
+        { name: 'Tablet', width: '768px' },
+        { name: 'Mobile', width: '360px' },
+      ]
+    },
+    assetManager: {
+      upload: "{% url 'admin_dashboard:grapes_asset_upload' %}",
+      uploadName: 'files',
+      headers: { 'X-CSRFToken': csrf },
+      multiUpload: true,
+    },
+    blockManager: { appendTo: '#blocks' },
+    traitManager: { appendTo: '#traits' },
+  });
+
+  // ----- Elementor-like Blocks (Sections/Columns/Widgets) -----
+  const bm = editor.BlockManager;
+
+  // Section (Container)
+  bm.add('section', {
+    label: 'سکشن',
+    category: 'چیدمان',
+    content: `<section class="container py-4"><div class="row g-3"><div class="col-md-12"></div></div></section>`
+  });
+
+  // Two Columns
+  bm.add('cols-2', {
+    label: '۲ ستونه',
+    category: 'چیدمان',
+    content: `<section class="container py-4"><div class="row g-4"><div class="col-md-6"></div><div class="col-md-6"></div></div></section>`
+  });
+
+  // Text (Heading + Paragraph)
+  bm.add('heading', {
+    label: 'عنوان',
+    category: 'محتوا',
+    content: `<h2 style="margin:0 0 10px;">عنوان بلاگ</h2>`
+  });
+  bm.add('paragraph', {
+    label: 'پاراگراف',
+    category: 'محتوا',
+    content: `<p>متن پاراگراف شما اینجاست...</p>`
+  });
+
+  // Image (uses Asset Manager)
+  bm.add('image', { label: 'تصویر', category: 'رسانه', content: { type: 'image' } });
+
+  // Quote
+  bm.add('quote', {
+    label: 'نقل‌قول',
+    category: 'محتوا',
+    content: `<blockquote style="border-right:4px solid #1C39BB;padding:10px;">نقل‌قول مهم...</blockquote>`
+  });
+
+  // Button / CTA
+  bm.add('button', {
+    label: 'دکمه',
+    category: 'محتوا',
+    content: `<a class="btn btn-primary" href="#">بیشتر بخوانید</a>`
+  });
+
+  // Video (YouTube embed)
+  bm.add('video', {
+    label: 'ویدیو',
+    category: 'رسانه',
+    content: `<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>`
+  });
+
+  // Code block
+  bm.add('code', {
+    label: 'کد',
+    category: 'محتوا',
+    content: `<pre><code>// کد نمونه</code></pre>`
+  });
+
+  // Product Card (binds product id for your rel_products)
+  bm.add('product-card', {
+    label: 'کارت محصول',
+    category: 'کاتالوگ',
+    content: `<div class="card p-3" data-product-id="">
+                <h5>نام محصول</h5>
+                <img src="" alt="" class="img-fluid mb-2"/>
+                <p class="mb-2">توضیح کوتاه...</p>
+                <a class="btn btn-outline-primary">نمایش محصول</a>
+              </div>`,
+  });
+
+  // Traits for product-card (Elementor-esque “content controls”)
+  editor.DomComponents.addType('default', {
+    isComponent: el => false,
+  });
+  const domc = editor.DomComponents;
+  const defaultType = domc.getType('default');
+  const defaultModel = defaultType.model;
+
+  domc.addType('product-card', {
+    model: defaultModel.extend({
+      defaults: {
+        traits: [
+          { type: 'text', name: 'data-product-id', label: 'شناسه محصول' },
+          { type: 'text', name: 'data-button-label', label: 'متن دکمه' },
+        ],
+      }
+    }, {
+      isComponent(el) {
+        if (el.classList && el.classList.contains('card') && el.getAttribute('data-product-id') !== null) {
+          return { type: 'product-card' };
+        }
+        return false;
+      }
+    })
+  });
+
+  // Device toolbar buttons
+  document.getElementById('btn-desktop').onclick = () => editor.setDevice('Desktop');
+  document.getElementById('btn-tablet').onclick  = () => editor.setDevice('Tablet');
+  document.getElementById('btn-mobile').onclick  = () => editor.setDevice('Mobile');
+
+  // Clear canvas
+  document.getElementById('btn-clear').onclick = () => {
+    if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
+  };
+
+  // On Save: push HTML to hidden <textarea name="content">; auto-fill short_description if empty
+  document.getElementById('btn-save').addEventListener('click', function(ev){
+    ev.preventDefault();
+    const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
+    const contentEl = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('[name="content"]');
+    contentEl.value = html;
+
+    // Optional: save project JSON (for perfect reconstruction)
+    const pj = editor.getProjectData();
+    const pjEl = document.querySelector('[name="project_json"]');
+    if (pjEl) pjEl.value = JSON.stringify(pj);
+
+    // First paragraph -> short_description if empty
+    const sd = document.getElementById('{{ form.short_description.id_for_label }}') || document.querySelector('[name="short_description"]');
+    if (sd && !sd.value) {
+      const tmp = document.createElement('div'); tmp.innerHTML = html;
+      const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.slice(0, 200);
+    }
+
+    document.getElementById('blog-form').submit();
+  });
+})();
+</script>
+{% endblock %}
