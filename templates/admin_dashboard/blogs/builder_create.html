@@ -414,9 +414,25 @@
 
   // Prepare data on any submit (Enter key, "ذخیره اطلاعات", etc.)
   formEl?.addEventListener('submit', (e) => {
-    fillBuilderIntoForm();
-    // let the browser continue (HTML5 validation already ran)
-    editor.setDirty(false);
+    // fillBuilderIntoForm();
+    // // let the browser continue (HTML5 validation already ran)
+    // editor.setDirty(false);
+
+      // 1. Prevent the default form submission immediately.
+  e.preventDefault();
+
+  // 2. Fill the form fields with the GrapesJS content.
+  fillBuilderIntoForm();
+
+  // 3. Clear the dirty state in GrapesJS.
+  editor.setDirty(false);
+
+  // 4. Manually trigger the form submission after a short delay
+  //    to ensure the browser recognizes the cleared dirty state.
+  //    A 100ms delay is usually more than enough.
+  setTimeout(() => {
+    formEl.submit();
+  }, 100);
   });
 
   // Our explicit Save button (if present) should trigger normal submit flow
