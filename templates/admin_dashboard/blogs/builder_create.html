@@ -416,6 +416,7 @@
   formEl?.addEventListener('submit', (e) => {
     fillBuilderIntoForm();
     // let the browser continue (HTML5 validation already ran)
+    editor.setDirty(false);
   });
 
   // Our explicit Save button (if present) should trigger normal submit flow
