@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'categories',
+    'tags',
     'accounts',
     'products',
     'payments',
