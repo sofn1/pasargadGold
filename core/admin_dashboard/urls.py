@@ -57,18 +57,19 @@ urlpatterns = [
     path("sellers/<int:pk>/edit/", views.admin_sellers_edit, name="admin_sellers_edit"),
     path("sellers/<int:pk>/delete/", views.admin_sellers_delete, name="admin_sellers_delete"),
 
-
-
-    # Users
-    path('users/', views.UserListView.as_view(), name='admin_users_list'),
-    path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
-
     # Blogs
     path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs'),
     path("blogs/create/", views.BlogBuilderCreateView.as_view(), name="admin_blogs_create"),
     path("uploads/grapes/", views.grapes_asset_upload, name="admin_grapes_asset_upload"),
     path('blogs/<int:pk>/edit/', views.AdminBlogEditView.as_view(), name='admin_blogs_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blogs_delete'),
+
+
+
+
+    # Users
+    path('users/', views.UserListView.as_view(), name='admin_users_list'),
+    path('users/<int:pk>/', views.UserDetailView.as_view(), name='admin_user_detail'),
 
     # News
     path('news/', views.AdminNewsListView.as_view(), name='admin_news'),

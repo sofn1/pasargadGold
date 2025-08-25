@@ -666,7 +666,7 @@ class AdminBlogEditView(View):
             #     blog.content_project = json.loads(pj)
 
             blog.save()
-            return redirect("admin_dashboard:admin_blogs_list")  # adjust to your list view name
+            return redirect("admin_dashboard:admin_blogs")  # adjust to your list view name
         return render(request, self.template_name, {
             "form": form,
             "title": "ویرایش بلاگ",
