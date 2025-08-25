@@ -555,6 +555,7 @@ def category_delete_view(request, category_id):
 # =====================================
 
 # --- BLOG CRUD ---
+@method_decorator(login_required, name="dispatch")
 class BlogListView(ListView):
     model = Blog
     template_name = 'admin_dashboard/content/blogs.html'
@@ -580,7 +581,7 @@ class AdminBlogListView(ListView):
             qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
         return qs
 
-@staff_required
+@method_decorator(login_required, name="dispatch")
 class BlogBuilderCreateView(View):
     template_name = "admin_dashboard/blogs/builder_create.html"
 
@@ -632,7 +633,7 @@ def grapes_asset_upload(request):
     return JsonResponse({"data": [{"src": u} for u in urls]})
 
 
-@staff_required
+@method_decorator(login_required, name="dispatch")
 class AdminBlogEditView(View):
     template_name = "admin_dashboard/blogs/builder_create.html"  # reuse the builder template
 
