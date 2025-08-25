@@ -48,55 +48,86 @@
       {% endif %}
 
       <!-- Meta fields -->
-      <div class="row g-3 mb-3">
-        <div class="col-12 col-md-4">
-          <label class="form-label">عنوان</label>
-          {{ form.name }}
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">نام انگلیسی</label>
-          {{ form.english_name }}
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">شناسه دسته‌بندی</label>
-          {{ form.category_id }}
+      <!-- === Form sections (clean, grouped) === -->
+      <div class="row g-3 mb-4">
+        <!-- مشخصات اصلی -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">مشخصات اصلی</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">عنوان</label>
+                {{ form.name }}
+                <small class="text-secondary">عنوان نمایشی بلاگ</small>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">نام انگلیسی</label>
+                {{ form.english_name }}
+                <small class="text-secondary">برای URL یا SEO</small>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">شناسه دسته‌بندی</label>
+                {{ form.category_id }}
+                <small class="text-secondary">MongoID یا شناسه داخلی دسته</small>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="col-12 col-md-4">
-          <label class="form-label">نویسنده (کاربر)</label>
-          {{ form.writer }}
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">نام نویسنده</label>
-          {{ form.writer_name }}
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">پروفایل نویسنده</label>
-          {{ form.writer_profile }}
+        <!-- نویسنده -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">نویسنده</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">نویسنده (کاربر)</label>
+                {{ form.writer }}
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">نام نویسنده</label>
+                {{ form.writer_name }}
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">پروفایل نویسنده</label>
+                {{ form.writer_profile }}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="col-12 col-md-4">
-          <label class="form-label">زمان انتشار</label>
-          {{ form.publish_time }}
-          <small class="text-muted">قالب پیشنهادی: YYYY/MM/DD، HH:MM</small>
+        <!-- زمان و رسانه -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">زمان و رسانه</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">زمان انتشار</label>
+                {{ form.publish_time }}
+                <small class="text-muted d-block">قالب پیشنهادی: YYYY/MM/DD، HH:MM</small>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">زمان مطالعه (دقیقه)</label>
+                {{ form.read_time }}
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">تصویر نمایشی</label>
+                {{ form.view_image }}
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">زمان مطالعه (دقیقه)</label>
-          {{ form.read_time }}
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label">تصویر نمایشی</label>
-          {{ form.view_image }}
+
+        <!-- توضیح کوتاه -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">توضیح کوتاه</div>
+            <div class="card-body">
+              {{ form.short_description }}
+              <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
+            </div>
+          </div>
         </div>
       </div>
-
-
-      <div class="mb-3">
-        <label class="form-label">توضیح کوتاه</label>
-        {{ form.short_description }}
-        <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
-      </div>
-
 
       <!-- Hidden fields for builder output -->
       {{ form.content }}           <!-- stores HTML -->
@@ -207,6 +238,31 @@
   .gjs-color-warn{ color:#ffb454 !important; }
   .gjs-title     { color:#dfe3ea !important; }
 
+  /* Make all typical inputs look like Bootstrap controls even without 'form-control' */
+  .card-body input[type="text"],
+  .card-body input[type="url"],
+  .card-body input[type="number"],
+  .card-body input[type="file"],
+  .card-body input[type="datetime-local"],
+  .card-body select,
+  .card-body textarea {
+    width: 100%;
+    background: #0f1216;
+    color: #e9ecef;
+    border: 1px solid #2a2f38;
+    border-radius: 10px;
+    padding: .55rem .75rem;
+  }
+  .card-body input:focus,
+  .card-body select:focus,
+  .card-body textarea:focus {
+    outline: none;
+    border-color: #3d4a7a;
+    background:#10141a;
+  }
+  .card-header { border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
+
+
   /* Blocks look nicer */
   #blocks .gjs-block, #blocks-mobile .gjs-block {
     border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed #2a2f38;
@@ -220,11 +276,10 @@
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
 (function(){
   const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-
-  // Expose edit state to JS
   {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
 
   // ---------- GrapesJS Init ----------
@@ -251,94 +306,74 @@
     traitManager: { appendTo: '#traits' },
   });
 
-  // Also mirror Blocks/Traits into mobile offcanvas (safe in most cases)
-  const blocksMobile = document.getElementById('blocks-mobile');
-  const traitsMobile = document.getElementById('traits-mobile');
-  if (blocksMobile) editor.BlockManager.render(blocksMobile);
-  if (traitsMobile) editor.TraitManager.render(traitsMobile);
-
-  // ---------- Elementor-like Blocks ----------
+  // ---------- Elementor-like Blocks (with open categories) ----------
   const bm = editor.BlockManager;
 
   bm.add('section', {
     label: 'سکشن',
-    category: 'چیدمان',
-    content:
-      `<section class="container py-4">
-         <div class="row g-3">
-           <div class="col-12"></div>
-         </div>
-       </section>`
+    category: { id: 'layout', label: 'چیدمان', open: true },
+    content: `<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>`
   });
 
   bm.add('cols-2', {
     label: '۲ ستونه',
-    category: 'چیدمان',
-    content:
-      `<section class="container py-4">
-         <div class="row g-4">
-           <div class="col-12 col-md-6"></div>
-           <div class="col-12 col-md-6"></div>
-         </div>
-       </section>`
+    category: { id: 'layout', label: 'چیدمان', open: true },
+    content: `<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>`
   });
 
   bm.add('heading', {
     label: 'عنوان',
-    category: 'محتوا',
+    category: { id: 'content', label: 'محتوا', open: true },
     content: `<h2 class="mb-2">عنوان بلاگ</h2>`
   });
 
   bm.add('paragraph', {
     label: 'پاراگراف',
-    category: 'محتوا',
+    category: { id: 'content', label: 'محتوا', open: true },
     content: `<p>متن پاراگراف شما اینجاست...</p>`
   });
 
   bm.add('image', {
     label: 'تصویر',
-    category: 'رسانه',
+    category: { id: 'media', label: 'رسانه', open: true },
     content: { type: 'image' }
   });
 
   bm.add('quote', {
     label: 'نقل‌قول',
-    category: 'محتوا',
-    content:
-      `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">
-         نقل‌قول مهم...
-       </blockquote>`
+    category: { id: 'content', label: 'محتوا', open: true },
+    content: `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>`
   });
 
   bm.add('button', {
     label: 'دکمه',
-    category: 'محتوا',
+    category: { id: 'content', label: 'محتوا', open: true },
     content: `<a class="btn btn-primary" href="#">بیشتر بخوانید</a>`
   });
 
   bm.add('video', {
     label: 'ویدیو',
-    category: 'رسانه',
-    content:
-      `<div class="ratio ratio-16x9">
-         <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
-       </div>`
+    category: { id: 'media', label: 'رسانه', open: true },
+    content: `<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>`
   });
 
   bm.add('code', {
     label: 'کد',
-    category: 'محتوا',
-    content:
-      `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;">
-<code>// کد نمونه</code></pre>`
+    category: { id: 'content', label: 'محتوا', open: true },
+    content: `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>`
   });
 
-  // ---------- Custom Component: product-card ----------
+  bm.add('product-card', {
+    label: 'کارت محصول',
+    category: { id: 'catalog', label: 'کاتالوگ', open: true },
+    content: `<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>`
+  });
+
+  // ---------- Custom Component: product-card (NO default override) ----------
   const domc = editor.DomComponents;
   const defaultType  = domc.getType('default');
   const defaultModel = defaultType.model;
 
-  // Do NOT override 'default' type (this causes the InvalidCharacterError)
   domc.addType('product-card', {
     model: defaultModel.extend({
       defaults: {
@@ -357,17 +392,35 @@
     })
   });
 
-  bm.add('product-card', {
-    label: 'کارت محصول',
-    category: 'کاتالوگ',
-    content:
-      `<div class="card p-3" data-product-id="">
-         <h5>نام محصول</h5>
-         <img src="" alt="" class="img-fluid mb-2"/>
-         <p class="mb-2">توضیح کوتاه...</p>
-         <a class="btn btn-outline-primary">نمایش محصول</a>
-       </div>`
-  });
+  // ---------- Mobile Offcanvas: move Blocks/Traits instead of double-render ----------
+  function moveChildren(fromEl, toEl){
+    if (!fromEl || !toEl) return;
+    while (fromEl.firstChild) toEl.appendChild(fromEl.firstChild);
+  }
+
+  const offcanvasEl  = document.getElementById('builderSidebar');
+  const blocksWrap   = document.getElementById('blocks');
+  const blocksMobile = document.getElementById('blocks-mobile');
+  const traitsWrap   = document.getElementById('traits');
+  const traitsMobile = document.getElementById('traits-mobile');
+
+  if (offcanvasEl) {
+    offcanvasEl.addEventListener('show.bs.offcanvas', () => {
+      // Move blocks list element (.gjs-blocks-c) into mobile pane
+      const blocksContent = blocksWrap?.querySelector('.gjs-blocks-c') || blocksWrap?.firstElementChild;
+      if (blocksContent && blocksMobile) blocksMobile.appendChild(blocksContent);
+      // Move traits inner content into mobile pane
+      moveChildren(traitsWrap, traitsMobile);
+    });
+
+    offcanvasEl.addEventListener('hidden.bs.offcanvas', () => {
+      // Move blocks content back to desktop wrapper
+      const blocksContent = blocksMobile?.querySelector('.gjs-blocks-c') || blocksMobile?.firstElementChild;
+      if (blocksContent && blocksWrap) blocksWrap.appendChild(blocksContent);
+      // Move traits inner content back to desktop wrapper
+      moveChildren(traitsMobile, traitsWrap);
+    });
+  }
 
   // ---------- Device buttons ----------
   document.getElementById('btn-desktop')?.addEventListener('click', () => editor.setDevice('Desktop'));
