@@ -580,7 +580,7 @@ class AdminBlogListView(ListView):
             qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
         return qs
 
-
+@staff_required
 class BlogBuilderCreateView(View):
     template_name = "admin_dashboard/blogs/builder_create.html"
 
@@ -633,22 +633,45 @@ def grapes_asset_upload(request):
 
 
 @staff_required
-def blog_edit_view(request, pk):
-    blog = get_object_or_404(Blog, pk=pk)
-    if request.method == "POST":
+class AdminBlogEditView(View):
+    template_name = "admin_dashboard/blogs/builder_create.html"  # reuse the builder template
+
+    def get(self, request, pk):
+        blog = get_object_or_404(Blog, pk=pk)
+        form = BlogForm(instance=blog)
+        return render(request, self.template_name, {
+            "form": form,
+            "title": "ویرایش بلاگ",
+            "blog": blog,  # useful if you want to preload the editor
+            "is_edit": True,
+        })
+
+    def post(self, request, pk):
+        blog = get_object_or_404(Blog, pk=pk)
+
+        # If you’re posting arrays for rel_* via JS, normalize them here
+        for key in ["rel_news", "rel_blogs", "rel_products"]:
+            if isinstance(request.POST.get(key), list):
+                request.POST = request.POST.copy()
+                request.POST[key] = json.dumps(request.POST.getlist(key))
+
         form = BlogForm(request.POST, request.FILES, instance=blog)
         if form.is_valid():
-            blog = form.save()
-            AdminActionLog.objects.create(
-                admin=request.user,
-                action="Update Blog",
-                details=f"Updated blog '{blog.name}' (ID: {blog.id})"
-            )
-            return redirect('admin_dashboard:admin_blogs')
-    else:
-        form = BlogForm(instance=blog)
-    return render(request, 'admin_dashboard/blogs/form.html',
-                  {'form': form, 'title': f'Edit Blog: {blog.name}', 'blog': blog})
+            blog = form.save(commit=False)
+
+            # If you added a project JSON field in your model, capture it here:
+            # pj = request.POST.get("project_json")
+            # if pj:
+            #     blog.content_project = json.loads(pj)
+
+            blog.save()
+            return redirect("admin_dashboard:admin_blogs_list")  # adjust to your list view name
+        return render(request, self.template_name, {
+            "form": form,
+            "title": "ویرایش بلاگ",
+            "blog": blog,
+            "is_edit": True,
+        })
 
 
 @staff_required
