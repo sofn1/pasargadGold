@@ -287,7 +287,7 @@
     container: '#gjs',
     fromElement: false,
     height: '70vh',
-    storageManager: { type: null }, // manual save (we post to Django)
+    storageManager: { type: null },
     selectorManager: { componentFirst: true },
     deviceManager: {
       devices: [
@@ -306,68 +306,27 @@
     traitManager: { appendTo: '#traits' },
   });
 
-  // ---------- Elementor-like Blocks (with open categories) ----------
+  // ---------- Blocks (open categories) ----------
   const bm = editor.BlockManager;
-
-  bm.add('section', {
-    label: 'سکشن',
-    category: { id: 'layout', label: 'چیدمان', open: true },
-    content: `<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>`
-  });
-
-  bm.add('cols-2', {
-    label: '۲ ستونه',
-    category: { id: 'layout', label: 'چیدمان', open: true },
-    content: `<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>`
-  });
-
-  bm.add('heading', {
-    label: 'عنوان',
-    category: { id: 'content', label: 'محتوا', open: true },
-    content: `<h2 class="mb-2">عنوان بلاگ</h2>`
-  });
-
-  bm.add('paragraph', {
-    label: 'پاراگراف',
-    category: { id: 'content', label: 'محتوا', open: true },
-    content: `<p>متن پاراگراف شما اینجاست...</p>`
-  });
-
-  bm.add('image', {
-    label: 'تصویر',
-    category: { id: 'media', label: 'رسانه', open: true },
-    content: { type: 'image' }
-  });
-
-  bm.add('quote', {
-    label: 'نقل‌قول',
-    category: { id: 'content', label: 'محتوا', open: true },
-    content: `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>`
-  });
-
-  bm.add('button', {
-    label: 'دکمه',
-    category: { id: 'content', label: 'محتوا', open: true },
-    content: `<a class="btn btn-primary" href="#">بیشتر بخوانید</a>`
-  });
-
-  bm.add('video', {
-    label: 'ویدیو',
-    category: { id: 'media', label: 'رسانه', open: true },
-    content: `<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>`
-  });
-
-  bm.add('code', {
-    label: 'کد',
-    category: { id: 'content', label: 'محتوا', open: true },
-    content: `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>`
-  });
-
-  bm.add('product-card', {
-    label: 'کارت محصول',
-    category: { id: 'catalog', label: 'کاتالوگ', open: true },
-    content: `<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>`
-  });
+  bm.add('section',   { label:'سکشن',    category:{id:'layout',label:'چیدمان',open:true},
+    content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
+  bm.add('cols-2',    { label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true},
+    content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
+  bm.add('heading',   { label:'عنوان',    category:{id:'content',label:'محتوا',open:true},
+    content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
+  bm.add('paragraph', { label:'پاراگراف', category:{id:'content',label:'محتوا',open:true},
+    content:`<p>متن پاراگراف شما اینجاست...</p>` });
+  bm.add('image',     { label:'تصویر',    category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
+  bm.add('quote',     { label:'نقل‌قول',  category:{id:'content',label:'محتوا',open:true},
+    content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
+  bm.add('button',    { label:'دکمه',     category:{id:'content',label:'محتوا',open:true},
+    content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
+  bm.add('video',     { label:'ویدیو',    category:{id:'media',label:'رسانه',open:true},
+    content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
+  bm.add('code',      { label:'کد',       category:{id:'content',label:'محتوا',open:true},
+    content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
+  bm.add('product-card', { label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true},
+    content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
 
   // ---------- Custom Component: product-card (NO default override) ----------
   const domc = editor.DomComponents;
@@ -392,12 +351,8 @@
     })
   });
 
-  // ---------- Mobile Offcanvas: move Blocks/Traits instead of double-render ----------
-  function moveChildren(fromEl, toEl){
-    if (!fromEl || !toEl) return;
-    while (fromEl.firstChild) toEl.appendChild(fromEl.firstChild);
-  }
-
+  // ---------- Mobile Offcanvas: move Blocks/Traits (no double render) ----------
+  function moveChildren(fromEl, toEl){ if(!fromEl||!toEl) return; while(fromEl.firstChild) toEl.appendChild(fromEl.firstChild); }
   const offcanvasEl  = document.getElementById('builderSidebar');
   const blocksWrap   = document.getElementById('blocks');
   const blocksMobile = document.getElementById('blocks-mobile');
@@ -406,18 +361,13 @@
 
   if (offcanvasEl) {
     offcanvasEl.addEventListener('show.bs.offcanvas', () => {
-      // Move blocks list element (.gjs-blocks-c) into mobile pane
       const blocksContent = blocksWrap?.querySelector('.gjs-blocks-c') || blocksWrap?.firstElementChild;
       if (blocksContent && blocksMobile) blocksMobile.appendChild(blocksContent);
-      // Move traits inner content into mobile pane
       moveChildren(traitsWrap, traitsMobile);
     });
-
     offcanvasEl.addEventListener('hidden.bs.offcanvas', () => {
-      // Move blocks content back to desktop wrapper
       const blocksContent = blocksMobile?.querySelector('.gjs-blocks-c') || blocksMobile?.firstElementChild;
       if (blocksContent && blocksWrap) blocksWrap.appendChild(blocksContent);
-      // Move traits inner content back to desktop wrapper
       moveChildren(traitsMobile, traitsWrap);
     });
   }
@@ -443,43 +393,48 @@
     const doc  = `<html dir="rtl"><head><meta charset="utf-8">${css}</head><body style="background:#0e0f11;color:#e9ecef;">${html}</body></html>`;
     const blob = new Blob([doc], {type:'text/html'});
     const url  = URL.createObjectURL(blob);
-    if (previewFrame) {
-      previewFrame.src = url;
-      previewModal?.show();
-    }
+    if (previewFrame) { previewFrame.src = url; previewModal?.show(); }
   });
 
-  // ---------- Save (button + Ctrl/Cmd+S) ----------
-  const submitForm = () => {
+  // ---------- Form submit wiring (handles ANY submit, including "ذخیره اطلاعات") ----------
+  const formEl = document.getElementById('blog-form');
+
+  function fillBuilderIntoForm(){
     const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
     const contentEl = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('[name="content"]');
     if (contentEl) contentEl.value = html;
 
-    // Optional: project JSON (if you later add a JSONField)
     const pj = editor.getProjectData?.();
     const pjEl = document.querySelector('[name="project_json"]');
     if (pjEl && pj) pjEl.value = JSON.stringify(pj);
 
-    // Auto-fill short_description from first <p> if empty
     const sd = document.getElementById('{{ form.short_description.id_for_label }}') || document.querySelector('[name="short_description"]');
     if (sd && !sd.value) {
       const tmp = document.createElement('div'); tmp.innerHTML = editor.getHtml();
       const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.trim().slice(0, 200);
     }
-
     try { localStorage.removeItem('blog_builder_draft'); } catch(e){}
-    document.getElementById('blog-form')?.submit();
-  };
+  }
 
-  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    submitForm();
+  // Prepare data on any submit (Enter key, "ذخیره اطلاعات", etc.)
+  formEl?.addEventListener('submit', (e) => {
+    fillBuilderIntoForm();
+    // let the browser continue (HTML5 validation already ran)
   });
 
+  // Our explicit Save button (if present) should trigger normal submit flow
+  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (formEl?.requestSubmit) formEl.requestSubmit();
+    else { fillBuilderIntoForm(); formEl?.submit(); }
+  });
+
+  // Ctrl/Cmd + S => normal submit flow
   document.addEventListener('keydown', function(e){
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      submitForm();
+      if (formEl?.requestSubmit) formEl.requestSubmit();
+      else { fillBuilderIntoForm(); formEl?.submit(); }
     }
   });
 
@@ -517,8 +472,7 @@
   {% if is_edit and blog and blog.content %}
     editor.setComponents(`{{ blog.content|escapejs }}`);
   {% endif %}
-  // If you add a JSON field later (e.g. blog.content_project), prefer:
-  // editor.loadProjectData({{ blog.content_project|safe }});
+  // If you add a JSON field later: editor.loadProjectData({{ blog.content_project|safe }});
 
 })();
 </script>
