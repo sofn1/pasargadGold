@@ -67,8 +67,8 @@ urlpatterns = [
     path('blogs/', views.AdminBlogListView.as_view(), name='admin_blogs'),
     # path('blogs/create/', views.blog_create_view, name='admin_blog_create'),
 
-    path("blogs/create/", BlogBuilderCreateView.as_view(), name="admin_blogs_create"),
-    path("uploads/grapes/", grapes_asset_upload, name="admin_grapes_asset_upload"),
+    path("blogs/create/", views.BlogBuilderCreateView.as_view(), name="admin_blogs_create"),
+    path("uploads/grapes/", views.grapes_asset_upload, name="admin_grapes_asset_upload"),
     path('blogs/<int:pk>/edit/', views.blog_edit_view, name='admin_blog_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blog_delete'),
 
