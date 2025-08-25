@@ -24,6 +24,8 @@ urlpatterns = [
 
     # ✅ FRONTEND PAGES
     path('', include('frontend.urls')),
+    # ✅ TAGS APIs
+    path('', include('tags.urls')),
 
 ]
 

@@ -1,0 +1,19 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% block title %}حذف برچسب{% endblock %}
+{% block mainContent %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center my-4">
+    <h2 class="text-white mb-0">حذف برچسب</h2>
+    <a href="{% url 'admin_dashboard:admin_tags' %}" class="btn btn-secondary">بازگشت</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <p>آیا از حذف <strong>{{ obj.name }}</strong> مطمئن هستید؟</p>
+      <form method="post">{% csrf_token %}
+        <button class="btn btn-danger">بله، حذف شود</button>
+        <a href="{% url 'admin_dashboard:admin_tags' %}" class="btn btn-outline-secondary">انصراف</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% if form.errors %}
+  <div class="alert alert-danger">لطفاً خطاهای زیر را بررسی کنید.</div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-md-4">{{ form.name.label_tag }}{{ form.name }}</div>
+  <div class="col-md-4">{{ form.slug.label_tag }}{{ form.slug }}</div>
+  <div class="col-md-4">{{ form.color.label_tag }}{{ form.color }}</div>
+  <div class="col-12">{{ form.description.label_tag }}{{ form.description }}</div>
+</div>
+<script>
+  // پر کردن خودکار اسلاگ از نام (ساده)
+  (function(){
+    const nameInput = document.getElementById("id_name");
+    const slugInput = document.getElementById("id_slug");
+    if(nameInput && slugInput){
+      nameInput.addEventListener("input", function(){
+        if(!slugInput.value){
+          slugInput.value = nameInput.value
+            .toString().trim().toLowerCase()
+            .replaceAll(/[^\w\s-]+/g, "")
+            .replaceAll(/\s+/g, "-");
+        }
+      });
+    }
+  })();
+</script>

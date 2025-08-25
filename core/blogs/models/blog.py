@@ -1,3 +1,4 @@
+from tags.models import Tag
 from django.db import models
 from django.conf import settings
 
@@ -12,6 +13,7 @@ class Blog(models.Model):
     writer_name = models.CharField(max_length=255)
     writer_profile = models.URLField()
 
+    tags = models.ManyToManyField(Tag, blank=True, related_name="blogs", verbose_name="برچسب‌ها")
     publish_time = models.DateTimeField()
     read_time = models.PositiveIntegerField()
     short_description = models.TextField()

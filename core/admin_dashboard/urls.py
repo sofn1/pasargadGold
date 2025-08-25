@@ -64,6 +64,11 @@ urlpatterns = [
     path('blogs/<int:pk>/edit/', views.AdminBlogEditView.as_view(), name='admin_blogs_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blogs_delete'),
 
+    # Tags
+    path("tags/", views.admin_tag_list, name="admin_tags"),
+    path("tags/create/", views.admin_tag_create, name="admin_tag_create"),
+    path("tags/<int:pk>/edit/", views.admin_tag_edit, name="admin_tag_edit"),
+    path("tags/<int:pk>/delete/", views.admin_tag_delete, name="admin_tag_delete"),
 
 
 

@@ -1,25 +1,27 @@
 # admin_dashboard/views.py
-import json, os
+import os
+import json
 from django.views import View
 from django.urls import reverse
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.contrib import messages
-from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models.functions import Cast
-from django.db.models import Sum, Q, CharField
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db.models import Sum, Q, CharField, Count
 from django.core.files.storage import default_storage
 from django.views.generic import ListView, DetailView
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 
+from tags.models import Tag
+from tags.forms import TagForm
 from heroes.models import Hero
 from datetime import timedelta
 from accounts.models import User
@@ -580,6 +582,7 @@ class AdminBlogListView(ListView):
         if q:
             qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
         return qs
+
 
 @method_decorator(login_required, name="dispatch")
 class BlogBuilderCreateView(View):
@@ -1412,3 +1415,61 @@ def admin_sellers_delete(request, pk):
         messages.success(request, "فروشنده حذف شد.")
         return redirect("admin_dashboard:admin_sellers")
     return render(request, "admin_dashboard/sellers/delete.html", {"seller": seller})
+
+
+# ---- TAGS ----
+@admin_required
+def admin_tag_list(request):
+    q = request.GET.get("q", "")
+    qs = Tag.objects.all().annotate(
+        blog_count=Count("blogs", distinct=True),
+        news_count=Count("news_items", distinct=True),
+    )
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(slug__icontains=q))
+    qs = qs.order_by("name")
+    paginator = Paginator(qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    # usage_count را محاسبه کنیم
+    tags = []
+    for t in page_obj.object_list:
+        t.usage_count = (getattr(t, "blog_count", 0) or 0) + (getattr(t, "news_count", 0) or 0)
+        tags.append(t)
+    return render(request, "admin_dashboard/tags/list.html", {"tags": tags, "page_obj": page_obj})
+
+
+@admin_required
+def admin_tag_create(request):
+    if request.method == "POST":
+        form = TagForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "برچسب با موفقیت ایجاد شد.")
+            return redirect("admin_dashboard:admin_tags")
+    else:
+        form = TagForm()
+    return render(request, "admin_dashboard/tags/create.html", {"form": form})
+
+
+@admin_required
+def admin_tag_edit(request, pk):
+    obj = get_object_or_404(Tag, pk=pk)
+    if request.method == "POST":
+        form = TagForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "برچسب با موفقیت به‌روزرسانی شد.")
+            return redirect("admin_dashboard:admin_tags")
+    else:
+        form = TagForm(instance=obj)
+    return render(request, "admin_dashboard/tags/edit.html", {"form": form, "obj": obj})
+
+
+@admin_required
+def admin_tag_delete(request, pk):
+    obj = get_object_or_404(Tag, pk=pk)
+    if request.method == "POST":
+        obj.delete()
+        messages.success(request, "برچسب حذف شد.")
+        return redirect("admin_dashboard:admin_tags")
+    return render(request, "admin_dashboard/tags/delete.html", {"obj": obj})
