@@ -605,7 +605,7 @@ class BlogBuilderCreateView(View):
 
             blog.save()
             form.save_m2m()  # not strictly needed here; kept for future relations
-            return redirect("admin_dashboard:admin_blogs_list")  # adjust to your list route
+            return redirect("admin_dashboard:admin_blogs")  # adjust to your list route
         return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
 
 
@@ -644,7 +644,7 @@ def blog_edit_view(request, pk):
                 action="Update Blog",
                 details=f"Updated blog '{blog.name}' (ID: {blog.id})"
             )
-            return redirect('admin_dashboard:blogs')
+            return redirect('admin_dashboard:admin_blogs')
     else:
         form = BlogForm(instance=blog)
     return render(request, 'admin_dashboard/blogs/form.html',
