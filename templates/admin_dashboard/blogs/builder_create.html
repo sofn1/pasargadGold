@@ -4,79 +4,215 @@
 {% block title %}{{ title|default:"ایجاد بلاگ" }}{% endblock %}
 
 {% block mainContent %}
-<div class="container-fluid px-3 py-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="text-white mb-0">سازنده بصری بلاگ (سبک Elementor)</h2>
-    <div class="d-flex gap-2">
-      <button id="btn-desktop" class="btn btn-outline-light">دسکتاپ</button>
-      <button id="btn-tablet" class="btn btn-outline-light">تبلت</button>
-      <button id="btn-mobile" class="btn btn-outline-light">موبایل</button>
-      <button id="btn-clear" class="btn btn-outline-danger">پاک‌سازی</button>
+<div class="container-fluid px-2 px-md-3 py-3">
+
+  <!-- Sticky top bar (actions + device switches) -->
+  <div class="position-sticky top-0 z-3 mb-3" style="backdrop-filter:saturate(180%) blur(8px);">
+    <div class="card border-0 shadow-sm rounded-3" style="background:rgba(20,22,26,.8);">
+      <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
+              {% if is_edit %}ویرایش بلاگ{% else %}ایجاد بلاگ جدید{% endif %}
+            </span>
+            <small class="text-secondary d-none d-md-inline">سازنده بصری (سبک Elementor)</small>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <!-- device buttons -->
+            <div class="btn-group me-1" role="group" aria-label="Devices">
+              <button id="btn-desktop" type="button" class="btn btn-outline-light btn-sm">دسکتاپ</button>
+              <button id="btn-tablet"  type="button" class="btn btn-outline-light btn-sm">تبلت</button>
+              <button id="btn-mobile"  type="button" class="btn btn-outline-light btn-sm">موبایل</button>
+            </div>
+
+            <!-- sidebar (blocks/traits) toggler on mobile -->
+            <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar" aria-controls="builderSidebar">
+              پنل ابزار
+            </button>
+
+            <button id="btn-clear"   type="button" class="btn btn-outline-danger btn-sm">پاک‌سازی</button>
+            <button id="btn-preview" type="button" class="btn btn-outline-secondary btn-sm">پیش‌نمایش</button>
+            <button id="btn-save"    type="button" class="btn btn-primary btn-sm px-3">ذخیره بلاگ</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" id="blog-form" class="card shadow-sm">
-    <div class="card-body">
+  <form method="post" enctype="multipart/form-data" id="blog-form" class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-3 p-md-4">
       {% csrf_token %}
       {% if form.errors %}
         <div class="alert alert-danger">لطفاً خطاها را بررسی کنید.</div>
       {% endif %}
 
-      <!-- Top meta fields -->
+      <!-- Meta fields -->
       <div class="row g-3 mb-3">
-        <div class="col-md-4">{{ form.name.label_tag }}{{ form.name }}</div>
-        <div class="col-md-4">{{ form.english_name.label_tag }}{{ form.english_name }}</div>
-        <div class="col-md-4">{{ form.category_id.label_tag }}{{ form.category_id }}</div>
-        <div class="col-md-4">{{ form.writer.label_tag }}{{ form.writer }}</div>
-        <div class="col-md-4">{{ form.writer_name.label_tag }}{{ form.writer_name }}</div>
-        <div class="col-md-4">{{ form.writer_profile.label_tag }}{{ form.writer_profile }}</div>
-        <div class="col-md-4">{{ form.publish_time.label_tag }}{{ form.publish_time }}</div>
-        <div class="col-md-4">{{ form.read_time.label_tag }}{{ form.read_time }}</div>
-        <div class="col-md-4">{{ form.view_image.label_tag }}{{ form.view_image }}</div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.name.label }}</label>
+          {{ form.name }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.english_name.label }}</label>
+          {{ form.english_name }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.category_id.label }}</label>
+          {{ form.category_id }}
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.writer.label }}</label>
+          {{ form.writer }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.writer_name.label }}</label>
+          {{ form.writer_name }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.writer_profile.label }}</label>
+          {{ form.writer_profile }}
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.publish_time.label }}</label>
+          {{ form.publish_time }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.read_time.label }}</label>
+          {{ form.read_time }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label small text-secondary">{{ form.view_image.label }}</label>
+          {{ form.view_image }}
+        </div>
       </div>
 
       <div class="mb-3">
-        {{ form.short_description.label_tag }}
+        <label class="form-label small text-secondary">{{ form.short_description.label }}</label>
         {{ form.short_description }}
-        <small class="text-muted d-block mt-1">به‌صورت خودکار از اولین پاراگراف هم می‌توان پر کرد.</small>
+        <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا به‌صورت خودکار از اولین پاراگراف پر شود.</small>
       </div>
 
       <!-- Hidden fields for builder output -->
       {{ form.content }}           <!-- stores HTML -->
       {{ form.project_json }}      <!-- optional JSON (string) -->
 
-      <!-- Builder UI -->
-      <div class="row">
-        <div class="col-lg-9 mb-3">
-          <div id="gjs" class="border rounded" style="background: #1e1e1e; min-height:70vh;"></div>
-        </div>
-        <div class="col-lg-3 mb-3">
-          <div id="blocks" class="border rounded mb-3" style="min-height:30vh;"></div>
-          <div class="border rounded p-2">
-            <h6 class="text-muted mb-2">خصوصیات المان</h6>
-            <div id="traits"></div>
+      <!-- Builder layout -->
+      <div class="row g-3">
+        <!-- Editor -->
+        <div class="col-12 col-lg-9 order-2 order-lg-1">
+          <div id="gjs" class="border rounded-4 shadow-sm" style="background:#14161a; min-height:70vh;"></div>
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-2 text-secondary small">
+            <span class="badge bg-dark-subtle text-secondary-emphasis">میانبرها:</span>
+            <span>Ctrl/Cmd + S = ذخیره</span>
+            <span>•</span>
+            <span>Ctrl/Cmd + Z = بازگشت</span>
+            <span>•</span>
+            <span>Ctrl/Cmd + Y/Shift+Z = جلو</span>
           </div>
         </div>
-      </div>
 
-      <div class="d-flex justify-content-end mt-3">
-        <button id="btn-save" class="btn btn-primary">ذخیره بلاگ</button>
+        <!-- Sidebar (Blocks / Traits) -->
+        <div class="col-12 col-lg-3 order-1 order-lg-2">
+          <div class="d-none d-lg-block">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+              <div class="card-header bg-body-tertiary border-0 fw-semibold">بلوک‌ها</div>
+              <div id="blocks" class="card-body p-2" style="max-height:35vh; overflow:auto;"></div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-body-tertiary border-0 fw-semibold">خصوصیات المان</div>
+              <div id="traits" class="card-body p-2" style="max-height:35vh; overflow:auto;"></div>
+            </div>
+          </div>
+
+          <!-- Offcanvas for mobile -->
+          <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="builderSidebar" aria-labelledby="builderSidebarLabel" style="width: 86vw; max-width: 420px;">
+            <div class="offcanvas-header">
+              <h5 class="offcanvas-title" id="builderSidebarLabel">ابزار سازنده</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+              <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="pills-blocks-tab" data-bs-toggle="pill" data-bs-target="#pills-blocks" type="button" role="tab">بلوک‌ها</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="pills-traits-tab" data-bs-toggle="pill" data-bs-target="#pills-traits" type="button" role="tab">خصوصیات</button>
+                </li>
+              </ul>
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="pills-blocks" role="tabpanel">
+                  <div id="blocks-mobile" style="max-height:60vh; overflow:auto;"></div>
+                </div>
+                <div class="tab-pane fade" id="pills-traits" role="tabpanel">
+                  <div id="traits-mobile" style="max-height:60vh; overflow:auto;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /Offcanvas -->
+        </div>
       </div>
     </div>
   </form>
 </div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="previewModalLabel">پیش‌نمایش بلاگ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <iframe id="previewFrame" class="w-100 border-0 rounded-3 shadow" style="height: calc(100vh - 140px); background:#0e0f11;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_css %}
-<!-- GrapesJS core (CDN) -->
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
 <script src="https://unpkg.com/grapesjs"></script>
 
 <style>
-  /* RTL tweaks for editor canvas */
-  .gjs-one-bg { background: #0f0f10; }
+  /* Global dark/RTL enhancements */
   body { direction: rtl; }
-  #blocks .gjs-block { text-align: center; }
+  .card { background: #171a1f; color: #e9ecef; }
+  .card-header { background: #1b1f26; color: #cfd3da; }
+  .form-control, .form-select, textarea {
+    background: #0f1216; color: #e9ecef; border-color: #2a2f38;
+  }
+  .form-control:focus, .form-select:focus, textarea:focus {
+    background:#10141a; color:#fff; border-color:#3d4a7a; box-shadow:none;
+  }
+  .btn-outline-light { border-color:#3a3f48; }
+  .btn-outline-light:hover { background:#2a2f38; }
+  .btn-primary { background:#1C39BB; border: none; }
+  .btn-outline-danger { border-color:#7a2a2a; }
+  .badge.bg-primary { background:#1C39BB !important; }
+
+  /* GrapesJS palette to match dark UI */
+  .gjs-one-bg    { background:#101216 !important; }
+  .gjs-two-bg    { background:#171a1f !important; }
+  .gjs-three-bg  { background:#1b1f26 !important; }
+  .gjs-four-color{ color:#cfd3da !important; }
+  .gjs-color-warn{ color:#ffb454 !important; }
+  .gjs-title     { color:#dfe3ea !important; }
+
+  /* Blocks look nicer */
+  #blocks .gjs-block, #blocks-mobile .gjs-block {
+    border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed #2a2f38;
+    background:#111318; cursor:grab; text-align:center;
+  }
+  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background:#171a1f; }
+
+  /* Rounded editor iframe edges */
+  #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; }
 </style>
 {% endblock %}
 
@@ -85,17 +221,18 @@
 (function(){
   const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+  // Editor init
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
     height: '70vh',
-    storageManager: { type: null }, // we'll push to Django on Save
+    storageManager: { type: null }, // manual save to Django
     selectorManager: { componentFirst: true },
     deviceManager: {
       devices: [
         { name: 'Desktop', width: '' },
-        { name: 'Tablet', width: '768px' },
-        { name: 'Mobile', width: '360px' },
+        { name: 'Tablet',  width: '768px' },
+        { name: 'Mobile',  width: '360px' },
       ]
     },
     assetManager: {
@@ -108,67 +245,79 @@
     traitManager: { appendTo: '#traits' },
   });
 
-  // ----- Elementor-like Blocks (Sections/Columns/Widgets) -----
+  // Also mirror Blocks/Traits into mobile offcanvas panes
+  const blocksMobile = document.getElementById('blocks-mobile');
+  const traitsMobile = document.getElementById('traits-mobile');
+  if (blocksMobile) editor.BlockManager.render(blocksMobile);
+  if (traitsMobile) editor.TraitManager.render(traitsMobile);
+
+  // ---------- Elementor-like Blocks ----------
   const bm = editor.BlockManager;
 
-  // Section (Container)
   bm.add('section', {
     label: 'سکشن',
     category: 'چیدمان',
-    content: `<section class="container py-4"><div class="row g-3"><div class="col-md-12"></div></div></section>`
+    content: `<section class="container py-4">
+                <div class="row g-3">
+                  <div class="col-12"></div>
+                </div>
+              </section>`
   });
 
-  // Two Columns
   bm.add('cols-2', {
     label: '۲ ستونه',
     category: 'چیدمان',
-    content: `<section class="container py-4"><div class="row g-4"><div class="col-md-6"></div><div class="col-md-6"></div></div></section>`
+    content: `<section class="container py-4">
+                <div class="row g-4">
+                  <div class="col-12 col-md-6"></div>
+                  <div class="col-12 col-md-6"></div>
+                </div>
+              </section>`
   });
 
-  // Text (Heading + Paragraph)
   bm.add('heading', {
     label: 'عنوان',
     category: 'محتوا',
-    content: `<h2 style="margin:0 0 10px;">عنوان بلاگ</h2>`
+    content: `<h2 class="mb-2">عنوان بلاگ</h2>`
   });
+
   bm.add('paragraph', {
     label: 'پاراگراف',
     category: 'محتوا',
     content: `<p>متن پاراگراف شما اینجاست...</p>`
   });
 
-  // Image (uses Asset Manager)
   bm.add('image', { label: 'تصویر', category: 'رسانه', content: { type: 'image' } });
 
-  // Quote
   bm.add('quote', {
     label: 'نقل‌قول',
     category: 'محتوا',
-    content: `<blockquote style="border-right:4px solid #1C39BB;padding:10px;">نقل‌قول مهم...</blockquote>`
+    content: `<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">
+                نقل‌قول مهم...
+              </blockquote>`
   });
 
-  // Button / CTA
   bm.add('button', {
     label: 'دکمه',
     category: 'محتوا',
     content: `<a class="btn btn-primary" href="#">بیشتر بخوانید</a>`
   });
 
-  // Video (YouTube embed)
   bm.add('video', {
     label: 'ویدیو',
     category: 'رسانه',
-    content: `<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>`
+    content: `<div class="ratio ratio-16x9">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+              </div>`
   });
 
-  // Code block
   bm.add('code', {
     label: 'کد',
     category: 'محتوا',
-    content: `<pre><code>// کد نمونه</code></pre>`
+    content: `<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;">
+<code>// کد نمونه</code></pre>`
   });
 
-  // Product Card (binds product id for your rel_products)
   bm.add('product-card', {
     label: 'کارت محصول',
     category: 'کاتالوگ',
@@ -180,10 +329,7 @@
               </div>`,
   });
 
-  // Traits for product-card (Elementor-esque “content controls”)
-  editor.DomComponents.addType('default', {
-    isComponent: el => false,
-  });
+  // Traits for product-card
   const domc = editor.DomComponents;
   const defaultType = domc.getType('default');
   const defaultModel = defaultType.model;
@@ -198,7 +344,7 @@
       }
     }, {
       isComponent(el) {
-        if (el.classList && el.classList.contains('card') && el.getAttribute('data-product-id') !== null) {
+        if (el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null) {
           return { type: 'product-card' };
         }
         return false;
@@ -206,37 +352,110 @@
     })
   });
 
-  // Device toolbar buttons
+  // ---------- Device buttons ----------
   document.getElementById('btn-desktop').onclick = () => editor.setDevice('Desktop');
   document.getElementById('btn-tablet').onclick  = () => editor.setDevice('Tablet');
   document.getElementById('btn-mobile').onclick  = () => editor.setDevice('Mobile');
 
-  // Clear canvas
+  // ---------- Clear canvas ----------
   document.getElementById('btn-clear').onclick = () => {
     if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
   };
 
-  // On Save: push HTML to hidden <textarea name="content">; auto-fill short_description if empty
-  document.getElementById('btn-save').addEventListener('click', function(ev){
-    ev.preventDefault();
+  // ---------- Preview ----------
+  const previewBtn = document.getElementById('btn-preview');
+  const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+  const previewFrame = document.getElementById('previewFrame');
+
+  previewBtn.addEventListener('click', () => {
+    const html = editor.getHtml();
+    const css  = `<style>${editor.getCss()}</style>`;
+    const doc  = `<html dir="rtl"><head><meta charset="utf-8">${css}</head><body style="background:#0e0f11;color:#e9ecef;">${html}</body></html>`;
+    const blob = new Blob([doc], {type:'text/html'});
+    const url  = URL.createObjectURL(blob);
+    previewFrame.src = url;
+    previewModal.show();
+  });
+
+  // ---------- Save (button + Ctrl/Cmd+S) ----------
+  const submitForm = () => {
     const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
     const contentEl = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('[name="content"]');
     contentEl.value = html;
 
-    // Optional: save project JSON (for perfect reconstruction)
-    const pj = editor.getProjectData();
+    // Optional project JSON
+    const pj = editor.getProjectData?.();
     const pjEl = document.querySelector('[name="project_json"]');
-    if (pjEl) pjEl.value = JSON.stringify(pj);
+    if (pjEl && pj) pjEl.value = JSON.stringify(pj);
 
-    // First paragraph -> short_description if empty
+    // Auto-fill short_description from first <p>
     const sd = document.getElementById('{{ form.short_description.id_for_label }}') || document.querySelector('[name="short_description"]');
     if (sd && !sd.value) {
-      const tmp = document.createElement('div'); tmp.innerHTML = html;
-      const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.slice(0, 200);
+      const tmp = document.createElement('div'); tmp.innerHTML = editor.getHtml();
+      const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.trim().slice(0, 200);
     }
 
+    // Clear draft once submitting
+    try { localStorage.removeItem('blog_builder_draft'); } catch(e){}
+
     document.getElementById('blog-form').submit();
+  };
+
+  document.getElementById('btn-save').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    submitForm();
   });
+
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      submitForm();
+    }
+  });
+
+  // ---------- Warn on unsaved changes ----------
+  let dirty = false;
+  editor.on('change', () => { dirty = true; });
+  window.addEventListener('beforeunload', function (e) {
+    if (dirty) {
+      e.preventDefault(); e.returnValue = '';
+    }
+  });
+
+  // ---------- Local draft autosave (30s) ----------
+  const DRAFT_KEY = 'blog_builder_draft';
+  setInterval(() => {
+    try {
+      const payload = {
+        html: editor.getHtml(),
+        css: editor.getCss(),
+        time: Date.now(),
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch(e){}
+  }, 30000);
+
+  // Offer restore if there is a draft and not editing a loaded project
+  try {
+    const draftRaw = localStorage.getItem(DRAFT_KEY);
+    if (draftRaw && !{{ is_edit|yesno:"false,false" }}) {
+      const draft = JSON.parse(draftRaw);
+      if (draft?.html) {
+        if (confirm('پیش‌نویس ذخیره‌شده‌ای یافت شد. بازیابی شود؟')) {
+          editor.setComponents(draft.html);
+          editor.setStyle(draft.css || '');
+        }
+      }
+    }
+  } catch(e){}
+
+  // ---------- Preload content when editing ----------
+  {% if is_edit and blog and blog.content %}
+    editor.setComponents(`{{ blog.content|escapejs }}`);
+  {% endif %}
+  // If you later add a JSON field (e.g. blog.content_project), prefer:
+  // editor.loadProjectData({{ blog.content_project|safe }});
+
 })();
 </script>
 {% endblock %}
