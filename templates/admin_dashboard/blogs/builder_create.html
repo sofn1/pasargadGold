@@ -227,43 +227,70 @@
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
 (function(){
   const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
 
+  // ---------- GrapesJS Init ----------
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
     height: '70vh',
     storageManager: { type: null },
     selectorManager: { componentFirst: true },
-    deviceManager: { devices: [{ name:'Desktop', width:'' }, { name:'Tablet', width:'768px' }, { name:'Mobile', width:'360px' }] },
-    assetManager: { upload: "{% url 'admin_dashboard:admin_grapes_asset_upload' %}", uploadName: 'files', headers: { 'X-CSRFToken': csrf }, multiUpload: true },
+    deviceManager: {
+      devices: [
+        { name: 'Desktop', width: '' },
+        { name: 'Tablet',  width: '768px' },
+        { name: 'Mobile',  width: '360px' },
+      ]
+    },
+    assetManager: {
+      upload: "{% url 'admin_dashboard:admin_grapes_asset_upload' %}",
+      uploadName: 'files',
+      headers: { 'X-CSRFToken': csrf },
+      multiUpload: true,
+    },
     blockManager: { appendTo: '#blocks' },
     traitManager: { appendTo: '#traits' },
   });
 
+  // ---------- Blocks ----------
   const bm = editor.BlockManager;
-  bm.add('section',{ label:'سکشن', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
-  bm.add('cols-2',{ label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
-  bm.add('heading',{ label:'عنوان', category:{id:'content',label:'محتوا',open:true}, content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
-  bm.add('paragraph',{ label:'پاراگراف', category:{id:'content',label:'محتوا',open:true}, content:`<p>متن پاراگراف شما اینجاست...</p>` });
+  bm.add('section',{ label:'سکشن', category:{id:'layout',label:'چیدمان',open:true},
+    content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
+  bm.add('cols-2',{ label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true},
+    content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
+  bm.add('heading',{ label:'عنوان', category:{id:'content',label:'محتوا',open:true},
+    content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
+  bm.add('paragraph',{ label:'پاراگراف', category:{id:'content',label:'محتوا',open:true},
+    content:`<p>متن پاراگراف شما اینجاست...</p>` });
   bm.add('image',{ label:'تصویر', category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
-  bm.add('quote',{ label:'نقل‌قول', category:{id:'content',label:'محتوا',open:true}, content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
-  bm.add('button',{ label:'دکمه', category:{id:'content',label:'محتوا',open:true}, content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
-  bm.add('video',{ label:'ویدیو', category:{id:'media',label:'رسانه',open:true}, content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
-  bm.add('code',{ label:'کد', category:{id:'content',label:'محتوا',open:true}, content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
-  bm.add('product-card',{ label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true}, content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
+  bm.add('quote',{ label:'نقل‌قول', category:{id:'content',label:'محتوا',open:true},
+    content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
+  bm.add('button',{ label:'دکمه', category:{id:'content',label:'محتوا',open:true},
+    content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
+  bm.add('video',{ label:'ویدیو', category:{id:'media',label:'رسانه',open:true},
+    content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
+  bm.add('code',{ label:'کد', category:{id:'content',label:'محتوا',open:true},
+    content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
+  bm.add('product-card',{ label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true},
+    content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
 
   const domc = editor.DomComponents;
   domc.addType('product-card', {
     model: {
-      defaults: { traits: [{ type:'text', name:'data-product-id', label:'شناسه محصول' }, { type:'text', name:'data-button-label', label:'متن دکمه' }] },
+      defaults: { traits: [
+        { type:'text', name:'data-product-id', label:'شناسه محصول' },
+        { type:'text', name:'data-button-label', label:'متن دکمه' }
+      ] },
       isComponent: (el) => el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null ? { type:'product-card' } : false
     }
   });
 
+  // ---------- Mobile Offcanvas moves ----------
   function moveChildren(fromEl, toEl){ if(!fromEl||!toEl) return; while(fromEl.firstChild) toEl.appendChild(fromEl.firstChild); }
   const offcanvasEl  = document.getElementById('builderSidebar');
   const blocksWrap   = document.getElementById('blocks');
@@ -284,12 +311,17 @@
     });
   }
 
+  // ---------- Device buttons ----------
   document.getElementById('btn-desktop')?.addEventListener('click', () => editor.setDevice('Desktop'));
   document.getElementById('btn-tablet') ?.addEventListener('click', () => editor.setDevice('Tablet'));
   document.getElementById('btn-mobile') ?.addEventListener('click', () => editor.setDevice('Mobile'));
 
-  document.getElementById('btn-clear')?.addEventListener('click', () => { if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear(); });
+  // ---------- Clear canvas ----------
+  document.getElementById('btn-clear')?.addEventListener('click', () => {
+    if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
+  });
 
+  // ---------- Preview ----------
   const previewBtn   = document.getElementById('btn-preview');
   const previewModal = document.getElementById('previewModal') ? new bootstrap.Modal(document.getElementById('previewModal')) : null;
   const previewFrame = document.getElementById('previewFrame');
@@ -303,8 +335,8 @@
     if (previewFrame) { previewFrame.src = url; previewModal?.show(); }
   });
 
+  // ---------- Form submit wiring ----------
   const formEl = document.getElementById('blog-form');
-
   function fillBuilderIntoForm(){
     const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
     const contentEl = document.querySelector('[name="content"]');
@@ -343,10 +375,14 @@
     }
   });
 
+  // ---------- Unsaved changes warning ----------
   let dirty = false;
   editor.on('change', () => { dirty = true; });
-  window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', function (e) {
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
+  });
 
+  // ---------- Local draft autosave ----------
   const DRAFT_KEY = 'blog_builder_draft';
   setInterval(() => {
     try { const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() }; localStorage.setItem(DRAFT_KEY, JSON.stringify(payload)); } catch(e){}
@@ -368,6 +404,56 @@
   {% if is_edit and blog and blog.content %}
     editor.setComponents(`{{ blog.content|escapejs }}`);
   {% endif %}
+
+  // ---------- Select2 for Tags (AJAX) ----------
+  const $tags = window.jQuery ? window.jQuery('#id_tags') : null;
+  if ($tags && $tags.length) {
+    $tags.select2({
+      dir: "rtl",
+      width: "100%",
+      placeholder: "انتخاب برچسب‌ها",
+      ajax: {
+        url: "{% url 'tags:api_select2' %}",
+        dataType: "json",
+        delay: 250,
+        data: function(params){ return { q: params.term, limit: 20 }; },
+        processResults: function(data){ return { results: data.results || [] }; },
+        cache: true
+      },
+      templateResult: function(item){
+        if(!item.id) return item.text;
+        const dot = item.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px;background:${item.color}"></span>` : "";
+        const el = document.createElement('span'); el.innerHTML = dot + (item.text || item.name || "");
+        return el;
+      },
+      multiple: true
+    });
+
+    // Preselect tags when editing
+    {% if is_edit and blog %}
+    (async function preloadSelectedTags(){
+      try{
+        const ids = {{ blog.tags.values_list "id" | list | safe }};
+        for (const id of ids){
+          const resp = await fetch("{% url 'tags:api_detail' 0 %}".replace("0/", id + "/"));
+          if (!resp.ok) continue;
+          const t = await resp.json();
+          const opt = new Option(t.name || t.text, t.id, true, true);
+          $tags.append(opt).trigger("change");
+        }
+      }catch(e){}
+    })();
+    {% endif %}
+  }
+
+  // ---------- Select2 for Category ----------
+  const $cat = window.jQuery ? window.jQuery('#id_product_category') : null;
+  if ($cat && $cat.length) {
+    $cat.select2({ dir: "rtl", width: "100%", placeholder: "انتخاب دسته‌بندی محصول" });
+  }
+
 })();
 </script>
+
+
 {% endblock %}

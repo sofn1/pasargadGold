@@ -587,9 +587,10 @@ def _prepare_blog_form_for_admin(form, *, instance=None):
             widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6})
         )
     else:
-        # Normalize widget style in case BlogForm already had it
+        form.fields["tags"].queryset = Tag.objects.all().order_by("name")
         form.fields["tags"].widget.attrs.setdefault("class", "form-select")
         form.fields["tags"].widget.attrs.setdefault("size", 6)
+
 
     # Preselect current category on edit
     if instance and getattr(instance, "category_id", None):
