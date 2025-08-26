@@ -678,7 +678,11 @@ class BlogBuilderCreateView(View):
     def get(self, request):
         form = BlogForm()
         form = _prepare_blog_form_for_admin(form)
-        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+        return render(request, self.template_name, {
+            "form": form,
+            "title": "ایجاد بلاگ",
+            "tag_ids": [],  # no preselected tags on create
+        })
 
     @transaction.atomic
     def post(self, request):
@@ -726,12 +730,15 @@ class AdminBlogEditView(View):
         blog = get_object_or_404(Blog, pk=pk)
         form = BlogForm(instance=blog)
         form = _prepare_blog_form_for_admin(form, instance=blog)
+        tag_ids = list(blog.tags.values_list("id", flat=True))
         return render(request, self.template_name, {
             "form": form,
             "title": "ویرایش بلاگ",
             "blog": blog,
             "is_edit": True,
+            "tag_ids": tag_ids,  # ✅ pass ids to template
         })
+
 
     @transaction.atomic
     def post(self, request, pk):
@@ -769,12 +776,15 @@ class AdminBlogEditView(View):
             messages.success(request, "وبلاگ با موفقیت به‌روزرسانی شد.")
             return redirect("admin_dashboard:admin_blogs")
 
+        tag_ids = list(blog.tags.values_list("id", flat=True))
         return render(request, self.template_name, {
             "form": form,
             "title": "ویرایش بلاگ",
             "blog": blog,
             "is_edit": True,
+            "tag_ids": tag_ids,  # ✅ keep them on error too
         })
+
 
 
 @csrf_exempt

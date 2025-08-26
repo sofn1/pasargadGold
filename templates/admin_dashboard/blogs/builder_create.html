@@ -232,6 +232,7 @@
 (function(){
   const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
+  const PRESELECT_TAG_IDS = {{ tag_ids|default:"[]"|safe }};  // ✅ comes from view
 
   // ---------- GrapesJS Init ----------
   const editor = grapesjs.init({
@@ -282,10 +283,12 @@
   const domc = editor.DomComponents;
   domc.addType('product-card', {
     model: {
-      defaults: { traits: [
-        { type:'text', name:'data-product-id', label:'شناسه محصول' },
-        { type:'text', name:'data-button-label', label:'متن دکمه' }
-      ] },
+      defaults: {
+        traits: [
+          { type:'text', name:'data-product-id', label:'شناسه محصول' },
+          { type:'text', name:'data-button-label', label:'متن دکمه' }
+        ],
+      },
       isComponent: (el) => el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null ? { type:'product-card' } : false
     }
   });
@@ -385,7 +388,10 @@
   // ---------- Local draft autosave ----------
   const DRAFT_KEY = 'blog_builder_draft';
   setInterval(() => {
-    try { const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() }; localStorage.setItem(DRAFT_KEY, JSON.stringify(payload)); } catch(e){}
+    try {
+      const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch(e){}
   }, 30000);
 
   try {
@@ -429,24 +435,23 @@
       multiple: true
     });
 
-    // Preselect tags when editing
-    {% if is_edit and blog %}
-    (async function preloadSelectedTags(){
-      try{
-        const ids = {{ blog.tags.values_list "id" | list | safe }};
-        for (const id of ids){
-          const resp = await fetch("{% url 'tags:api_detail' 0 %}".replace("0/", id + "/"));
-          if (!resp.ok) continue;
-          const t = await resp.json();
-          const opt = new Option(t.name || t.text, t.id, true, true);
-          $tags.append(opt).trigger("change");
-        }
-      }catch(e){}
-    })();
-    {% endif %}
+    // Preselect tags on edit
+    if (Array.isArray(PRESELECT_TAG_IDS) && PRESELECT_TAG_IDS.length){
+      (async function preloadSelectedTags(){
+        try{
+          for (const id of PRESELECT_TAG_IDS){
+            const resp = await fetch("{% url 'tags:api_detail' 0 %}".replace("0/", id + "/"));
+            if (!resp.ok) continue;
+            const t = await resp.json();
+            const opt = new Option(t.name || t.text, t.id, true, true);
+            $tags.append(opt).trigger("change");
+          }
+        }catch(e){}
+      })();
+    }
   }
 
-  // ---------- Select2 for Category ----------
+  // ---------- Select2 for Category (optional) ----------
   const $cat = window.jQuery ? window.jQuery('#id_product_category') : null;
   if ($cat && $cat.length) {
     $cat.select2({ dir: "rtl", width: "100%", placeholder: "انتخاب دسته‌بندی محصول" });
