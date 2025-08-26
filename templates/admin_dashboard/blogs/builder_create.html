@@ -72,8 +72,8 @@
             <div class="card-header bg-body-tertiary border-0 fw-semibold">تگ‌ها و دسته‌بندی‌ها</div>
             <div class="card-body row g-3">
               <div class="col-12 col-md-6">
-                <label class="form-label">دسته‌بندی محصول</label>
-                {{ form.product_category }}
+                <label class="form-label">دسته‌بندی‌های محصول</label>
+                {{ form.product_categories }}
                 <small class="text-secondary">دسته‌بندی مرتبط با محصول را انتخاب کنید.</small>
               </div>
               <div class="col-12 col-md-6">
@@ -252,7 +252,7 @@
   const bm = editor.BlockManager;
   bm.add('section',{ label:'سکشن', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
   bm.add('cols-2',{ label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
-  bm.add('heading',{ label:'タイトル', category:{id:'content',label:'محتوا',open:true}, content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
+  bm.add('heading',{ label:'عنوان', category:{id:'content',label:'محتوا',open:true}, content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
   bm.add('paragraph',{ label:'پاراگراف', category:{id:'content',label:'محتوا',open:true}, content:`<p>متن پاراگراف شما اینجاست...</p>` });
   bm.add('image',{ label:'تصویر', category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
   bm.add('quote',{ label:'نقل‌قول', category:{id:'content',label:'محتوا',open:true}, content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
@@ -394,15 +394,28 @@
         dataType: "json",
         delay: 250,
         data: function(params){ return { q: params.term, limit: 20 }; },
-        processResults: function(data){ return { results: data.results || [] }; },
+        processResults: function(data){
+          // accept either {results:[{id,name|text,color}]} or bare array
+          const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+          const mapped = items.map(it => ({
+            id: it.id,
+            text: it.text || it.name || "",
+            color: it.color || null
+          }));
+          return { results: mapped };
+        },
         cache: true
       },
       templateResult: function(item){
         if(!item.id) return item.text;
         const dot = item.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px;background:${item.color}"></span>` : "";
-        const el = document.createElement('span'); el.innerHTML = dot + (item.text || item.name || "");
-        return el;
+        return `${dot}${item.text || item.name || ""}`;
       },
+      templateSelection: function(item){
+        // ensure chips show a label even if 'text' missing
+        return item.text || item.name || "";
+      },
+      escapeMarkup: function(markup){ return markup; }, // allow dot HTML
       multiple: true,
       allowClear: true
     });
@@ -415,7 +428,8 @@
             const resp = await fetch("{% url 'tags:api_detail' 0 %}".replace("0/", id + "/"));
             if (!resp.ok) continue;
             const t = await resp.json();
-            const opt = new Option(t.name || t.text, t.id, true, true);
+            const label = t.name || t.text || "";
+            const opt = new Option(label, t.id, true, true);
             $tags.append(opt).trigger("change");
           }
         }catch(e){}
@@ -423,7 +437,7 @@
     }
   }
 
-  // ---------- Select2 (Categories: multiple, local data, easy deselect) ----------
+  // ---------- Select2 (Categories: MULTI local, easy deselect) ----------
   const $cats = window.jQuery ? window.jQuery('#id_product_categories') : null;
   if ($cats && $cats.length) {
     $cats.select2({
@@ -434,7 +448,7 @@
       allowClear: true
     });
 
-    // Preselect on edit (IDs must match option values)
+    // Preselect on edit
     if (Array.isArray(PRESELECT_CATEGORY_IDS) && PRESELECT_CATEGORY_IDS.length){
       $cats.val(PRESELECT_CATEGORY_IDS.map(String)).trigger("change");
     }

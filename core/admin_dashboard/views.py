@@ -725,12 +725,6 @@ class BlogBuilderCreateView(View):
             blog.writer = user
             blog.writer_name = _derive_writer_name(user)
             blog.writer_profile = _derive_writer_profile_url(user)
-
-            # ✅ category_id from product_category UI
-            product_category = form.cleaned_data.get("product_category")
-            if product_category:
-                blog.category_id = str(product_category.pk)
-
             blog.save()  # save before M2M
 
             # ✅ tags (M2M) — either from BlogForm's own field or our injected one
@@ -798,12 +792,6 @@ class AdminBlogEditView(View):
             blog.writer = blog.writer
             blog.writer_name = blog.writer_name
             blog.writer_profile = blog.writer_profile
-
-            # ✅ update category_id from UI
-            product_category = form.cleaned_data.get("product_category")
-            if product_category:
-                blog.category_id = str(product_category.pk)
-
             blog.save()
 
             # ✅ tags
