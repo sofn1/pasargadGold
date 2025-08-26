@@ -557,6 +557,77 @@ def category_delete_view(request, category_id):
 # =====================================
 
 # --- BLOG CRUD ---
+def _prepare_blog_form_for_admin(form, *, instance=None):
+    """
+    - Hide/remove author fields from the form so user cannot edit them
+    - Remove raw category_id field (we'll use UI field 'product_category' instead)
+    - Inject product_category ModelChoiceField on the instance
+    """
+    # Remove fields if they exist
+    for f in ("writer", "writer_name", "writer_profile", "category_id"):
+        if f in form.fields:
+            del form.fields[f]
+
+    # Inject product_category (single select)
+    form.fields["product_category"] = _forms.ModelChoiceField(
+        queryset=Category.objects.all().order_by("name"),
+        label="دسته‌بندی محصول",
+        required=True,
+        widget=_forms.Select(attrs={"class": "form-select"})
+    )
+
+    # Preselect current category on edit
+    if instance and getattr(instance, "category_id", None):
+        try:
+            form.initial["product_category"] = Category.objects.filter(pk=instance.category_id).first()
+        except Exception:
+            pass
+
+    return form
+
+
+def _derive_writer_name(user):
+    # Try typical full name fallbacks
+    try:
+        if hasattr(user, "get_full_name") and callable(user.get_full_name):
+            fn = (user.get_full_name() or "").strip()
+            if fn:
+                return fn
+    except Exception:
+        pass
+    full_name = f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip()
+    if full_name:
+        return full_name
+    return getattr(user, "username", None) or getattr(user, "email", "") or "user"
+
+
+def _derive_writer_profile_url(user):
+    """
+    Best-effort to pull a profile image/url from common related profiles.
+    If none found, returns empty string. This keeps your model unchanged.
+    """
+    try:
+        # Try common related objects (customize if you have a definitive one)
+        for rel in ("profile", "customer", "writer", "seller"):
+            obj = getattr(user, rel, None)
+            if not obj:
+                continue
+            # direct URL field
+            if hasattr(obj, "profile_image") and getattr(obj, "profile_image"):
+                img = getattr(obj, "profile_image")
+                return getattr(img, "url", "") or str(img)
+            # generic image field named 'image'
+            if hasattr(obj, "image") and getattr(obj, "image"):
+                img = getattr(obj, "image")
+                return getattr(img, "url", "") or str(img)
+            # generic URL field
+            if hasattr(obj, "profile_url") and getattr(obj, "profile_url"):
+                return getattr(obj, "profile_url")
+    except Exception:
+        pass
+    return ""
+
+
 @method_decorator(login_required, name="dispatch")
 class BlogListView(ListView):
     model = Blog
@@ -577,10 +648,10 @@ class AdminBlogListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        q = self.request.GET.get('q')
+        q = self.request.GET.get('q', '')
         qs = Blog.objects.select_related('writer').all().order_by('-publish_time')
         if q:
-            qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
+            qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
         return qs
 
 
@@ -590,27 +661,104 @@ class BlogBuilderCreateView(View):
 
     def get(self, request):
         form = BlogForm()
+        form = _prepare_blog_form_for_admin(form)
         return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
 
+    @transaction.atomic
     def post(self, request):
-        # Extract relations if you populate via JS (arrays -> JSON strings)
+        # Normalize rel_* arrays if posted from JS
         for key in ["rel_news", "rel_blogs", "rel_products"]:
             if isinstance(request.POST.get(key), list):
                 request.POST = request.POST.copy()
                 request.POST[key] = json.dumps(request.POST.getlist(key))
 
         form = BlogForm(request.POST, request.FILES)
+        form = _prepare_blog_form_for_admin(form)
+
         if form.is_valid():
             blog = form.save(commit=False)
-            # Optional: if you added content_project JSONField
-            # pj = request.POST.get("project_json")
-            # if pj:
-            #     blog.content_project = json.loads(pj)
+
+            # ✅ author fields from the logged-in user
+            user = request.user
+            blog.writer = user
+            blog.writer_name = _derive_writer_name(user)
+            blog.writer_profile = _derive_writer_profile_url(user)
+
+            # ✅ category_id from product_category UI
+            product_category = form.cleaned_data.get("product_category")
+            if product_category:
+                blog.category_id = str(product_category.pk)
+
+            blog.save()  # save before M2M
+
+            # ✅ tags (M2M) — either from BlogForm's own field or our injected one
+            tags_qs = form.cleaned_data.get("tags")
+            if tags_qs is not None:
+                blog.tags.set(tags_qs)
+
+            messages.success(request, "وبلاگ با موفقیت ایجاد شد.")
+            return redirect("admin_dashboard:admin_blogs")
+
+        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+
+
+@method_decorator(login_required, name="dispatch")
+class AdminBlogEditView(View):
+    template_name = "admin_dashboard/blogs/builder_create.html"  # reuse the builder template
+
+    def get(self, request, pk):
+        blog = get_object_or_404(Blog, pk=pk)
+        form = BlogForm(instance=blog)
+        form = _prepare_blog_form_for_admin(form, instance=blog)
+        return render(request, self.template_name, {
+            "form": form,
+            "title": "ویرایش بلاگ",
+            "blog": blog,
+            "is_edit": True,
+        })
+
+    @transaction.atomic
+    def post(self, request, pk):
+        blog = get_object_or_404(Blog, pk=pk)
+
+        # Normalize rel_* arrays if posted from JS
+        for key in ["rel_news", "rel_blogs", "rel_products"]:
+            if isinstance(request.POST.get(key), list):
+                request.POST = request.POST.copy()
+                request.POST[key] = json.dumps(request.POST.getlist(key))
+
+        form = BlogForm(request.POST, request.FILES, instance=blog)
+        form = _prepare_blog_form_for_admin(form, instance=blog)
+
+        if form.is_valid():
+            blog = form.save(commit=False)
+
+            # ❌ do NOT allow changing authorship on edit
+            blog.writer = blog.writer
+            blog.writer_name = blog.writer_name
+            blog.writer_profile = blog.writer_profile
+
+            # ✅ update category_id from UI
+            product_category = form.cleaned_data.get("product_category")
+            if product_category:
+                blog.category_id = str(product_category.pk)
 
             blog.save()
-            form.save_m2m()  # not strictly needed here; kept for future relations
-            return redirect("admin_dashboard:admin_blogs")  # adjust to your list route
-        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+
+            # ✅ tags
+            tags_qs = form.cleaned_data.get("tags")
+            if tags_qs is not None:
+                blog.tags.set(tags_qs)
+
+            messages.success(request, "وبلاگ با موفقیت به‌روزرسانی شد.")
+            return redirect("admin_dashboard:admin_blogs")
+
+        return render(request, self.template_name, {
+            "form": form,
+            "title": "ویرایش بلاگ",
+            "blog": blog,
+            "is_edit": True,
+        })
 
 
 @csrf_exempt
@@ -634,48 +782,6 @@ def grapes_asset_upload(request):
 
     # Grapes expects { data: [{src: "..."}] }
     return JsonResponse({"data": [{"src": u} for u in urls]})
-
-
-@method_decorator(login_required, name="dispatch")
-class AdminBlogEditView(View):
-    template_name = "admin_dashboard/blogs/builder_create.html"  # reuse the builder template
-
-    def get(self, request, pk):
-        blog = get_object_or_404(Blog, pk=pk)
-        form = BlogForm(instance=blog)
-        return render(request, self.template_name, {
-            "form": form,
-            "title": "ویرایش بلاگ",
-            "blog": blog,  # useful if you want to preload the editor
-            "is_edit": True,
-        })
-
-    def post(self, request, pk):
-        blog = get_object_or_404(Blog, pk=pk)
-
-        # If you’re posting arrays for rel_* via JS, normalize them here
-        for key in ["rel_news", "rel_blogs", "rel_products"]:
-            if isinstance(request.POST.get(key), list):
-                request.POST = request.POST.copy()
-                request.POST[key] = json.dumps(request.POST.getlist(key))
-
-        form = BlogForm(request.POST, request.FILES, instance=blog)
-        if form.is_valid():
-            blog = form.save(commit=False)
-
-            # If you added a project JSON field in your model, capture it here:
-            # pj = request.POST.get("project_json")
-            # if pj:
-            #     blog.content_project = json.loads(pj)
-
-            blog.save()
-            return redirect("admin_dashboard:admin_blogs")  # adjust to your list view name
-        return render(request, self.template_name, {
-            "form": form,
-            "title": "ویرایش بلاگ",
-            "blog": blog,
-            "is_edit": True,
-        })
 
 
 @staff_required
