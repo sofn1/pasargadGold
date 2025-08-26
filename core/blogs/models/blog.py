@@ -1,45 +1,30 @@
-# core/blogs/forms.py
-from django import forms
-from .models import Blog
 from tags.models import Tag
+from django.db import models
+from django.conf import settings
 
 
-from products.models import Category  # <-- adjust if your name differs
+class Blog(models.Model):
+    name = models.CharField(max_length=255)
+    english_name = models.CharField(max_length=255)
+    category_id = models.CharField(max_length=64)  # MongoDB category ID
 
-class BlogCreateForm(forms.ModelForm):
-    # UI field for selecting a product category (not the raw ID)
-    product_category = forms.ModelChoiceField(
-        queryset=Category.objects.all().order_by("name"),
-        label="دسته‌بندی محصول",
-        required=True,
-        widget=forms.Select(attrs={"class": "form-select"})
-    )
+    # Link to actual User
+    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blogs')
+    writer_name = models.CharField(max_length=255)
+    writer_profile = models.URLField()
 
-    # Let user choose tags normally (your Blog already has M2M `tags`)
-    tags = forms.ModelMultipleChoiceField(
-        queryset=Tag.objects.all().order_by("name"),
-        required=False,
-        label="برچسب‌ها",
-        widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6})
-    )
+    tags = models.ManyToManyField(Tag, blank=True, related_name="blogs", verbose_name="برچسب‌ها")
+    publish_time = models.DateTimeField()
+    read_time = models.PositiveIntegerField()
+    short_description = models.TextField()
+    content = models.TextField()
+    view_image = models.ImageField(upload_to="blogs/view/")
+    rel_news = models.JSONField(default=list, blank=True)
+    rel_blogs = models.JSONField(default=list, blank=True)
+    rel_products = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        model = Blog
-        # Exclude writer fields from the form so user can’t (and shouldn’t) set them
-        exclude = ("writer", "writer_name", "writer_profile", "tags", "category_id")
-        # You keep every other field as-is (publish_time, read_time, etc.)
+    content_project = models.JSONField(default=dict, blank=True)
 
-    def save(self, commit=True):
-        """
-        - Store the chosen category into `category_id` under the hood (no model change needed)
-        - M2M tags are set by the view after instance is saved (standard Django pattern)
-        """
-        instance = super().save(commit=False)
-        cat = self.cleaned_data.get("product_category")
-        if cat:
-            instance.category_id = str(cat.pk)  # or use str(cat.slug) if you prefer storing slug
-        if commit:
-            instance.save()
-        # M2M (tags) set in the view
-        return instance
-
+    def __str__(self):
+        return self.name
