@@ -558,46 +558,57 @@ def category_delete_view(request, category_id):
 # =====================================
 
 # --- BLOG CRUD ---
+def _parse_category_ids(raw: str):
+    if not raw:
+        return []
+    return [cid for cid in str(raw).split(",") if cid.strip()]
+
+
+def _join_category_ids(ids):
+    return ",".join(str(x) for x in ids)
+
+
 def _prepare_blog_form_for_admin(form, *, instance=None):
     """
-    - Hide/remove author fields & raw category_id
-    - Inject product_category (single select)
-    - Ensure tags (multi select) exists
-    - Preselect category on edit
+    - Hide author fields & raw category_id
+    - Inject product_categories (MULTI select)
+    - Ensure tags (MULTI select) exists
+    - Preselect categories on edit
     """
-    # Remove fields if they exist in the bound BlogForm
+    # Remove fields if they exist in BlogForm
     for f in ("writer", "writer_name", "writer_profile", "category_id"):
         if f in form.fields:
             del form.fields[f]
 
-    # Inject category picker (UI)
-    form.fields["product_category"] = forms.ModelChoiceField(
+    # MULTI category picker
+    form.fields["product_categories"] = forms.ModelMultipleChoiceField(
         queryset=Category.objects.all().order_by("name"),
-        label="دسته‌بندی محصول",
-        required=True,
-        widget=forms.Select(attrs={"class": "form-select"})
+        required=False,
+        label="دسته‌بندی‌های محصول",
+        widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6, "id": "id_product_categories"})
     )
 
-    # Ensure tags field exists (UI)
+    # Preselect categories on edit
+    if instance:
+        selected_ids = _parse_category_ids(getattr(instance, "category_id", "") or "")
+        if selected_ids:
+            # For safety, only keep IDs that exist
+            qs_ids = set(Category.objects.filter(pk__in=selected_ids).values_list("pk", flat=True))
+            form.initial["product_categories"] = list(qs_ids)
+
+    # Ensure multi-tags field exists
     if "tags" not in form.fields:
         form.fields["tags"] = forms.ModelMultipleChoiceField(
             queryset=Tag.objects.all().order_by("name"),
             required=False,
             label="برچسب‌ها",
-            widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6})
+            widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6, "id": "id_tags"})
         )
     else:
         form.fields["tags"].queryset = Tag.objects.all().order_by("name")
         form.fields["tags"].widget.attrs.setdefault("class", "form-select")
         form.fields["tags"].widget.attrs.setdefault("size", 6)
-
-
-    # Preselect current category on edit
-    if instance and getattr(instance, "category_id", None):
-        try:
-            form.initial["product_category"] = Category.objects.filter(pk=instance.category_id).first()
-        except Exception:
-            pass
+        form.fields["tags"].widget.attrs.setdefault("id", "id_tags")
 
     return form
 
@@ -681,8 +692,10 @@ class BlogBuilderCreateView(View):
         return render(request, self.template_name, {
             "form": form,
             "title": "ایجاد بلاگ",
-            "tag_ids": [],  # no preselected tags on create
+            "tag_ids": [],              # no preselected tags
+            "category_ids": [],         # no preselected categories
         })
+
 
     @transaction.atomic
     def post(self, request):
@@ -697,6 +710,15 @@ class BlogBuilderCreateView(View):
 
         if form.is_valid():
             blog = form.save(commit=False)
+            # MULTI categories -> store as comma-separated into category_id (<= 64 chars)
+            cats = form.cleaned_data.get("product_categories") or []
+            cat_ids = [str(c.pk) for c in cats]
+            cat_joined = _join_category_ids(cat_ids)
+            if len(cat_joined) > 64:
+                messages.error(request, "مجموع شناسه‌های دسته‌بندی بیش از حد مجاز است. لطفاً تعداد کمتری انتخاب کنید.")
+                return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+            blog.category_id = cat_joined
+
 
             # ✅ author fields from the logged-in user
             user = request.user
@@ -731,13 +753,16 @@ class AdminBlogEditView(View):
         form = BlogForm(instance=blog)
         form = _prepare_blog_form_for_admin(form, instance=blog)
         tag_ids = list(blog.tags.values_list("id", flat=True))
+        category_ids = _parse_category_ids(blog.category_id or "")
         return render(request, self.template_name, {
             "form": form,
             "title": "ویرایش بلاگ",
             "blog": blog,
             "is_edit": True,
-            "tag_ids": tag_ids,  # ✅ pass ids to template
+            "tag_ids": tag_ids,
+            "category_ids": category_ids,
         })
+
 
 
     @transaction.atomic
@@ -755,6 +780,19 @@ class AdminBlogEditView(View):
 
         if form.is_valid():
             blog = form.save(commit=False)
+
+            cats = form.cleaned_data.get("product_categories") or []
+            cat_ids = [str(c.pk) for c in cats]
+            cat_joined = _join_category_ids(cat_ids)
+            if len(cat_joined) > 64:
+                messages.error(request, "مجموع شناسه‌های دسته‌بندی بیش از حد مجاز است. لطفاً تعداد کمتری انتخاب کنید.")
+                return render(request, self.template_name, {
+                    "form": form,
+                    "title": "ویرایش بلاگ",
+                    "blog": blog,
+                    "is_edit": True,
+                })
+            blog.category_id = cat_joined
 
             # ❌ do NOT allow changing authorship on edit
             blog.writer = blog.writer
