@@ -1,6 +1,7 @@
 # admin_dashboard/views.py
 import os
 import json
+from django import forms
 from django.views import View
 from django.urls import reverse
 from django.conf import settings
@@ -569,11 +570,11 @@ def _prepare_blog_form_for_admin(form, *, instance=None):
             del form.fields[f]
 
     # Inject product_category (single select)
-    form.fields["product_category"] = _forms.ModelChoiceField(
+    form.fields["product_category"] = forms.ModelChoiceField(
         queryset=Category.objects.all().order_by("name"),
         label="دسته‌بندی محصول",
         required=True,
-        widget=_forms.Select(attrs={"class": "form-select"})
+        widget=forms.Select(attrs={"class": "form-select"})
     )
 
     # Preselect current category on edit
