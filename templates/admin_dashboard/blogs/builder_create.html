@@ -19,14 +19,12 @@
           </div>
 
           <div class="d-flex align-items-center gap-2 ms-auto">
-            <!-- device buttons -->
             <div class="btn-group me-1" role="group" aria-label="Devices">
               <button id="btn-desktop" type="button" class="btn btn-outline-light btn-sm">دسکتاپ</button>
               <button id="btn-tablet"  type="button" class="btn btn-outline-light btn-sm">تبلت</button>
               <button id="btn-mobile"  type="button" class="btn btn-outline-light btn-sm">موبایل</button>
             </div>
 
-            <!-- sidebar (blocks/traits) toggler on mobile -->
             <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar" aria-controls="builderSidebar">
               پنل ابزار
             </button>
@@ -47,40 +45,42 @@
         <div class="alert alert-danger">لطفاً خطاها را بررسی کنید.</div>
       {% endif %}
 
-      <!-- === Form sections (clean, grouped) === -->
+      <!-- === Form sections === -->
       <div class="row g-3 mb-4">
         <!-- مشخصات اصلی -->
         <div class="col-12">
           <div class="card border-0 shadow-sm rounded-4">
             <div class="card-header bg-body-tertiary border-0 fw-semibold">مشخصات اصلی</div>
             <div class="card-body row g-3">
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <label class="form-label">عنوان</label>
                 {{ form.name }}
                 <small class="text-secondary">عنوان نمایشی بلاگ</small>
               </div>
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <label class="form-label">نام انگلیسی</label>
                 {{ form.english_name }}
                 <small class="text-secondary">برای URL یا SEO</small>
-              </div>
-              <!-- ✅ Category selector (replaces raw category_id field) -->
-              <div class="col-12 col-md-4">
-                <label class="form-label">دسته‌بندی محصول</label>
-                {{ form.product_category }}
-                <small class="text-secondary">دسته‌بندی مرتبط با محصول را انتخاب کنید.</small>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ✅ Tags -->
+        <!-- ✅ تگ‌ها و دسته‌بندی‌ها -->
         <div class="col-12">
           <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-body-tertiary border-0 fw-semibold">برچسب‌ها</div>
-            <div class="card-body">
-              {{ form.tags }}
-              <small class="text-muted d-block mt-1">می‌توانید چند برچسب را انتخاب کنید.</small>
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">تگ‌ها و دسته‌بندی‌ها</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">دسته‌بندی محصول</label>
+                {{ form.product_category }}
+                <small class="text-secondary">دسته‌بندی مرتبط با محصول را انتخاب کنید.</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">برچسب‌ها</label>
+                {{ form.tags }}
+                <small class="text-muted d-block mt-1">می‌توانید چند برچسب را انتخاب کنید.</small>
+              </div>
             </div>
           </div>
         </div>
@@ -121,11 +121,10 @@
 
       <!-- Hidden fields for builder output -->
       {{ form.content }}           <!-- stores HTML -->
-      <input type="hidden" name="project_json" value=""> <!-- keep optional project JSON -->
+      <input type="hidden" name="project_json" value="">
 
       <!-- Builder layout -->
       <div class="row g-3">
-        <!-- Editor -->
         <div class="col-12 col-lg-9 order-2 order-lg-1">
           <div id="gjs" class="border rounded-4 shadow-sm" style="background:#14161a; min-height:70vh;"></div>
           <div class="d-flex flex-wrap align-items-center gap-2 mt-2 text-secondary small">
@@ -204,62 +203,25 @@
 <script src="https://unpkg.com/grapesjs"></script>
 
 <style>
-  /* Global dark/RTL enhancements */
   body { direction: rtl; }
   .card { background: #171a1f; color: #e9ecef; }
   .card-header { background: #1b1f26; color: #cfd3da; }
-  .form-control, .form-select, textarea {
-    background: #0f1216; color: #e9ecef; border-color: #2a2f38;
-  }
-  .form-control:focus, .form-select:focus, textarea:focus {
-    background:#10141a; color:#fff; border-color:#3d4a7a; box-shadow:none;
-  }
+  .form-control, .form-select, textarea { background: #0f1216; color: #e9ecef; border-color: #2a2f38; }
+  .form-control:focus, .form-select:focus, textarea:focus { background:#10141a; color:#fff; border-color:#3d4a7a; box-shadow:none; }
   .btn-outline-light { border-color:#3a3f48; }
   .btn-outline-light:hover { background:#2a2f38; }
   .btn-primary { background:#1C39BB; border: none; }
   .btn-outline-danger { border-color:#7a2a2a; }
   .badge.bg-primary { background:#1C39BB !important; }
-
-  /* GrapesJS palette to match dark UI */
-  .gjs-one-bg    { background:#101216 !important; }
-  .gjs-two-bg    { background:#171a1f !important; }
-  .gjs-three-bg  { background:#1b1f26 !important; }
-  .gjs-four-color{ color:#cfd3da !important; }
-  .gjs-color-warn{ color:#ffb454 !important; }
-  .gjs-title     { color:#dfe3ea !important; }
-
-  /* Make all typical inputs look like Bootstrap controls even without 'form-control' */
-  .card-body input[type="text"],
-  .card-body input[type="url"],
-  .card-body input[type="number"],
-  .card-body input[type="file"],
-  .card-body input[type="datetime-local"],
-  .card-body select,
-  .card-body textarea {
-    width: 100%;
-    background: #0f1216;
-    color: #e9ecef;
-    border: 1px solid #2a2f38;
-    border-radius: 10px;
-    padding: .55rem .75rem;
+  .gjs-one-bg{ background:#101216 !important; } .gjs-two-bg{ background:#171a1f !important; } .gjs-three-bg{ background:#1b1f26 !important; }
+  .gjs-four-color{ color:#cfd3da !important; } .gjs-color-warn{ color:#ffb454 !important; } .gjs-title{ color:#dfe3ea !important; }
+  .card-body input[type="text"], .card-body input[type="url"], .card-body input[type="number"], .card-body input[type="file"], .card-body input[type="datetime-local"], .card-body select, .card-body textarea {
+    width: 100%; background: #0f1216; color: #e9ecef; border: 1px solid #2a2f38; border-radius: 10px; padding: .55rem .75rem;
   }
-  .card-body input:focus,
-  .card-body select:focus,
-  .card-body textarea:focus {
-    outline: none;
-    border-color: #3d4a7a;
-    background:#10141a;
-  }
+  .card-body input:focus, .card-body select:focus, .card-body textarea:focus { outline: none; border-color: #3d4a7a; background:#10141a; }
   .card-header { border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
-
-  /* Blocks look nicer */
-  #blocks .gjs-block, #blocks-mobile .gjs-block {
-    border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed #2a2f38;
-    background:#111318; cursor:grab; text-align:center;
-  }
+  #blocks .gjs-block, #blocks-mobile .gjs-block { border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed #2a2f38; background:#111318; cursor:grab; text-align:center; }
   #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background:#171a1f; }
-
-  /* Rounded editor iframe edges */
   #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; }
 </style>
 {% endblock %}
@@ -270,72 +232,38 @@
   const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
 
-  // ---------- GrapesJS Init ----------
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
     height: '70vh',
     storageManager: { type: null },
     selectorManager: { componentFirst: true },
-    deviceManager: {
-      devices: [
-        { name: 'Desktop', width: '' },
-        { name: 'Tablet',  width: '768px' },
-        { name: 'Mobile',  width: '360px' },
-      ]
-    },
-    assetManager: {
-      upload: "{% url 'admin_dashboard:admin_grapes_asset_upload' %}",
-      uploadName: 'files',
-      headers: { 'X-CSRFToken': csrf },
-      multiUpload: true,
-    },
+    deviceManager: { devices: [{ name:'Desktop', width:'' }, { name:'Tablet', width:'768px' }, { name:'Mobile', width:'360px' }] },
+    assetManager: { upload: "{% url 'admin_dashboard:admin_grapes_asset_upload' %}", uploadName: 'files', headers: { 'X-CSRFToken': csrf }, multiUpload: true },
     blockManager: { appendTo: '#blocks' },
     traitManager: { appendTo: '#traits' },
   });
 
-  // ---------- Blocks ----------
   const bm = editor.BlockManager;
-  bm.add('section',   { label:'سکشن',    category:{id:'layout',label:'چیدمان',open:true},
-    content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
-  bm.add('cols-2',    { label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true},
-    content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
-  bm.add('heading',   { label:'عنوان',    category:{id:'content',label:'محتوا',open:true},
-    content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
-  bm.add('paragraph', { label:'پاراگراف', category:{id:'content',label:'محتوا',open:true},
-    content:`<p>متن پاراگراف شما اینجاست...</p>` });
-  bm.add('image',     { label:'تصویر',    category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
-  bm.add('quote',     { label:'نقل‌قول',  category:{id:'content',label:'محتوا',open:true},
-    content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
-  bm.add('button',    { label:'دکمه',     category:{id:'content',label:'محتوا',open:true},
-    content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
-  bm.add('video',     { label:'ویدیو',    category:{id:'media',label:'رسانه',open:true},
-    content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
-  bm.add('code',      { label:'کد',       category:{id:'content',label:'محتوا',open:true},
-    content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
-  bm.add('product-card', { label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true},
-    content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
+  bm.add('section',{ label:'سکشن', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
+  bm.add('cols-2',{ label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
+  bm.add('heading',{ label:'عنوان', category:{id:'content',label:'محتوا',open:true}, content:`<h2 class="mb-2">عنوان بلاگ</h2>` });
+  bm.add('paragraph',{ label:'پاراگراف', category:{id:'content',label:'محتوا',open:true}, content:`<p>متن پاراگراف شما اینجاست...</p>` });
+  bm.add('image',{ label:'تصویر', category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
+  bm.add('quote',{ label:'نقل‌قول', category:{id:'content',label:'محتوا',open:true}, content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
+  bm.add('button',{ label:'دکمه', category:{id:'content',label:'محتوا',open:true}, content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
+  bm.add('video',{ label:'ویدیو', category:{id:'media',label:'رسانه',open:true}, content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
+  bm.add('code',{ label:'کد', category:{id:'content',label:'محتوا',open:true}, content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
+  bm.add('product-card',{ label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true}, content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
 
-  // ---------- Custom Component: product-card ----------
   const domc = editor.DomComponents;
   domc.addType('product-card', {
     model: {
-      defaults: {
-        traits: [
-          { type: 'text', name: 'data-product-id', label: 'شناسه محصول' },
-          { type: 'text', name: 'data-button-label', label: 'متن دکمه' },
-        ],
-      },
-      isComponent: (el) => {
-        if (el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null) {
-          return { type: 'product-card' };
-        }
-        return false;
-      }
+      defaults: { traits: [{ type:'text', name:'data-product-id', label:'شناسه محصول' }, { type:'text', name:'data-button-label', label:'متن دکمه' }] },
+      isComponent: (el) => el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null ? { type:'product-card' } : false
     }
   });
 
-  // ---------- Mobile Offcanvas moves ----------
   function moveChildren(fromEl, toEl){ if(!fromEl||!toEl) return; while(fromEl.firstChild) toEl.appendChild(fromEl.firstChild); }
   const offcanvasEl  = document.getElementById('builderSidebar');
   const blocksWrap   = document.getElementById('blocks');
@@ -356,17 +284,12 @@
     });
   }
 
-  // ---------- Device buttons ----------
   document.getElementById('btn-desktop')?.addEventListener('click', () => editor.setDevice('Desktop'));
   document.getElementById('btn-tablet') ?.addEventListener('click', () => editor.setDevice('Tablet'));
   document.getElementById('btn-mobile') ?.addEventListener('click', () => editor.setDevice('Mobile'));
 
-  // ---------- Clear canvas ----------
-  document.getElementById('btn-clear')?.addEventListener('click', () => {
-    if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
-  });
+  document.getElementById('btn-clear')?.addEventListener('click', () => { if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear(); });
 
-  // ---------- Preview ----------
   const previewBtn   = document.getElementById('btn-preview');
   const previewModal = document.getElementById('previewModal') ? new bootstrap.Modal(document.getElementById('previewModal')) : null;
   const previewFrame = document.getElementById('previewFrame');
@@ -380,12 +303,11 @@
     if (previewFrame) { previewFrame.src = url; previewModal?.show(); }
   });
 
-  // ---------- Form submit wiring ----------
   const formEl = document.getElementById('blog-form');
 
   function fillBuilderIntoForm(){
     const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
-    const contentEl = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('[name="content"]');
+    const contentEl = document.querySelector('[name="content"]');
     if (contentEl) contentEl.value = html;
 
     const pj = editor.getProjectData?.();
@@ -413,7 +335,6 @@
     else { fillBuilderIntoForm(); formEl?.submit(); }
   });
 
-  // Ctrl/Cmd + S
   document.addEventListener('keydown', function(e){
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
@@ -422,23 +343,15 @@
     }
   });
 
-  // ---------- Unsaved changes warning ----------
   let dirty = false;
   editor.on('change', () => { dirty = true; });
-  window.addEventListener('beforeunload', function (e) {
-    if (dirty) { e.preventDefault(); e.returnValue = ''; }
-  });
+  window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
-  // ---------- Local draft autosave (every 30s) ----------
   const DRAFT_KEY = 'blog_builder_draft';
   setInterval(() => {
-    try {
-      const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() };
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-    } catch(e){}
+    try { const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() }; localStorage.setItem(DRAFT_KEY, JSON.stringify(payload)); } catch(e){}
   }, 30000);
 
-  // Offer restore if there is a draft and NOT editing an existing post
   try {
     const draftRaw = localStorage.getItem(DRAFT_KEY);
     if (draftRaw && !IS_EDIT) {
@@ -452,7 +365,6 @@
     }
   } catch(e){}
 
-  // ---------- Preload content when editing ----------
   {% if is_edit and blog and blog.content %}
     editor.setComponents(`{{ blog.content|escapejs }}`);
   {% endif %}

@@ -560,22 +560,36 @@ def category_delete_view(request, category_id):
 # --- BLOG CRUD ---
 def _prepare_blog_form_for_admin(form, *, instance=None):
     """
-    - Hide/remove author fields from the form so user cannot edit them
-    - Remove raw category_id field (we'll use UI field 'product_category' instead)
-    - Inject product_category ModelChoiceField on the instance
+    - Hide/remove author fields & raw category_id
+    - Inject product_category (single select)
+    - Ensure tags (multi select) exists
+    - Preselect category on edit
     """
-    # Remove fields if they exist
+    # Remove fields if they exist in the bound BlogForm
     for f in ("writer", "writer_name", "writer_profile", "category_id"):
         if f in form.fields:
             del form.fields[f]
 
-    # Inject product_category (single select)
+    # Inject category picker (UI)
     form.fields["product_category"] = forms.ModelChoiceField(
         queryset=Category.objects.all().order_by("name"),
         label="دسته‌بندی محصول",
         required=True,
         widget=forms.Select(attrs={"class": "form-select"})
     )
+
+    # Ensure tags field exists (UI)
+    if "tags" not in form.fields:
+        form.fields["tags"] = forms.ModelMultipleChoiceField(
+            queryset=Tag.objects.all().order_by("name"),
+            required=False,
+            label="برچسب‌ها",
+            widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6})
+        )
+    else:
+        # Normalize widget style in case BlogForm already had it
+        form.fields["tags"].widget.attrs.setdefault("class", "form-select")
+        form.fields["tags"].widget.attrs.setdefault("size", 6)
 
     # Preselect current category on edit
     if instance and getattr(instance, "category_id", None):
