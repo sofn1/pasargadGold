@@ -35,7 +35,7 @@
         </thead>
         <tbody>
           {% for blog in blogs %}
-          <tr>
+          <tr id="row-{{ blog.id }}">
             <td>{{ blog.name|truncatechars:50 }}</td>
             <td>{{ blog.writer_name }}</td>
             <td>{{ blog.publish_time|date:"Y/m/d" }}</td>
@@ -43,16 +43,16 @@
             <td>
               <div class="btn-group">
                 <a href="{% url 'admin_dashboard:admin_blogs_edit' blog.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <!-- inside your table row for each blog -->
-                <!-- inside your table row for each blog -->
                 <button
                   type="button"
-                  class="btn btn-sm btn-danger js-delete-blog"
+                  class="btn btn-outline-danger btn-sm rounded-pill d-inline-flex align-items-center gap-1 js-open-delete"
                   data-id="{{ blog.id }}"
                   data-name="{{ blog.name|default:blog.english_name }}"
-                >
-                  حذف
+                  data-row="#row-{{ blog.id }}"
+                  title="حذف">
+                  <i class="fas fa-trash-alt"></i><span class="d-none d-sm-inline">حذف</span>
                 </button>
+
 
               </div>
             </td>
@@ -69,50 +69,128 @@
   {% endif %}
 
   <!-- Delete Modal -->
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="وبلاگ" return_url="admin_dashboard:admin_blogs" %}
+   <div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4" style="background:#171a1f; color:#e9ecef;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <i class="fas fa-trash-alt text-danger"></i>
+          تایید حذف
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">آیا از حذف <strong id="del-item-name" class="text-warning"></strong> مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <span class="btn-text">حذف</span>
+          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Toast container -->
+<div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080;">
+  <div id="toastDel" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">آیتم با موفقیت حذف شد.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+  .row-fade-out { opacity:1; transition:opacity .35s ease, transform .35s ease; }
+  .row-fade-out.is-deleting { opacity:.2; transform:scale(.99); }
+</style>
+
+
 {% endblock %}
 
 {% block extra_js %}
 
 <script>
-  // read CSRF token from cookie (Django default)
-  function getCookie(name) {
+(function(){
+  // CSRF cookie helper (Django default)
+  function getCookie(name){
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
   }
   const CSRF = getCookie('csrftoken');
 
-  document.querySelectorAll('.js-delete-blog').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id   = btn.dataset.id;
-      const name = btn.dataset.name || id;
-      if (!confirm(`آیا از حذف «${name}» مطمئن هستید؟`)) return;
+  // Modal elements
+  const modalEl = document.getElementById('deleteBlogModal');
+  const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+  const nameEl = document.getElementById('del-item-name');
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  const btnText = confirmBtn?.querySelector('.btn-text');
+  const btnSpin = confirmBtn?.querySelector('.spinner-border');
 
-      // Build the proper delete URL using the named route pattern
-      const url = "{% url 'admin_dashboard:admin_blog_delete' 0 %}".replace("0", id);
+  let current = { id: null, name: '', row: null };
 
-      try {
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: { "X-CSRFToken": CSRF },
-        });
-
-        if (resp.ok) {
-          // your view returns JSON {success: true}
-          location.reload(); // or remove the row from the DOM
-        } else {
-          const txt = await resp.text();
-          alert("خطا در حذف آیتم. لطفاً دوباره تلاش کنید.");
-          console.error("Delete failed:", resp.status, txt);
-        }
-      } catch (e) {
-        alert("خطای شبکه هنگام حذف. اتصال خود را بررسی کنید.");
-        console.error(e);
-      }
+  // Open modal
+  document.querySelectorAll('.js-open-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      current.id = btn.dataset.id;
+      current.name = btn.dataset.name || '';
+      current.row = document.querySelector(btn.dataset.row) || btn.closest('tr') || btn.closest('.card');
+      if (nameEl) nameEl.textContent = `«${current.name || current.id}»`;
+      modal?.show();
     });
   });
+
+  // Delete action
+  async function doDelete(){
+    if (!current.id) return;
+    const url = "{% url 'admin_dashboard:admin_blog_delete' 0 %}".replace("0", current.id);
+
+    // UI state
+    confirmBtn.disabled = true; btnText.classList.add('d-none'); btnSpin.classList.remove('d-none');
+    if (current.row){ current.row.classList.add('row-fade-out', 'is-deleting'); }
+
+    try{
+      const resp = await fetch(url, { method: "POST", headers: { "X-CSRFToken": CSRF }});
+      if (!resp.ok){
+        // try to show server message
+        const txt = await resp.text();
+        throw new Error(txt || ("HTTP " + resp.status));
+      }
+      // Expect JSON {success:true}
+      const data = await resp.json().catch(()=>({success:true}));
+      if (data.success){
+        // remove row cleanly
+        if (current.row){
+          setTimeout(()=> current.row.remove(), 250);
+        }
+        modal?.hide();
+        // toast
+        const toastEl = document.getElementById('toastDel');
+        if (toastEl) new bootstrap.Toast(toastEl, { delay: 2400 }).show();
+      } else {
+        throw new Error("Server returned success:false");
+      }
+    } catch(e){
+      // revert UI state
+      if (current.row){ current.row.classList.remove('is-deleting'); }
+      alert("خطا در حذف آیتم. لطفاً دوباره تلاش کنید.");
+      console.error("Delete error:", e);
+    } finally {
+      confirmBtn.disabled = false; btnText.classList.remove('d-none'); btnSpin.classList.add('d-none');
+    }
+  }
+
+  confirmBtn?.addEventListener('click', doDelete);
+})();
 </script>
 
 
