@@ -1635,9 +1635,12 @@ def admin_tag_edit(request, pk):
 
 @admin_required
 def admin_tag_delete(request, pk):
-    obj = get_object_or_404(Tag, pk=pk)
+    tag = get_object_or_404(Tag, pk=pk)
     if request.method == "POST":
-        obj.delete()
-        messages.success(request, "برچسب حذف شد.")
+        name = tag.name
+        tag.delete()
+        messages.success(request, f"برچسب «{name}» با موفقیت حذف شد.")
         return redirect("admin_dashboard:admin_tags")
-    return render(request, "admin_dashboard/tags/delete.html", {"obj": obj})
+
+    # Fallback (not usually used if modal is in place)
+    return render(request, "admin_dashboard/tags/delete.html", {"obj": tag})
