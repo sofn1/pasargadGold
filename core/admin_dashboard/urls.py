@@ -62,7 +62,7 @@ urlpatterns = [
     path("blogs/create/", views.BlogBuilderCreateView.as_view(), name="admin_blogs_create"),
     path("uploads/grapes/", views.grapes_asset_upload, name="admin_grapes_asset_upload"),
     path('blogs/<int:pk>/edit/', views.AdminBlogEditView.as_view(), name='admin_blogs_edit'),
-    path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blogs_delete'),
+    path('blogs/<int:pk>/delete/', views.blog_delete_view, name='admin_blog_delete'),
 
     # Tags
     path("tags/", views.admin_tag_list, name="admin_tags"),

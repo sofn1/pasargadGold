@@ -43,10 +43,15 @@
             <td>
               <div class="btn-group">
                 <a href="{% url 'admin_dashboard:admin_blogs_edit' blog.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ blog.pk }}" data-name="{{ blog.name }}">
-                  حذف
-                </button>
+                <!-- inside your table row for each blog -->
+                <form method="post" action="{% url 'admin_dashboard:admin_blog_delete' blog.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger"
+                          onclick="return confirm('آیا از حذف «{{ blog.name|default:blog.english_name }}» مطمئن هستید؟')">
+                    حذف
+                  </button>
+                </form>
+
               </div>
             </td>
           </tr>
