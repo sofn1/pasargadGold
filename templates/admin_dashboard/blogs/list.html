@@ -169,11 +169,7 @@
   {% endif %}
 
   <!-- Delete modal (shared) -->
-  {% include 'admin_dashboard/_delete_modal.html'
-     with object_type="وبلاگ"
-     delete_url_name='admin_dashboard:admin_blog_delete'
-     delete_dummy_pk=0
-     return_url='admin_dashboard:admin_blogs' %}
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="وبلاگ" delete_url_name='admin_dashboard:admin_blog_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_blogs' %}
 </div>
 {% endblock %}
 
