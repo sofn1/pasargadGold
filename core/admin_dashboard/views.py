@@ -844,8 +844,21 @@ def blog_delete_view(request, pk):
             action="Delete Blog",
             details=f"Deleted blog '{name}' (ID: {pk})"
         )
-        return JsonResponse({'success': True})
-    return render(request, 'admin_dashboard/blogs/confirm_delete.html', {'blog': blog})
+
+        # If AJAX (or JSON requested), keep old behavior:
+        wants_json = (
+            request.headers.get("x-requested-with") == "XMLHttpRequest" or
+            "application/json" in (request.headers.get("accept") or "")
+        )
+        if wants_json:
+            return JsonResponse({'success': True})
+
+        # Otherwise behave like banners: flash + redirect to list
+        messages.success(request, f"«{name or 'وبلاگ'}» با موفقیت حذف شد.")
+        return redirect("admin_dashboard:admin_blogs")
+
+    # GET -> optional confirm page, but we usually don't hit this with modal
+    return render(request, "admin_dashboard/blogs/confirm_delete.html", {"blog": blog})
 
 
 # --- NEWS CRUD ---
