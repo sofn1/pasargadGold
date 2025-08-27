@@ -123,12 +123,9 @@
             </td>
 
             <td style="max-width:240px;">
-              {# category_id contains comma-separated product category IDs; show them as tiny chips #}
-              {% if blog.category_id %}
-                {% for cid in blog.category_id|cut:" "|cut:"["|cut:"]"|cut:"'"|cut:"\""|cut:" "|split:"," %}
-                  {% if cid %}
-                    <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">#{{ cid }}</span>
-                  {% endif %}
+              {% if blog._category_ids %}
+                {% for cid in blog._category_ids %}
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">#{{ cid }}</span>
                 {% endfor %}
               {% else %}
                 <span class="text-muted">—</span>

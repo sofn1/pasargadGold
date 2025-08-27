@@ -677,10 +677,10 @@ class AdminBlogListView(ListView):
     def get_queryset(self):
         qs = (Blog.objects
               .select_related('writer')
-              .prefetch_related('tags')   # for tag chips
+              .prefetch_related('tags')
               .order_by('-publish_time'))
 
-        # New flexible filters
+        # --- existing filter logic you added earlier ---
         field = (self.request.GET.get('field') or 'name').strip()
         value = (self.request.GET.get('value') or '').strip()
         date_from = self.request.GET.get('date_from')
@@ -688,41 +688,39 @@ class AdminBlogListView(ListView):
 
         if field == 'name' and value:
             qs = qs.filter(name__icontains=value)
-
         elif field == 'english_name' and value:
             qs = qs.filter(english_name__icontains=value)
-
         elif field == 'writer_name' and value:
             qs = qs.filter(writer_name__icontains=value)
-
         elif field == 'tag' and value:
-            # match by tag name or slug
             qs = qs.filter(Q(tags__name__icontains=value) | Q(tags__slug__icontains=value)).distinct()
-
         elif field == 'category' and value:
-            # your model stores comma-separated IDs in category_id
-            # contains is OK if IDs are not ambiguous; for exact match use regex boundaries
             qs = qs.filter(category_id__icontains=value)
-
         elif field == 'read_time' and value:
             try:
                 qs = qs.filter(read_time=int(value))
             except ValueError:
                 pass
-
         elif field == 'publish_date':
-            # date range; both are optional
             if date_from:
                 qs = qs.filter(publish_time__date__gte=date_from)
             if date_to:
                 qs = qs.filter(publish_time__date__lte=date_to)
 
-        # Legacy 'q' fallback (kept to not break old links)
+        # legacy q
         q = self.request.GET.get('q', '').strip()
         if q and not value:
             qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # Parse category_id (comma-separated) into a list for each blog
+        for b in ctx['blogs']:
+            raw = (b.category_id or '').strip()
+            b._category_ids = [cid for cid in raw.split(',') if cid.strip()] if raw else []
+        return ctx
 
 
 @method_decorator(login_required, name="dispatch")
