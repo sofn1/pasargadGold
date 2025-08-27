@@ -696,7 +696,6 @@ class BlogBuilderCreateView(View):
             "category_ids": [],         # no preselected categories
         })
 
-
     @transaction.atomic
     def post(self, request):
         # Normalize rel_* arrays if posted from JS
@@ -756,8 +755,6 @@ class AdminBlogEditView(View):
             "tag_ids": tag_ids,
             "category_ids": category_ids,
         })
-
-
 
     @transaction.atomic
     def post(self, request, pk):

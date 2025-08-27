@@ -6,7 +6,7 @@
 {% block mainContent %}
 <div class="container-fluid px-2 px-md-3 py-3">
 
-  <!-- Sticky top bar (actions + device switches) -->
+  <!-- Sticky top bar -->
   <div class="position-sticky top-0 z-3 mb-3" style="backdrop-filter:saturate(180%) blur(8px);">
     <div class="card border-0 shadow-sm rounded-3" style="background:rgba(20,22,26,.8);">
       <div class="card-body py-2">
@@ -17,18 +17,13 @@
             </span>
             <small class="text-secondary d-none d-md-inline">سازنده بصری (سبک Elementor)</small>
           </div>
-
           <div class="d-flex align-items-center gap-2 ms-auto">
-            <div class="btn-group me-1" role="group" aria-label="Devices">
+            <div class="btn-group me-1" role="group">
               <button id="btn-desktop" type="button" class="btn btn-outline-light btn-sm">دسکتاپ</button>
               <button id="btn-tablet"  type="button" class="btn btn-outline-light btn-sm">تبلت</button>
               <button id="btn-mobile"  type="button" class="btn btn-outline-light btn-sm">موبایل</button>
             </div>
-
-            <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar" aria-controls="builderSidebar">
-              پنل ابزار
-            </button>
-
+            <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar">پنل ابزار</button>
             <button id="btn-clear"   type="button" class="btn btn-outline-danger btn-sm">پاک‌سازی</button>
             <button id="btn-preview" type="button" class="btn btn-outline-secondary btn-sm">پیش‌نمایش</button>
             <button id="btn-save"    type="submit" class="btn btn-primary btn-sm px-3">ذخیره بلاگ</button>
@@ -41,8 +36,8 @@
   <form method="post" enctype="multipart/form-data" id="blog-form" class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-body p-3 p-md-4">
       {% csrf_token %}
-      {% if form.errors %}
-        <div class="alert alert-danger">لطفاً خطاها را بررسی کنید.</div>
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
       {% endif %}
 
       <!-- === Form sections === -->
@@ -55,18 +50,20 @@
               <div class="col-12 col-md-6">
                 <label class="form-label">عنوان</label>
                 {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
                 <small class="text-secondary">عنوان نمایشی بلاگ</small>
               </div>
               <div class="col-12 col-md-6">
                 <label class="form-label">نام انگلیسی</label>
                 {{ form.english_name }}
+                {% if form.english_name.errors %}<div class="text-danger small">{{ form.english_name.errors }}</div>{% endif %}
                 <small class="text-secondary">برای URL یا SEO</small>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ✅ تگ‌ها و دسته‌بندی‌ها -->
+        <!-- تگ‌ها و دسته‌بندی‌ها -->
         <div class="col-12">
           <div class="card border-0 shadow-sm rounded-4">
             <div class="card-header bg-body-tertiary border-0 fw-semibold">تگ‌ها و دسته‌بندی‌ها</div>
@@ -74,11 +71,13 @@
               <div class="col-12 col-md-6">
                 <label class="form-label">دسته‌بندی‌های محصول</label>
                 {{ form.product_categories }}
-                <small class="text-secondary">دسته‌بندی مرتبط با محصول را انتخاب کنید.</small>
+                {% if form.product_categories.errors %}<div class="text-danger small">{{ form.product_categories.errors }}</div>{% endif %}
+                <small class="text-secondary">می‌توانید چند دسته را انتخاب کنید.</small>
               </div>
               <div class="col-12 col-md-6">
                 <label class="form-label">برچسب‌ها</label>
                 {{ form.tags }}
+                {% if form.tags.errors %}<div class="text-danger small">{{ form.tags.errors }}</div>{% endif %}
                 <small class="text-muted d-block mt-1">می‌توانید چند برچسب را انتخاب کنید.</small>
               </div>
             </div>
@@ -93,15 +92,18 @@
               <div class="col-12 col-md-4">
                 <label class="form-label">زمان انتشار</label>
                 {{ form.publish_time }}
-                <small class="text-muted d-block">قالب پیشنهادی: YYYY/MM/DD، HH:MM</small>
+                {% if form.publish_time.errors %}<div class="text-danger small">{{ form.publish_time.errors }}</div>{% endif %}
+                <small class="text-muted">قالب پیشنهادی: YYYY/MM/DD HH:MM</small>
               </div>
               <div class="col-12 col-md-4">
                 <label class="form-label">زمان مطالعه (دقیقه)</label>
                 {{ form.read_time }}
+                {% if form.read_time.errors %}<div class="text-danger small">{{ form.read_time.errors }}</div>{% endif %}
               </div>
               <div class="col-12 col-md-4">
                 <label class="form-label">تصویر نمایشی</label>
                 {{ form.view_image }}
+                {% if form.view_image.errors %}<div class="text-danger small">{{ form.view_image.errors }}</div>{% endif %}
               </div>
             </div>
           </div>
@@ -113,14 +115,15 @@
             <div class="card-header bg-body-tertiary border-0 fw-semibold">توضیح کوتاه</div>
             <div class="card-body">
               {{ form.short_description }}
-              <small class="text-muted d-block mt-1">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
+              {% if form.short_description.errors %}<div class="text-danger small">{{ form.short_description.errors }}</div>{% endif %}
+              <small class="text-muted">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Hidden fields for builder output -->
-      {{ form.content }}           <!-- stores HTML -->
+      <!-- Hidden fields -->
+      {{ form.content }}
       <input type="hidden" name="project_json" value="">
 
       <!-- Builder layout -->
@@ -137,7 +140,7 @@
           </div>
         </div>
 
-        <!-- Sidebar (Blocks / Traits) -->
+        <!-- Sidebar -->
         <div class="col-12 col-lg-3 order-1 order-lg-2">
           <div class="d-none d-lg-block">
             <div class="card border-0 shadow-sm rounded-4 mb-3">
@@ -151,31 +154,22 @@
           </div>
 
           <!-- Offcanvas for mobile -->
-          <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="builderSidebar" aria-labelledby="builderSidebarLabel" style="width: 86vw; max-width: 420px;">
+          <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="builderSidebar" style="width:86vw; max-width:420px;">
             <div class="offcanvas-header">
-              <h5 class="offcanvas-title" id="builderSidebarLabel">ابزار سازنده</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              <h5 class="offcanvas-title">ابزار سازنده</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
             </div>
             <div class="offcanvas-body">
-              <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link active" id="pills-blocks-tab" data-bs-toggle="pill" data-bs-target="#pills-blocks" type="button" role="tab">بلوک‌ها</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="pills-traits-tab" data-bs-toggle="pill" data-bs-target="#pills-traits" type="button" role="tab">خصوصیات</button>
-                </li>
+              <ul class="nav nav-pills mb-3">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-blocks">بلوک‌ها</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-traits">خصوصیات</button></li>
               </ul>
               <div class="tab-content">
-                <div class="tab-pane fade show active" id="pills-blocks" role="tabpanel">
-                  <div id="blocks-mobile" style="max-height:60vh; overflow:auto;"></div>
-                </div>
-                <div class="tab-pane fade" id="pills-traits" role="tabpanel">
-                  <div id="traits-mobile" style="max-height:60vh; overflow:auto;"></div>
-                </div>
+                <div class="tab-pane fade show active" id="pills-blocks"><div id="blocks-mobile" style="max-height:60vh; overflow:auto;"></div></div>
+                <div class="tab-pane fade" id="pills-traits"><div id="traits-mobile" style="max-height:60vh; overflow:auto;"></div></div>
               </div>
             </div>
           </div>
-          <!-- /Offcanvas -->
         </div>
       </div>
     </div>
@@ -183,12 +177,12 @@
 </div>
 
 <!-- Preview Modal -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+<div class="modal fade" id="previewModal" tabindex="-1">
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content bg-dark text-light">
       <div class="modal-header border-0">
-        <h5 class="modal-title" id="previewModalLabel">پیش‌نمایش بلاگ</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title">پیش‌نمایش بلاگ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <iframe id="previewFrame" class="w-100 border-0 rounded-3 shadow" style="height: calc(100vh - 140px); background:#0e0f11;"></iframe>
@@ -197,6 +191,7 @@
   </div>
 </div>
 {% endblock %}
+
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
