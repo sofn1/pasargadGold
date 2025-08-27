@@ -123,14 +123,15 @@
             </td>
 
             <td style="max-width:240px;">
-              {% if blog.category_ids_list %}
-                {% for cid in blog.category_ids_list %}
-                  <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">#{{ cid }}</span>
+              {% if blog.category_names_list %}
+                {% for cname in blog.category_names_list %}
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">{{ cname }}</span>
                 {% endfor %}
               {% else %}
                 <span class="text-muted">—</span>
               {% endif %}
             </td>
+
 
             <td class="text-nowrap">
               <div class="fw-semibold">{{ blog.publish_time|date:"Y/m/d" }}</div>

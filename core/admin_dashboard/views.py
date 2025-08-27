@@ -667,7 +667,6 @@ class BlogListView(ListView):
         return super().dispatch(*args, **kwargs)
 
 
-@method_decorator(staff_required, name='dispatch')
 class AdminBlogListView(ListView):
     model = Blog
     template_name = 'admin_dashboard/blogs/list.html'
@@ -675,52 +674,31 @@ class AdminBlogListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = (Blog.objects
-              .select_related('writer')
-              .prefetch_related('tags')
-              .order_by('-publish_time'))
-
-        # --- existing filter logic you added earlier ---
-        field = (self.request.GET.get('field') or 'name').strip()
-        value = (self.request.GET.get('value') or '').strip()
-        date_from = self.request.GET.get('date_from')
-        date_to   = self.request.GET.get('date_to')
-
-        if field == 'name' and value:
-            qs = qs.filter(name__icontains=value)
-        elif field == 'english_name' and value:
-            qs = qs.filter(english_name__icontains=value)
-        elif field == 'writer_name' and value:
-            qs = qs.filter(writer_name__icontains=value)
-        elif field == 'tag' and value:
-            qs = qs.filter(Q(tags__name__icontains=value) | Q(tags__slug__icontains=value)).distinct()
-        elif field == 'category' and value:
-            qs = qs.filter(category_id__icontains=value)
-        elif field == 'read_time' and value:
-            try:
-                qs = qs.filter(read_time=int(value))
-            except ValueError:
-                pass
-        elif field == 'publish_date':
-            if date_from:
-                qs = qs.filter(publish_time__date__gte=date_from)
-            if date_to:
-                qs = qs.filter(publish_time__date__lte=date_to)
-
-        # legacy q
-        q = self.request.GET.get('q', '').strip()
-        if q and not value:
+        q = self.request.GET.get('q', '')
+        qs = Blog.objects.select_related('writer').all().order_by('-publish_time')
+        if q:
             qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
-
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+
+        # collect all category ids across blogs
+        all_ids = set()
         for b in ctx['blogs']:
             raw = (b.category_id or '').strip()
-            b.category_ids_list = [cid for cid in raw.split(',') if cid.strip()] if raw else []
-        return ctx
+            ids = [cid for cid in raw.split(',') if cid.strip()]
+            b.category_ids_list = ids
+            all_ids.update(ids)
 
+        # build a map {id: name}
+        cat_map = {str(c.pk): c.name for c in Category.objects.filter(pk__in=all_ids)}
+
+        # attach category names to each blog
+        for b in ctx['blogs']:
+            b.category_names_list = [cat_map.get(cid, f"#{cid}") for cid in b.category_ids_list]
+
+        return ctx
 
 
 @method_decorator(login_required, name="dispatch")
