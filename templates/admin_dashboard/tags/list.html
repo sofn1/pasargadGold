@@ -47,18 +47,19 @@
               </td>
               <td>{{ t.description|default:"-" }}</td>
               <td class="text-center">{{ t.usage_count }}</td>
-              <td class="text-end">
-                <a class="btn btn-sm btn-outline-primary"
-                  href="{% url 'admin_dashboard:admin_tag_edit' t.id %}">ویرایش</a>
-
-                <button type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteModal"
-                        data-id="{{ t.id }}"
-                        data-name="{{ t.name }}">
-                  حذف
-                </button>
+              <td>
+                <div class="btn-group">
+                  <a href="{% url 'admin_dashboard:admin_tag_edit' t.id %}" class="btn btn-sm btn-warning">
+                    ویرایش
+                  </a>
+                  <button type="button" class="btn btn-sm btn-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteModal"
+                          data-id="{{ t.id }}"
+                          data-name="{{ t.name }}">
+                    حذف
+                  </button>
+                </div>
               </td>
             </tr>
             {% empty %}
