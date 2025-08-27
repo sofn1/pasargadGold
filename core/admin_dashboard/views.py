@@ -716,11 +716,11 @@ class AdminBlogListView(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        # Parse category_id (comma-separated) into a list for each blog
         for b in ctx['blogs']:
             raw = (b.category_id or '').strip()
-            b._category_ids = [cid for cid in raw.split(',') if cid.strip()] if raw else []
+            b.category_ids_list = [cid for cid in raw.split(',') if cid.strip()] if raw else []
         return ctx
+
 
 
 @method_decorator(login_required, name="dispatch")

@@ -123,8 +123,8 @@
             </td>
 
             <td style="max-width:240px;">
-              {% if blog._category_ids %}
-                {% for cid in blog._category_ids %}
+              {% if blog.category_ids_list %}
+                {% for cid in blog.category_ids_list %}
                   <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">#{{ cid }}</span>
                 {% endfor %}
               {% else %}
