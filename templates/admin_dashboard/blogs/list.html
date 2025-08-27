@@ -44,13 +44,15 @@
               <div class="btn-group">
                 <a href="{% url 'admin_dashboard:admin_blogs_edit' blog.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
                 <!-- inside your table row for each blog -->
-                <form method="post" action="{% url 'admin_dashboard:admin_blog_delete' blog.id %}" class="d-inline">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-danger"
-                          onclick="return confirm('آیا از حذف «{{ blog.name|default:blog.english_name }}» مطمئن هستید؟')">
-                    حذف
-                  </button>
-                </form>
+                <!-- inside your table row for each blog -->
+                <button
+                  type="button"
+                  class="btn btn-sm btn-danger js-delete-blog"
+                  data-id="{{ blog.id }}"
+                  data-name="{{ blog.name|default:blog.english_name }}"
+                >
+                  حذف
+                </button>
 
               </div>
             </td>
@@ -69,4 +71,49 @@
   <!-- Delete Modal -->
   {% include 'admin_dashboard/_delete_modal.html' with object_type="وبلاگ" return_url="admin_dashboard:admin_blogs" %}
 </div>
+{% endblock %}
+
+{% extra_js %}
+
+<script>
+  // read CSRF token from cookie (Django default)
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const CSRF = getCookie('csrftoken');
+
+  document.querySelectorAll('.js-delete-blog').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id   = btn.dataset.id;
+      const name = btn.dataset.name || id;
+      if (!confirm(`آیا از حذف «${name}» مطمئن هستید؟`)) return;
+
+      // Build the proper delete URL using the named route pattern
+      const url = "{% url 'admin_dashboard:admin_blog_delete' 0 %}".replace("0", id);
+
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": CSRF },
+        });
+
+        if (resp.ok) {
+          // your view returns JSON {success: true}
+          location.reload(); // or remove the row from the DOM
+        } else {
+          const txt = await resp.text();
+          alert("خطا در حذف آیتم. لطفاً دوباره تلاش کنید.");
+          console.error("Delete failed:", resp.status, txt);
+        }
+      } catch (e) {
+        alert("خطای شبکه هنگام حذف. اتصال خود را بررسی کنید.");
+        console.error(e);
+      }
+    });
+  });
+</script>
+
+
 {% endblock %}
