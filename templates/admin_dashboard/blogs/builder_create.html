@@ -656,31 +656,19 @@
   });
 
 
-  const formEl = document.getElementById('blog-form');
-  let submitting = false;
-
-  formEl?.addEventListener('submit', () => {
-    if (submitting) return;          // double-click guard
-    submitting = true;
-
-    fillBuilderIntoForm();           // put HTML/CSS + project_json + short_description into fields
-    editor.clearDirtyCount();
-
-    // disable all submit buttons to avoid double posts
-    formEl.querySelectorAll('button[type="submit"]').forEach(b => {
-      b.disabled = true;
-      b.classList.add('disabled');
-    });
+  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (formEl?.requestSubmit) formEl.requestSubmit();
+    else { fillBuilderIntoForm(); formEl.submit(); }
   });
-
 
   document.addEventListener('keydown', function(e){
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      formEl?.requestSubmit();  // triggers the same 'submit' listener above
+      if (formEl?.requestSubmit) formEl.requestSubmit();
+      else { fillBuilderIntoForm(); formEl.submit(); }
     }
   });
-
 
 
   // ---------- Unsaved changes warning ----------
