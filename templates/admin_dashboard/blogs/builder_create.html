@@ -648,12 +648,12 @@
     try { localStorage.removeItem('blog_builder_draft'); } catch(e){}
   }
 
-  formEl?.addEventListener('submit', (e) => {
-    e.preventDefault();
+  // NEW: just prepare fields, then let the browser POST
+  formEl?.addEventListener('submit', () => {
     fillBuilderIntoForm();
     editor.clearDirtyCount();
-    setTimeout(() => { formEl.submit(); }, 100);
   });
+
 
   document.getElementById('btn-save')?.addEventListener('click', (ev) => {
     ev.preventDefault();
@@ -668,6 +668,7 @@
       else { fillBuilderIntoForm(); formEl.submit(); }
     }
   });
+
 
   // ---------- Unsaved changes warning ----------
   let dirty = false;
