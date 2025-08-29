@@ -18,7 +18,7 @@
     <div class="card-body">
       <form method="get" class="row g-2 align-items-end" id="searchForm">
         <div class="col-12 col-md-3">
-          <label class="form-label mb-1">جستجو بر اساس</label>
+          <label class="form-label mb-1 text-white">جستجو بر اساس</label>
           <select class="form-select" name="field" id="fieldSelect">
             {% with fs=request.GET.field %}
             <option value="name"             {% if fs == "name" or not fs %}selected{% endif %}>عنوان</option>
@@ -34,17 +34,17 @@
 
         <!-- Generic text/number value -->
         <div class="col-12 col-md-4" id="valueWrap">
-          <label class="form-label mb-1">عبارت جستجو</label>
+          <label class="form-label mb-1 text-white">عبارت جستجو</label>
           <input type="text" class="form-control" name="value" value="{{ request.GET.value }}" placeholder="بنویسید…">
         </div>
 
         <!-- Date range (visible only when field=publish_date) -->
         <div class="col-12 col-md-3 d-none" id="dateFromWrap">
-          <label class="form-label mb-1">از تاریخ</label>
+          <label class="form-label mb-1 text-white">از تاریخ</label>
           <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
         </div>
         <div class="col-12 col-md-3 d-none" id="dateToWrap">
-          <label class="form-label mb-1">تا تاریخ</label>
+          <label class="form-label mb-1 text-white">تا تاریخ</label>
           <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
         </div>
 
