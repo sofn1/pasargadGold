@@ -226,6 +226,24 @@
     --chip-text:#e6edf3;          /* default chip text */
   }
 
+  /* Make the calendar icon in date inputs white */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);       /* inverts the dark icon to white */
+    cursor: pointer;
+  }
+
+  input[type="date"] {
+    color: #fff;             /* text inside input */
+  }
+
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="date"]::-webkit-datetime-edit-text,
+  input[type="date"]::-webkit-datetime-edit-year-field,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field {
+    color: #fff;             /* numbers stay white */
+  }
+
   /* Cards / containers */
   .card{
     background: var(--bg-elev-1) !important;
