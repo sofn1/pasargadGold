@@ -198,39 +198,104 @@
 <script src="https://unpkg.com/grapesjs"></script>
 
 <style>
-  body { direction: rtl; }
-  .card { background: #171a1f; color: #e9ecef; }
-  .card-header { background: #1b1f26; color: #cfd3da; }
-  .form-control, .form-select, textarea { background: #0f1216; color: #e9ecef; border-color: #2a2f38; }
-  .form-control:focus, .form-select:focus, textarea:focus { background:#10141a; color:#fff; border-color:#3d4a7a; box-shadow:none; }
-  .btn-outline-light { border-color:#3a3f48; }
-  .btn-outline-light:hover { background:#2a2f38; }
-  .btn-primary { background:#1C39BB; border: none; }
-  .btn-outline-danger { border-color:#7a2a2a; }
-  .badge.bg-primary { background:#1C39BB !important; }
-  .gjs-one-bg{ background:#101216 !important; } .gjs-two-bg{ background:#171a1f !important; } .gjs-three-bg{ background:#1b1f26 !important; }
-  .gjs-four-color{ color:#cfd3da !important; } .gjs-color-warn{ color:#ffb454 !important; } .gjs-title{ color:#dfe3ea !important; }
-  .card-body input[type="text"], .card-body input[type="url"], .card-body input[type="number"], .card-body input[type="file"], .card-body input[type="datetime-local"], .card-body select, .card-body textarea {
-    width: 100%; background: #0f1216; color: #e9ecef; border: 1px solid #2a2f38; border-radius: 10px; padding: .55rem .75rem;
+  /* ===== High-contrast palette (dark) ===== */
+  :root{
+    --bg-elev-1: #1b2330;         /* card/table background */
+    --bg-elev-2: #232e42;         /* header/toolbar background */
+    --bg-elev-3: #2b3650;         /* hover/selected */
+    --text-main: #e6edf3;         /* main text */
+    --text-muted: #9fb0c3;        /* secondary text */
+    --border-soft: #2f3a55;       /* borders */
+    --brand: #1C39BB;             /* primary brand */
+    --brand-600:#2748d5;
+    --success:#22c55e;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+    --chip-bg:#2a344b;
+    --chip-text:#e6edf3;
   }
-  .card-body input:focus, .card-body select:focus, .card-body textarea:focus { outline: none; border-color: #3d4a7a; background:#10141a; }
-  .card-header { border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
-  #blocks .gjs-block, #blocks-mobile .gjs-block { border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed #2a2f38; background:#111318; cursor:grab; text-align:center; }
-  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background:#171a1f; }
+
+  /* Date input calendar icon */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+  input[type="date"] {
+    color: #fff;
+  }
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="date"]::-webkit-datetime-edit-text,
+  input[type="date"]::-webkit-datetime-edit-year-field,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field {
+    color: #fff;
+  }
+
+  /* Cards */
+  .card{
+    background: var(--bg-elev-1) !important;
+    color: var(--text-main);
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 14px;
+  }
+  .card-header{
+    background: var(--bg-elev-2) !important;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-soft) !important;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+
+  /* Inputs */
+  .form-control, .form-select, textarea {
+    background: #0f1724 !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 10px;
+    padding: .55rem .75rem;
+  }
+  .form-control::placeholder { color: #8aa0b6; }
+  .form-control:focus, .form-select:focus, textarea:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 .2rem rgba(28,57,187,.15) !important;
+    outline: none;
+  }
+  label.form-label { color: var(--text-muted); }
+
+  /* Buttons */
+  .btn-primary{ background: var(--brand) !important; border:none !important; }
+  .btn-primary:hover{ background: var(--brand-600) !important; }
+  .btn-success{ background: var(--success) !important; border:none !important; }
+  .btn-warning{ background: var(--warning) !important; border:none !important; color:#1c1917 !important; }
+  .btn-danger { background: var(--danger) !important; border:none !important; }
+  .btn-outline-secondary{ color: var(--text-main); border-color: var(--border-soft); }
+  .btn-outline-secondary:hover{ background: var(--bg-elev-3); }
+
+  /* GrapesJS dark UI adjustments */
+  .gjs-one-bg    { background:#101216 !important; }
+  .gjs-two-bg    { background:#171a1f !important; }
+  .gjs-three-bg  { background:#1b1f26 !important; }
+  .gjs-four-color{ color:#cfd3da !important; }
+  .gjs-color-warn{ color:#ffb454 !important; }
+  .gjs-title     { color:#dfe3ea !important; }
+
+  /* Chips */
+  .badge.bg-info { background:#3b82f6 !important; }
+  .badge.bg-secondary-subtle{
+    background: var(--chip-bg) !important;
+    color: var(--chip-text) !important;
+    border: 1px solid var(--border-soft) !important;
+  }
+
+  /* Blocks look nicer */
+  #blocks .gjs-block, #blocks-mobile .gjs-block {
+    border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed var(--border-soft);
+    background:#111318; cursor:grab; text-align:center;
+  }
+  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background: var(--bg-elev-3); }
+
+  /* Editor canvas */
   #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; }
-
-  /* Tags chip color */
-  #id_tags + .select2 .select2-selection__choice {
-    color: #28a745 !important;   /* green */
-    border-color: #28a745 !important;
-  }
-
-/* Categories chip color */
-#id_product_categories + .select2 .select2-selection__choice {
-  color: #ff9800 !important;   /* orange */
-  border-color: #ff9800 !important;
-}
-
 </style>
 {% endblock %}
 
