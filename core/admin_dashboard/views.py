@@ -780,8 +780,8 @@ class BlogBuilderCreateView(View):
             {
                 "form": form,
                 "title": "ایجاد بلاگ",
-                "tag_ids": [],        # no preselected tags on create
-                "category_ids": [],   # no preselected categories on create
+                "tag_ids": [],  # no preselected tags on create
+                "category_ids": [],  # no preselected categories on create
             },
         )
 
@@ -989,85 +989,323 @@ def blog_delete_view(request, pk):
 
 
 # --- NEWS CRUD ---
-class NewsListView(ListView):
-    model = News
-    template_name = 'admin_dashboard/content/news.html'
-    context_object_name = 'news_list'
-    paginate_by = 15
+def _prepare_news_form_for_admin(form, *, instance=None):
+    """
+    Hide author fields & raw category_id.
+    Add MULTI product_categories + MULTI tags (Select2-compatible),
+    and preselect the categories/tags on edit.
+    """
+    # Remove author/raw fields if present on the form
+    for f in ("writer", "writer_name", "writer_profile", "category_id"):
+        if f in form.fields:
+            del form.fields[f]
 
-    @method_staff_required
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+    # MULTI category picker
+    form.fields["product_categories"] = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all().order_by("name"),
+        required=False,
+        label="دسته‌بندی‌های محصول",
+        widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6, "id": "id_product_categories"})
+    )
 
-    def get_queryset(self):
-        # Optional: Order by publish time, newest first
-        return News.objects.all().order_by('-publish_time')
+    # Preselect categories on edit
+    if instance:
+        selected_ids = _parse_category_ids(getattr(instance, "category_id", "") or "")
+        if selected_ids:
+            qs_ids = set(Category.objects.filter(pk__in=selected_ids).values_list("pk", flat=True))
+            form.initial["product_categories"] = list(qs_ids)
+
+    # Ensure multi-tags field exists / configured
+    if "tags" not in form.fields:
+        form.fields["tags"] = forms.ModelMultipleChoiceField(
+            queryset=Tag.objects.all().order_by("name"),
+            required=False,
+            label="برچسب‌ها",
+            widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6, "id": "id_tags"})
+        )
+    else:
+        form.fields["tags"].queryset = Tag.objects.all().order_by("name")
+        form.fields["tags"].widget.attrs.setdefault("class", "form-select")
+        form.fields["tags"].widget.attrs.setdefault("size", 6)
+        form.fields["tags"].widget.attrs.setdefault("id", "id_tags")
+
+    return form
 
 
 @method_decorator(staff_required, name='dispatch')
 class AdminNewsListView(ListView):
     model = News
     template_name = 'admin_dashboard/news/list.html'
-    context_object_name = 'news_list'
+    context_object_name = 'items'
     paginate_by = 10
 
     def get_queryset(self):
-        q = self.request.GET.get('q')
-        qs = News.objects.select_related('writer').all().order_by('-publish_time')
-        if q:
-            qs = qs.filter(name__icontains=q) | qs.filter(english_name__icontains=q)
-        return qs
+        qs = (News.objects
+              .select_related('writer')
+              .prefetch_related('tags')
+              .order_by('-publish_time'))
+
+        field = (self.request.GET.get('field') or 'name').strip()
+        value_raw = (self.request.GET.get('value') or '').strip()
+        value = _normalize_digits(value_raw)
+
+        date_from = (self.request.GET.get('date_from') or '').strip()
+        date_to = (self.request.GET.get('date_to') or '').strip()
+
+        if field == 'name' and value:
+            qs = qs.filter(name__icontains=value)
+
+        elif field == 'english_name' and value:
+            qs = qs.filter(english_name__icontains=value)
+
+        elif field == 'writer_name' and value:
+            qs = qs.filter(writer_name__icontains=value)
+
+        elif field == 'tag' and value:
+            qs = qs.filter(Q(tags__name__icontains=value) | Q(tags__slug__icontains=value))
+
+        elif field == 'category' and value:
+            # stored as comma-separated IDs (strings)
+            qs = qs.filter(category_id__icontains=value)
+
+        elif field == 'read_time':
+            num = _to_int_safe(value)
+            if num is not None:
+                qs = qs.filter(read_time=num)
+
+        elif field == 'publish_date':
+            if date_from:
+                qs = qs.filter(publish_time__date__gte=date_from)
+            if date_to:
+                qs = qs.filter(publish_time__date__lte=date_to)
+
+        # Legacy 'q' fallback
+        q = (self.request.GET.get('q') or '').strip()
+        if q and not value:
+            qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
+
+        return qs.distinct()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # Convert packed category_id -> readable names
+        all_ids = set()
+        for n in ctx['items']:
+            raw = (n.category_id or '').strip()
+            ids = [cid for cid in raw.split(',') if cid.strip()]
+            n.category_ids_list = ids
+            all_ids.update(ids)
+
+        cat_map = {str(c.pk): c.name for c in Category.objects.filter(pk__in=all_ids)}
+        for n in ctx['items']:
+            n.category_names_list = [cat_map.get(cid, f"#{cid}") for cid in n.category_ids_list]
+        return ctx
 
 
-@staff_required
-def news_create_view(request):
-    if request.method == "POST":
-        form = NewsForm(request.POST, request.FILES)
-        if form.is_valid():
-            news = form.save()
-            AdminActionLog.objects.create(
-                admin=request.user,
-                action="Create News",
-                details=f"Created news '{news.name}' (ID: {news.id})"
-            )
-            return redirect('admin_dashboard:news')
-    else:
+@method_decorator(login_required, name="dispatch")
+class NewsBuilderCreateView(View):
+    template_name = "admin_dashboard/news/builder_create.html"
+
+    def get(self, request):
         form = NewsForm()
-    return render(request, 'admin_dashboard/news/form.html', {'form': form, 'title': 'Create News'})
+        form = _prepare_news_form_for_admin(form)
+        return render(
+            request, self.template_name,
+            {
+                "form": form,
+                "title": "ایجاد خبر",
+                "tag_ids": [],
+                "category_ids": [],
+            }
+        )
 
+    @transaction.atomic
+    def post(self, request):
+        # Normalize rel_* (arrays) if posted as checkbox/multi keys
+        for key in ["rel_news", "rel_blogs", "rel_products"]:
+            values = request.POST.getlist(key)
+            if values:
+                post = request.POST.copy()
+                post[key] = json.dumps(values)
+                request.POST = post
 
-@staff_required
-def news_edit_view(request, pk):
-    news = get_object_or_404(News, pk=pk)
-    if request.method == "POST":
-        form = NewsForm(request.POST, request.FILES, instance=news)
-        if form.is_valid():
-            news = form.save()
-            AdminActionLog.objects.create(
-                admin=request.user,
-                action="Update News",
-                details=f"Updated news '{news.name}' (ID: {news.id})"
+        form = NewsForm(request.POST, request.FILES)
+        form = _prepare_news_form_for_admin(form)
+
+        if not form.is_valid():
+            return render(
+                request, self.template_name,
+                {
+                    "form": form,
+                    "title": "ایجاد خبر",
+                    "tag_ids": [],
+                    "category_ids": [],
+                }
             )
-            return redirect('admin_dashboard:news')
-    else:
-        form = NewsForm(instance=news)
-    return render(request, 'admin_dashboard/news/form.html',
-                  {'form': form, 'title': f'Edit News: {news.name}', 'news': news})
+
+        news = form.save(commit=False)
+
+        # Pack categories into CharField(category_id)
+        cats = list(form.cleaned_data.get("product_categories") or [])
+        cat_ids = [str(c.pk) for c in cats]
+        cat_joined = ",".join(cat_ids)
+
+        try:
+            maxlen = news._meta.get_field("category_id").max_length
+        except Exception:
+            maxlen = 64
+
+        if len(cat_joined) > maxlen:
+            form.add_error(
+                "product_categories",
+                f"طول شناسه‌های دسته‌بندی از حد مجاز ({maxlen} کاراکتر) بیشتر است. لطفاً تعداد کمتری انتخاب کنید."
+            )
+            return render(
+                request, self.template_name,
+                {
+                    "form": form,
+                    "title": "ایجاد خبر",
+                    "tag_ids": [],
+                    "category_ids": cat_ids,
+                }
+            )
+
+        news.category_id = cat_joined
+
+        # Author info from current user
+        user = request.user
+        news.writer = user
+        news.writer_name = _derive_writer_name(user)
+        news.writer_profile = _derive_writer_profile_url(user)
+
+        news.save()
+
+        # M2M: tags
+        tags_qs = form.cleaned_data.get("tags")
+        if tags_qs is not None:
+            news.tags.set(tags_qs)
+
+        # (Optional) If you later add a real M2M for categories on News, set it here:
+        # if hasattr(news, "product_categories"):
+        #     news.product_categories.set(cats)
+
+        messages.success(request, "خبر ذخیره شد.")
+        return redirect("admin_dashboard:admin_news")
+
+
+@method_decorator(login_required, name="dispatch")
+class AdminNewsEditView(View):
+    template_name = "admin_dashboard/news/builder_create.html"
+
+    def get(self, request, pk):
+        item = get_object_or_404(News, pk=pk)
+        form = NewsForm(instance=item)
+        form = _prepare_news_form_for_admin(form, instance=item)
+        tag_ids = list(item.tags.values_list("id", flat=True))
+        category_ids = _parse_category_ids(item.category_id or "")
+        return render(
+            request, self.template_name,
+            {
+                "form": form,
+                "title": "ویرایش خبر",
+                "item": item,
+                "is_edit": True,
+                "tag_ids": tag_ids,
+                "category_ids": category_ids,
+            }
+        )
+
+    @transaction.atomic
+    def post(self, request, pk):
+        item = get_object_or_404(News, pk=pk)
+
+        # Normalize rel_* arrays if posted from JS
+        for key in ["rel_news", "rel_blogs", "rel_products"]:
+            if isinstance(request.POST.get(key), list):
+                request.POST = request.POST.copy()
+                request.POST[key] = json.dumps(request.POST.getlist(key))
+
+        form = NewsForm(request.POST, request.FILES, instance=item)
+        form = _prepare_news_form_for_admin(form, instance=item)
+
+        if form.is_valid():
+            n = form.save(commit=False)
+
+            cats = form.cleaned_data.get("product_categories") or []
+            cat_ids = [str(c.pk) for c in cats]
+            cat_joined = _join_category_ids(cat_ids)
+
+            # respect model field limit
+            try:
+                maxlen = n._meta.get_field("category_id").max_length
+            except Exception:
+                maxlen = 64
+            if len(cat_joined) > maxlen:
+                messages.error(request, "مجموع شناسه‌های دسته‌بندی بیش از حد مجاز است. لطفاً تعداد کمتری انتخاب کنید.")
+                return render(
+                    request, self.template_name,
+                    {
+                        "form": form,
+                        "title": "ویرایش خبر",
+                        "item": item,
+                        "is_edit": True,
+                    }
+                )
+
+            n.category_id = cat_joined
+
+            # ❌ do not let authorship change on edit
+            n.writer = item.writer
+            n.writer_name = item.writer_name
+            n.writer_profile = item.writer_profile
+
+            n.save()
+
+            # ✅ tags
+            tags_qs = form.cleaned_data.get("tags")
+            if tags_qs is not None:
+                n.tags.set(tags_qs)
+
+            messages.success(request, "خبر با موفقیت به‌روزرسانی شد.")
+            return redirect("admin_dashboard:admin_news")
+
+        tag_ids = list(item.tags.values_list("id", flat=True))
+        return render(
+            request, self.template_name,
+            {
+                "form": form,
+                "title": "ویرایش خبر",
+                "item": item,
+                "is_edit": True,
+                "tag_ids": tag_ids,
+            }
+        )
 
 
 @staff_required
 def news_delete_view(request, pk):
-    news = get_object_or_404(News, pk=pk)
+    item = get_object_or_404(News, pk=pk)
     if request.method == "POST":
-        name = news.name
-        news.delete()
+        name = item.name
+        item.delete()
         AdminActionLog.objects.create(
             admin=request.user,
             action="Delete News",
             details=f"Deleted news '{name}' (ID: {pk})"
         )
-        return JsonResponse({'success': True})
-    return render(request, 'admin_dashboard/news/confirm_delete.html', {'news': news})
+
+        # If AJAX/JSON requested (keeps parity with blogs)
+        wants_json = (
+                request.headers.get("x-requested-with") == "XMLHttpRequest"
+                or "application/json" in (request.headers.get("accept") or "")
+        )
+        if wants_json:
+            return JsonResponse({'success': True})
+
+        messages.success(request, f"«{name or 'خبر'}» با موفقیت حذف شد.")
+        return redirect("admin_dashboard:admin_news")
+
+    return render(request, "admin_dashboard/news/confirm_delete.html", {"item": item})
 
 
 # --- BANNER CRUD ---

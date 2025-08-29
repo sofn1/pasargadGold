@@ -1,48 +1,155 @@
 {% extends "admin_dashboard/dashboard.html" %}
 
-{% block title %}مدیریت اخبار{% endblock %}
+{% block title %}مدیریت خبرها{% endblock %}
 
 {% block mainContent %}
 <div class="container-fluid px-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-white">اخبار</h2>
+
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <h2 class="text-white mb-0">خبرها</h2>
     <a href="{% url 'admin_dashboard:admin_news_create' %}" class="btn btn-success">
-      <i class="fas fa-plus"></i> افزودن خبر جدید
+      <i class="fas fa-plus"></i> افزودن جدید
     </a>
   </div>
 
-  <!-- Search -->
-  <form method="get" class="mb-4">
-    <div class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="جستجو در اخبار..." value="{{ request.GET.q }}">
-      <button class="btn btn-outline-secondary" type="submit">جستجو</button>
-    </div>
-  </form>
+  <!-- Filters / Search -->
+  <div class="card shadow-sm border-0 mb-3 rounded-4">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end" id="searchForm">
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1 text-white">جستجو بر اساس</label>
+          <select class="form-select" name="field" id="fieldSelect">
+            {% with fs=request.GET.field %}
+            <option value="name"             {% if fs == "name" or not fs %}selected{% endif %}>عنوان</option>
+            <option value="english_name"     {% if fs == "english_name" %}selected{% endif %}>نام انگلیسی (Slug/SEO)</option>
+            <option value="writer_name"      {% if fs == "writer_name" %}selected{% endif %}>نام نویسنده</option>
+            <option value="tag"              {% if fs == "tag" %}selected{% endif %}>برچسب</option>
+            <option value="category"         {% if fs == "category" %}selected{% endif %}>شناسه دسته‌بندی محصول</option>
+            <option value="read_time"        {% if fs == "read_time" %}selected{% endif %}>زمان مطالعه (دقیقه)</option>
+            <option value="publish_date"     {% if fs == "publish_date" %}selected{% endif %}>تاریخ انتشار (بازه)</option>
+            {% endwith %}
+          </select>
+        </div>
 
+        <!-- Generic text/number value -->
+        <div class="col-12 col-md-4" id="valueWrap">
+          <label class="form-label mb-1 text-white">عبارت جستجو</label>
+          <input type="text" class="form-control" name="value" value="{{ request.GET.value }}" placeholder="بنویسید…">
+        </div>
+
+        <!-- Date range (visible only when field=publish_date) -->
+        <div class="col-12 col-md-3 d-none" id="dateFromWrap">
+          <label class="form-label mb-1 text-white">از تاریخ</label>
+          <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+        </div>
+        <div class="col-12 col-md-3 d-none" id="dateToWrap">
+          <label class="form-label mb-1 text-white">تا تاریخ</label>
+          <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+        </div>
+
+        <div class="col-12 col-md-2 ms-auto">
+          <button class="btn btn-primary w-100"><i class="fas fa-search"></i> جستجو</button>
+        </div>
+
+        <!-- Quick clear -->
+        {% if request.GET %}
+        <div class="col-12 col-md-2">
+          <a class="btn btn-outline-secondary w-100" href="{% url 'admin_dashboard:admin_news' %}">پاک کردن فیلترها</a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  {% if items %}
   <!-- Table -->
-  {% if news_list %}
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0">
-        <thead class="table-dark">
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 table-contrast">
+        <thead class="thead-contrast">
           <tr>
-            <th>عنوان</th>
+            <th style="width:76px">تصویر</th>
+            <th>عنوان / اسلاگ</th>
             <th>نویسنده</th>
-            <th>تاریخ انتشار</th>
-            <th>عملیات</th>
+            <th>برچسب‌ها</th>
+            <th>دسته‌بندی‌ها</th>
+            <th class="text-nowrap">انتشار</th>
+            <th class="text-nowrap">مطالعه</th>
+            <th class="text-end">عملیات</th>
           </tr>
         </thead>
         <tbody>
-          {% for news in news_list %}
-          <tr>
-            <td>{{ news.name|truncatechars:50 }}</td>
-            <td>{{ news.writer_name }}</td>
-            <td>{{ news.publish_time|date:"Y/m/d H:i" }}</td>
+          {% for n in items %}
+          <tr id="row-{{ n.id }}">
             <td>
+              {% if n.view_image %}
+                <img src="{{ n.view_image.url }}" alt="{{ n.name }}" style="height:56px;width:56px;object-fit:cover;border-radius:.5rem;border:1px solid #2b3036;">
+              {% else %}
+                <div class="d-flex justify-content-center align-items-center rounded" style="height:56px;width:56px;background:#0f1216;border:1px solid #2b3036;">
+                  <i class="far fa-image text-secondary"></i>
+                </div>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="fw-semibold">{{ n.name|default:"—" }}</div>
+              <div class="text-secondary small">{{ n.english_name|default:"-" }}</div>
+              {% if n.short_description %}
+              <div class="small mt-1 text-muted">{{ n.short_description|truncatechars:80 }}</div>
+              {% endif %}
+            </td>
+
+            <td class="text-nowrap">
+              <div class="fw-semibold">{{ n.writer_name|default:"-" }}</div>
+              {% if n.writer_profile %}
+                <a href="{{ n.writer_profile }}" class="small text-info" target="_blank" rel="noopener">پروفایل</a>
+              {% endif %}
+            </td>
+
+            <td style="max-width:240px;">
+              {% with n.tags.all as tg %}
+                {% if tg %}
+                  {% for t in tg %}
+                    <span class="badge rounded-pill me-1 mb-1"
+                          style="background: {% if t.color %}{{ t.color }}{% else %}#2a2f38{% endif %}; color:#fff;">
+                      {{ t.name }}
+                    </span>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+
+            <td style="max-width:240px;">
+              {% if n.category_names_list %}
+                {% for cname in n.category_names_list %}
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis border me-1 mb-1">{{ cname }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="text-nowrap">
+              <div class="fw-semibold">{{ n.publish_time|date:"Y/m/d" }}</div>
+              <div class="small text-secondary">{{ n.publish_time|date:"H:i" }}</div>
+            </td>
+
+            <td class="text-nowrap">
+              <span class="badge bg-info">{{ n.read_time|default:"-" }} دقیقه</span>
+            </td>
+
+            <td class="text-end">
               <div class="btn-group">
-                <a href="{% url 'admin_dashboard:admin_news_edit' news.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#deleteModal" data-id="{{ news.pk }}" data-name="{{ news.name }}">
+                <a href="{% url 'admin_dashboard:admin_news_edit' n.pk %}" class="btn btn-sm btn-warning">ویرایش</a>
+                <button type="button"
+                        class="btn btn-sm btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        data-id="{{ n.pk }}"
+                        data-name="{{ n.name|default:n.english_name }}">
                   حذف
                 </button>
               </div>
@@ -52,14 +159,152 @@
         </tbody>
       </table>
     </div>
+
+    {% include 'admin_dashboard/_pagination.html' %}
   </div>
 
-  {% include 'admin_dashboard/_pagination.html' %}
   {% else %}
-  <div class="alert alert-info">خبری یافت نشد.</div>
+    <div class="alert alert-info">خبری یافت نشد.</div>
   {% endif %}
 
-  <!-- Delete Modal -->
-  {% include 'admin_dashboard/_delete_modal.html' with object_type="خبر" return_url="admin_dashboard:admin_news" %}
+  <!-- Delete modal (shared) -->
+  {% include 'admin_dashboard/_delete_modal.html' with object_type="خبر" delete_url_name='admin_dashboard:admin_news_delete' delete_dummy_pk=0 return_url='admin_dashboard:admin_news' %}
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  // Toggle inputs based on selected field
+  const fieldSelect = document.getElementById('fieldSelect');
+  const valueWrap   = document.getElementById('valueWrap');
+  const dateFrom    = document.getElementById('dateFromWrap');
+  const dateTo      = document.getElementById('dateToWrap');
+
+  function refreshFieldUI(){
+    const f = fieldSelect.value;
+    const isDate = (f === 'publish_date');
+    valueWrap.classList.toggle('d-none', isDate);
+    dateFrom.classList.toggle('d-none', !isDate);
+    dateTo.classList.toggle('d-none', !isDate);
+
+    // tune input type for read_time (number)
+    const valueInput = valueWrap.querySelector('input[name="value"]');
+    if (valueInput){
+      valueInput.type = (f === 'read_time') ? 'number' : 'text';
+      valueInput.placeholder = (f === 'tag')
+        ? 'نام برچسب…'
+        : (f === 'category')
+          ? 'شناسه دسته (ID)…'
+          : (f === 'english_name')
+            ? 'اسلاگ/نام انگلیسی…'
+            : 'بنویسید…';
+    }
+  }
+  if (fieldSelect){ fieldSelect.addEventListener('change', refreshFieldUI); refreshFieldUI(); }
+})();
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== High-contrast palette (dark) ===== */
+  :root{
+    --bg-elev-1: #1b2330;
+    --bg-elev-2: #232e42;
+    --bg-elev-3: #2b3650;
+    --text-main: #e6edf3;
+    --text-muted: #080808;
+    --border-soft: #2f3a55;
+    --brand: #1C39BB;
+    --brand-600:#2748d5;
+    --success:#22c55e;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+    --chip-bg:#2a344b;
+    --chip-text:#e6edf3;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+  input[type="date"] { color: #fff; }
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="date"]::-webkit-datetime-edit-text,
+  input[type="date"]::-webkit-datetime-edit-year-field,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field { color: #fff; }
+
+  .card{
+    background: var(--bg-elev-1) !important;
+    color: var(--text-main);
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 14px;
+  }
+  .card .card-header{
+    background: var(--bg-elev-2) !important;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-soft) !important;
+  }
+
+  .form-control, .form-select {
+    background: #0f1724 !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-soft) !important;
+  }
+  .form-control::placeholder { color: #8aa0b6; }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 .2rem rgba(28,57,187,.15) !important;
+  }
+  label.form-label { color: var(--text-muted); }
+
+  .btn-primary{ background: var(--brand) !important; border: none !important; }
+  .btn-primary:hover{ background: var(--brand-600) !important; }
+  .btn-success{ background: var(--success) !important; border: none !important; }
+  .btn-warning{ background: var(--warning) !important; border: none !important; color:#1c1917 !important; }
+  .btn-danger { background: var(--danger)  !important; border: none !important; }
+
+  .btn-outline-secondary{ color: var(--text-main); border-color: var(--border-soft); }
+  .btn-outline-secondary:hover{ background: var(--bg-elev-3); }
+
+  .table-contrast{
+    color: var(--text-main);
+    background: var(--bg-elev-1);
+  }
+  .table-contrast thead, .thead-contrast{
+    background: linear-gradient(0deg, var(--bg-elev-2), var(--bg-elev-2));
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .table-contrast tbody tr{ border-color: var(--border-soft); }
+  .table-contrast tbody tr:hover{ background: var(--bg-elev-3); }
+  .table-contrast td, .table-contrast th{ vertical-align: middle; }
+
+  .text-secondary{ color: var(--text-muted) !important; }
+  .text-muted{ color: #080808 !important; }
+  .text-info{ color:#080808 !important; }
+
+  .badge.bg-info { background:#3b82f6 !important; }
+  .badge.bg-secondary-subtle{
+    background: var(--chip-bg) !important;
+    color: var(--chip-text) !important;
+    border: 1px solid var(--border-soft) !important;
+  }
+  .badge.rounded-pill{ border: 1px solid rgba(255,255,255,.12); }
+
+  .thumb-placeholder{
+    height:56px; width:56px; background:#0f1724;
+    border:1px solid var(--border-soft); border-radius:.5rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .pagination .page-link{
+    background: #0f1724; color: var(--text-main); border-color: var(--border-soft);
+  }
+  .pagination .page-item.active .page-link{
+    background: var(--brand); border-color: var(--brand);
+  }
+</style>
+{% endblock  %}

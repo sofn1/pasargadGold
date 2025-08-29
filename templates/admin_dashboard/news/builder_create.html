@@ -1,0 +1,609 @@
+{% extends "admin_dashboard/dashboard.html" %}
+{% load static %}
+
+{% block title %}{{ title|default:"ایجاد خبر" }}{% endblock %}
+
+{% block mainContent %}
+<div class="container-fluid px-2 px-md-3 py-3">
+
+  <!-- Sticky top bar -->
+  <div class="position-sticky top-0 z-3 mb-3" style="backdrop-filter:saturate(180%) blur(8px);">
+    <div class="card border-0 shadow-sm rounded-3" style="background:rgba(255,255,255,.8);">
+      <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <span class="px-3 py-2 fs-6">
+              {% if is_edit %}ویرایش خبر{% else %}ایجاد خبر جدید{% endif %}
+            </span>
+            <small class="text-secondary d-none d-md-inline">سازنده بصری (سبک Elementor)</small>
+          </div>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <div class="btn-group me-1" role="group">
+              <button id="btn-desktop" type="button" class="btn btn-outline-light btn-sm">دسکتاپ</button>
+              <button id="btn-tablet"  type="button" class="btn btn-outline-light btn-sm">تبلت</button>
+              <button id="btn-mobile"  type="button" class="btn btn-outline-light btn-sm">موبایل</button>
+            </div>
+            <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar">پنل ابزار</button>
+            <button id="btn-clear"   type="button" class="btn btn-outline-danger btn-sm">پاک‌سازی</button>
+            <button id="btn-preview" type="button" class="btn btn-outline-secondary btn-sm">پیش‌نمایش</button>
+            <button id="btn-save" type="submit" class="btn btn-primary btn-sm px-3" form="news-form">ذخیره خبر</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="news-form" class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-3 p-md-4">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <!-- === Form sections === -->
+      <div class="row g-3 mb-4">
+        <!-- مشخصات اصلی -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">مشخصات اصلی</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">عنوان</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+                <small class="text-secondary">عنوان نمایشی خبر</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">نام انگلیسی</label>
+                {{ form.english_name }}
+                {% if form.english_name.errors %}<div class="text-danger small">{{ form.english_name.errors }}</div>{% endif %}
+                <small class="text-secondary">برای URL یا SEO</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- تگ‌ها و دسته‌بندی‌ها -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">تگ‌ها و دسته‌بندی‌ها</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">دسته‌بندی‌های محصول</label>
+                {{ form.product_categories }}
+                {% if form.product_categories.errors %}<div class="text-danger small">{{ form.product_categories.errors }}</div>{% endif %}
+                <small class="text-secondary">می‌توانید چند دسته‌بندی انتخاب کنید.</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">برچسب‌ها</label>
+                {{ form.tags }}
+                {% if form.tags.errors %}<div class="text-danger small">{{ form.tags.errors }}</div>{% endif %}
+                <small class="text-muted d-block mt-1">می‌توانید چند برچسب را انتخاب کنید.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- زمان و رسانه -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">زمان و رسانه</div>
+            <div class="card-body row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">زمان انتشار</label>
+                {{ form.publish_time }}
+                {% if form.publish_time.errors %}<div class="text-danger small">{{ form.publish_time.errors }}</div>{% endif %}
+                <small class="text-muted">قالب پیشنهادی: YYYY/MM/DD HH:MM</small>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">زمان مطالعه (دقیقه)</label>
+                {{ form.read_time }}
+                {% if form.read_time.errors %}<div class="text-danger small">{{ form.read_time.errors }}</div>{% endif %}
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">تصویر نمایشی</label>
+                {{ form.view_image }}
+                {% if form.view_image.errors %}<div class="text-danger small">{{ form.view_image.errors }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- توضیح کوتاه -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-body-tertiary border-0 fw-semibold">توضیح کوتاه</div>
+            <div class="card-body">
+              {{ form.short_description }}
+              {% if form.short_description.errors %}<div class="text-danger small">{{ form.short_description.errors }}</div>{% endif %}
+              <small class="text-muted">می‌توانید خالی بگذارید تا از اولین پاراگراف پر شود.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden fields -->
+      {{ form.content }}
+      <input type="hidden" name="project_json" value="">
+
+      <!-- Builder layout -->
+      <div class="row g-3">
+        <div class="col-12 col-lg-9 order-2 order-lg-1">
+          <div id="gjs" class="border rounded-4 shadow-sm" style="background:#ffffff; min-height:70vh;"></div>
+
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-2 text-secondary small">
+            <span class="badge bg-dark-subtle text-secondary-emphasis">میانبرها:</span>
+            <span>Ctrl/Cmd + S = ذخیره</span>
+            <span>•</span>
+            <span>Ctrl/Cmd + Z = بازگشت</span>
+            <span>•</span>
+            <span>Ctrl/Cmd + Y/Shift+Z = جلو</span>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-12 col-lg-3 order-1 order-lg-2">
+          <div class="d-none d-lg-block">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+              <div class="card-header bg-body-tertiary border-0 fw-semibold">بلوک‌ها</div>
+              <div id="blocks" class="card-body p-2" style="max-height:35vh; overflow:auto;"></div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-body-tertiary border-0 fw-semibold">خصوصیات المان</div>
+              <div id="traits" class="card-body p-2" style="max-height:35vh; overflow:auto;"></div>
+            </div>
+          </div>
+
+          <!-- Offcanvas for mobile -->
+          <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="builderSidebar" style="width:86vw; max-width:420px;">
+            <div class="offcanvas-header">
+              <h5 class="offcanvas-title">ابزار سازنده</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body">
+              <ul class="nav nav-pills mb-3">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-blocks">بلوک‌ها</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-traits">خصوصیات</button></li>
+              </ul>
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="pills-blocks"><div id="blocks-mobile" style="max-height:60vh; overflow:auto;"></div></div>
+                <div class="tab-pane fade" id="pills-traits"><div id="traits-mobile" style="max-height:60vh; overflow:auto;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content bg-white text-dark">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="previewModalLabel">پیش‌نمایش خبر</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+      </div>
+      <div class="modal-body">
+        <iframe id="previewFrame"
+                class="w-100 border rounded-3 shadow-sm"
+                style="height: calc(100vh - 140px); background:#ffffff;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+<script src="https://unpkg.com/grapesjs"></script>
+
+<style>
+  /* ========= Light palette ========= */
+  :root{
+    --bg-page: #f5f7fb;
+    --bg-card: #ffffff;
+    --bg-header: #f1f5f9;
+    --bg-soft: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-soft: #e2e8f0;
+    --brand: #1C39BB;
+    --brand-600:#2748d5;
+    --success:#22c55e;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+    --chip-bg:#eef2ff;
+    --chip-text:#1e293b;
+  }
+
+  body{ background: var(--bg-page); color: var(--text-main); direction: rtl; }
+
+  .card{
+    background: var(--bg-card) !important;
+    color: var(--text-main);
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 14px;
+  }
+  .card-header{
+    background: var(--bg-header) !important;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-soft) !important;
+    border-top-left-radius: 1rem; border-top-right-radius: 1rem;
+  }
+
+  .form-control, .form-select, textarea {
+    background: #fff !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 10px;
+    padding: .55rem .75rem;
+  }
+  .form-control::placeholder { color: #94a3b8; }
+  .form-control:focus, .form-select:focus, textarea:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 .2rem rgba(28,57,187,.15) !important;
+    outline: none;
+  }
+  label.form-label{ color: var(--text-muted); }
+  .text-secondary{ color: var(--text-muted) !important; }
+
+  .btn-primary{ background: var(--brand) !important; border:none !important; }
+  .btn-primary:hover{ background: var(--brand-600) !important; }
+  .btn-outline-secondary{ color: var(--text-main); border-color: var(--border-soft); }
+  .btn-outline-secondary:hover{ background: var(--bg-soft); }
+  .btn-outline-light{ color:#334155; border-color:#cbd5e1; }
+  .btn-outline-light:hover{ background:#e2e8f0; }
+  .btn-warning{ background: var(--warning) !important; border: none !important; color:#1c1917 !important; }
+  .btn-danger { background: var(--danger)  !important; border: none !important; }
+
+  .badge.bg-info{ background:#3b82f6 !important; }
+  .badge.bg-secondary-subtle{
+    background: var(--chip-bg) !important;
+    color: var(--chip-text) !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  /* GrapesJS (light) */
+  #gjs{ background:#ffffff !important; }
+  .gjs-one-bg    { background:#ffffff !important; }
+  .gjs-two-bg    { background:#f8fafc !important; }
+  .gjs-three-bg  { background:#f1f5f9 !important; }
+  .gjs-four-color{ color:#0f172a !important; }
+  .gjs-color-warn{ color:#b45309 !important; }
+  .gjs-title     { color:#0f172a !important; }
+
+  /* Layers panel readable on light */
+  .gjs-layer-title, .gjs-layer-title-inn, .gjs-layer-name,
+  .gjs-layer-caret, .gjs-layer-caret svg,
+  .gjs-layer-vis, .gjs-layer-vis svg, .gjs-layer-vis-on svg, .gjs-layer-vis-off svg,
+  .gjs-layer-move, .gjs-layer-move svg,
+  .gjs-layer-count { color:#000 !important; fill:#000 !important; }
+
+  /* Traits Manager */
+  .gjs-traits-c .gjs-label, .gjs-traits-c .gjs-label-wrp { color:#000 !important; }
+  .gjs-traits-c .gjs-field input[type="text"],
+  .gjs-traits-c .gjs-field textarea,
+  .gjs-traits-c .gjs-field select{
+    background:#fff !important; color:#000 !important; border:1px solid #d1d5db !important; border-radius:6px; padding:4px 6px;
+  }
+  .gjs-traits-c .gjs-field input::placeholder{ color:#9ca3af; }
+
+  /* Block labels */
+  .gjs-block .gjs-block-label { color:#000 !important; }
+
+  /* Blocks */
+  #blocks .gjs-block, #blocks-mobile .gjs-block {
+    border-radius: 12px; padding: 10px; margin: 6px;
+    border:1px dashed #e2e8f0; background:#ffffff; cursor:grab; text-align:center;
+  }
+  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background:#f8fafc; }
+
+  #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-soft); }
+
+  /* Select2 chips color overrides (optional) */
+  #id_tags + .select2 .select2-selection__choice {
+    color:#1c1917 !important; background:#fde68a !important; border-color:#f59e0b !important;
+  }
+  #id_product_categories + .select2 .select2-selection__choice {
+    color:#1c1917 !important; background:#bbf7d0 !important; border-color:#22c55e !important;
+  }
+
+  input[type="date"]{ color: var(--text-main); background:#fff; }
+  input[type="date"]::-webkit-calendar-picker-indicator{ filter: invert(0); opacity:.85; cursor:pointer; }
+
+  .offcanvas{ background:#fff; color:var(--text-main); }
+  .offcanvas .nav-pills .nav-link{ color:var(--text-main); }
+  .offcanvas .nav-pills .nav-link.active{ background: var(--brand); color:#fff; }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  {% if is_edit %}const IS_EDIT = true;{% else %}const IS_EDIT = false;{% endif %}
+  const PRESELECT_TAG_IDS = {{ tag_ids|default:"[]"|safe }};
+  const PRESELECT_CATEGORY_IDS = {{ category_ids|default:"[]"|safe }};
+
+  // ---------- GrapesJS Init ----------
+  const editor = grapesjs.init({
+    container: '#gjs',
+    fromElement: false,
+    height: '70vh',
+    storageManager: { type: null },
+    selectorManager: { componentFirst: true },
+    deviceManager: { devices: [{ name:'Desktop', width:'' }, { name:'Tablet', width:'768px' }, { name:'Mobile', width:'360px' }] },
+    assetManager: { upload: "{% url 'admin_dashboard:admin_grapes_asset_upload' %}", uploadName: 'files', headers: { 'X-CSRFToken': csrf }, multiUpload: true },
+    blockManager: { appendTo: '#blocks' },
+    traitManager: { appendTo: '#traits' },
+  });
+
+  // Useful traits
+  const dc = editor.DomComponents;
+
+  // Default
+  {
+    const type = dc.getType('default');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'id', label: 'Id' },
+      { type: 'text', name: 'title', label: 'Title' },
+    ]);
+  }
+  // Image
+  {
+    const type = dc.getType('image');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      'alt',
+      { type: 'text', name: 'title', label: 'Title' },
+    ]);
+  }
+  // Link
+  {
+    const type = dc.getType('link');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'href', label: 'لینک' },
+      { type: 'select', name: 'target', label: 'Target', options: [{ value: '', name: 'همین پنجره' }, { value: '_blank', name: 'پنجره جدید' }] },
+    ]);
+  }
+  // Video
+  {
+    const type = dc.getType('video');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'src', label: 'ویدیو URL' },
+      { type: 'checkbox', name: 'controls', label: 'کنترل‌ها' },
+    ]);
+  }
+
+  editor.on('component:selected', () => editor.TraitManager.render());
+  editor.on('load', () => { const w = editor.getWrapper(); if (w) editor.select(w); });
+
+  // ---------- Blocks ----------
+  const bm = editor.BlockManager;
+  bm.add('section',{ label:'سکشن', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-3"><div class="col-12"></div></div></section>` });
+  bm.add('cols-2',{ label:'۲ ستونه', category:{id:'layout',label:'چیدمان',open:true}, content:`<section class="container py-4"><div class="row g-4"><div class="col-12 col-md-6"></div><div class="col-12 col-md-6"></div></div></section>` });
+  bm.add('heading',{ label:'عنوان', category:{id:'content',label:'محتوا',open:true}, content:`<h2 class="mb-2">تیتر خبر</h2>` });
+  bm.add('paragraph',{ label:'پاراگراف', category:{id:'content',label:'محتوا',open:true}, content:`<p>متن خبر اینجاست...</p>` });
+  bm.add('image',{ label:'تصویر', category:{id:'media',label:'رسانه',open:true}, content:{type:'image'} });
+  bm.add('quote',{ label:'نقل‌قول', category:{id:'content',label:'محتوا',open:true}, content:`<blockquote class="p-3 my-2" style="border-right:4px solid #1C39BB;background:#101216;">نقل‌قول مهم...</blockquote>` });
+  bm.add('button',{ label:'دکمه', category:{id:'content',label:'محتوا',open:true}, content:`<a class="btn btn-primary" href="#">بیشتر بخوانید</a>` });
+  bm.add('video',{ label:'ویدیو', category:{id:'media',label:'رسانه',open:true}, content:`<div class="ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div>` });
+  bm.add('code',{ label:'کد', category:{id:'content',label:'محتوا',open:true}, content:`<pre class="p-3 rounded-3" style="background:#0f1216;border:1px solid #2a2f38;"><code>// کد نمونه</code></pre>` });
+  bm.add('product-card',{ label:'کارت محصول', category:{id:'catalog',label:'کاتالوگ',open:true}, content:`<div class="card p-3" data-product-id=""><h5>نام محصول</h5><img src="" alt="" class="img-fluid mb-2"/><p class="mb-2">توضیح کوتاه...</p><a class="btn btn-outline-primary">نمایش محصول</a></div>` });
+
+  const domc = editor.DomComponents;
+  domc.addType('product-card', {
+    model: {
+      defaults: { traits: [{ type:'text', name:'data-product-id', label:'شناسه محصول' }, { type:'text', name:'data-button-label', label:'متن دکمه' }] },
+      isComponent: (el) => el?.classList?.contains('card') && el.getAttribute('data-product-id') !== null ? { type:'product-card' } : false
+    }
+  });
+
+  // ---------- Mobile Offcanvas moves ----------
+  function moveChildren(fromEl, toEl){ if(!fromEl||!toEl) return; while(fromEl.firstChild) toEl.appendChild(fromEl.firstChild); }
+  const offcanvasEl  = document.getElementById('builderSidebar');
+  const blocksWrap   = document.getElementById('blocks');
+  const blocksMobile = document.getElementById('blocks-mobile');
+  const traitsWrap   = document.getElementById('traits');
+  const traitsMobile = document.getElementById('traits-mobile');
+
+  if (offcanvasEl) {
+    offcanvasEl.addEventListener('show.bs.offcanvas', () => {
+      const blocksContent = blocksWrap?.querySelector('.gjs-blocks-c') || blocksWrap?.firstElementChild;
+      if (blocksContent && blocksMobile) blocksMobile.appendChild(blocksContent);
+      moveChildren(traitsWrap, traitsMobile);
+    });
+    offcanvasEl.addEventListener('hidden.bs.offcanvas', () => {
+      const blocksContent = blocksMobile?.querySelector('.gjs-blocks-c') || blocksMobile?.firstElementChild;
+      if (blocksContent && blocksWrap) blocksWrap.appendChild(blocksContent);
+      moveChildren(traitsMobile, traitsWrap);
+    });
+  }
+
+  // ---------- Device buttons ----------
+  document.getElementById('btn-desktop')?.addEventListener('click', () => editor.setDevice('Desktop'));
+  document.getElementById('btn-tablet') ?.addEventListener('click', () => editor.setDevice('Tablet'));
+  document.getElementById('btn-mobile') ?.addEventListener('click', () => editor.setDevice('Mobile'));
+
+  // ---------- Clear canvas ----------
+  document.getElementById('btn-clear')?.addEventListener('click', () => {
+    if (confirm('همه محتوا پاک شود؟')) editor.DomComponents.clear();
+  });
+
+  // ---------- Preview ----------
+  const previewBtn   = document.getElementById('btn-preview');
+  const previewModal = document.getElementById('previewModal') ? new bootstrap.Modal(document.getElementById('previewModal')) : null;
+  const previewFrame = document.getElementById('previewFrame');
+
+  previewBtn?.addEventListener('click', () => {
+    const html = editor.getHtml();
+    const css  = `<style>${editor.getCss()}</style>`;
+    const doc  = `
+      <html dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          ${css}
+          <style>
+            body{
+              background:#ffffff;
+              color:#0f172a;
+              margin:0; padding:1rem;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+            }
+            a{ color:#1C39BB; }
+          </style>
+        </head>
+        <body>${html}</body>
+      </html>`;
+    const blob = new Blob([doc], {type:'text/html'});
+    const url  = URL.createObjectURL(blob);
+    if (previewFrame) { previewFrame.src = url; previewModal?.show(); }
+  });
+
+  // ---------- Form submit wiring ----------
+  const formEl = document.getElementById('news-form');
+
+  function fillBuilderIntoForm(){
+    const html = editor.getHtml() + `<style>${editor.getCss()}</style>`;
+    const contentEl = document.querySelector('[name="content"]');
+    if (contentEl) contentEl.value = html;
+
+    const pj = editor.getProjectData?.();
+    const pjEl = document.querySelector('[name="project_json"]');
+    if (pjEl && pj) pjEl.value = JSON.stringify(pj);
+
+    const sd = document.querySelector('[name="short_description"]');
+    if (sd && !sd.value) {
+      const tmp = document.createElement('div'); tmp.innerHTML = editor.getHtml();
+      const p = tmp.querySelector('p'); if (p) sd.value = p.textContent.trim().slice(0, 200);
+    }
+    try { localStorage.removeItem('news_builder_draft'); } catch(e){}
+  }
+
+  formEl?.addEventListener('submit', () => {
+    fillBuilderIntoForm();
+    editor.clearDirtyCount();
+  });
+
+  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (formEl?.requestSubmit) formEl.requestSubmit();
+    else { fillBuilderIntoForm(); formEl.submit(); }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (formEl?.requestSubmit) formEl.requestSubmit();
+      else { fillBuilderIntoForm(); formEl.submit(); }
+    }
+  });
+
+  // ---------- Unsaved changes warning ----------
+  let dirty = false;
+  editor.on('change', () => { dirty = true; });
+  window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  // ---------- Local draft autosave ----------
+  const DRAFT_KEY = 'news_builder_draft';
+  setInterval(() => {
+    try {
+      const payload = { html: editor.getHtml(), css: editor.getCss(), time: Date.now() };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch(e){}
+  }, 30000);
+
+  try {
+    const draftRaw = localStorage.getItem(DRAFT_KEY);
+    if (draftRaw && !IS_EDIT) {
+      const draft = JSON.parse(draftRaw);
+      if (draft?.html) {
+        if (confirm('پیش‌نویس ذخیره‌شده‌ای یافت شد. بازیابی شود؟')) {
+          editor.setComponents(draft.html);
+          editor.setStyle(draft.css || '');
+        }
+      }
+    }
+  } catch(e){}
+
+  // Preload existing content on edit
+  {% if is_edit and item and item.content %}
+    editor.setComponents(`{{ item.content|escapejs }}`);
+  {% endif %}
+
+  // ---------- Select2 (Tags: AJAX, multiple) ----------
+  const $tags = window.jQuery ? window.jQuery('#id_tags') : null;
+  if ($tags && $tags.length) {
+    $tags.select2({
+      dir: "rtl",
+      width: "100%",
+      placeholder: "انتخاب برچسب‌ها",
+      ajax: {
+        url: "{% url 'tags:api_select2' %}",
+        dataType: "json",
+        delay: 250,
+        data: function(params){ return { q: params.term, limit: 20 }; },
+        processResults: function(data){
+          const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+          const mapped = items.map(it => ({ id: it.id, text: it.text || it.name || "", color: it.color || null }));
+          return { results: mapped };
+        },
+        cache: true
+      },
+      templateResult: function(item){
+        if(!item.id) return item.text;
+        const dot = item.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px;background:${item.color}"></span>` : "";
+        return `${dot}${item.text || item.name || ""}`;
+      },
+      templateSelection: function(item){ return item.text || item.name || ""; },
+      escapeMarkup: function(markup){ return markup; },
+      multiple: true,
+      allowClear: true
+    });
+
+    // Preselect tags on edit
+    if (Array.isArray(PRESELECT_TAG_IDS) && PRESELECT_TAG_IDS.length){
+      (async function preloadSelectedTags(){
+        try{
+          for (const id of PRESELECT_TAG_IDS){
+            const resp = await fetch("{% url 'tags:api_detail' 0 %}".replace("0/", id + "/"));
+            if (!resp.ok) continue;
+            const t = await resp.json();
+            const label = t.name || t.text || "";
+            const opt = new Option(label, t.id, true, true);
+            $tags.append(opt).trigger("change");
+          }
+        }catch(e){}
+      })();
+    }
+  }
+
+  // ---------- Select2 (Categories: MULTI local) ----------
+  const $cats = window.jQuery ? window.jQuery('#id_product_categories') : null;
+  if ($cats && $cats.length) {
+    $cats.select2({
+      dir: "rtl",
+      width: "100%",
+      placeholder: "انتخاب دسته‌بندی‌های محصول",
+      multiple: true,
+      allowClear: true
+    });
+
+    // Preselect on edit
+    if (Array.isArray(PRESELECT_CATEGORY_IDS) && PRESELECT_CATEGORY_IDS.length){
+      $cats.val(PRESELECT_CATEGORY_IDS.map(String)).trigger("change");
+    }
+  }
+
+})();
+</script>
+{% endblock %}

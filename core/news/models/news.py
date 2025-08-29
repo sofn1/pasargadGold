@@ -6,13 +6,14 @@ from django.conf import settings
 class News(models.Model):
     name = models.CharField(max_length=255)
     english_name = models.CharField(max_length=255)
-    category_id = models.CharField(max_length=64)  # MongoDB ObjectID as string
-    # Link to actual User
-    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='news')
+    category_id = models.CharField(max_length=64)
 
-    tags = models.ManyToManyField(Tag, blank=True, related_name="news_items", verbose_name="برچسب‌ها")
+    # Link to actual User
+    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blogs')
     writer_name = models.CharField(max_length=255)
     writer_profile = models.URLField()
+
+    tags = models.ManyToManyField(Tag, blank=True, related_name="news_items", verbose_name="برچسب‌ها")
     publish_time = models.DateTimeField()
     read_time = models.PositiveIntegerField()
     short_description = models.TextField()
