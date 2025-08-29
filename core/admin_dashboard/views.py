@@ -667,6 +667,35 @@ class BlogListView(ListView):
         return super().dispatch(*args, **kwargs)
 
 
+# helpers to normalize Persian/Arabic digits
+PERSIAN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
+ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
+
+
+def _normalize_digits(s: str) -> str:
+    if s is None:
+        return ""
+    return str(s).strip().translate(PERSIAN_DIGITS).translate(ARABIC_DIGITS)
+
+
+def _to_int_safe(s: str):
+    s = _normalize_digits(s)
+    if not s:
+        return None
+    # strictly integer only (no commas/spaces)
+    if s.isdigit():
+        try:
+            return int(s)
+        except Exception:
+            return None
+    # last resort: float to int (if someone typed "12.0")
+    try:
+        return int(float(s))
+    except Exception:
+        return None
+
+
+@method_decorator(staff_required, name='dispatch')
 class AdminBlogListView(ListView):
     model = Blog
     template_name = 'admin_dashboard/blogs/list.html'
@@ -674,16 +703,55 @@ class AdminBlogListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        q = self.request.GET.get('q', '')
-        qs = Blog.objects.select_related('writer').all().order_by('-publish_time')
-        if q:
+        qs = (Blog.objects
+              .select_related('writer')
+              .prefetch_related('tags')
+              .order_by('-publish_time'))
+
+        field = (self.request.GET.get('field') or 'name').strip()
+        value_raw = (self.request.GET.get('value') or '').strip()
+        value = _normalize_digits(value_raw)
+
+        date_from = (self.request.GET.get('date_from') or '').strip()
+        date_to = (self.request.GET.get('date_to') or '').strip()
+
+        if field == 'name' and value:
+            qs = qs.filter(name__icontains=value)
+
+        elif field == 'english_name' and value:
+            qs = qs.filter(english_name__icontains=value)
+
+        elif field == 'writer_name' and value:
+            qs = qs.filter(writer_name__icontains=value)
+
+        elif field == 'tag' and value:
+            qs = qs.filter(Q(tags__name__icontains=value) | Q(tags__slug__icontains=value))
+
+        elif field == 'category' and value:
+            # category_id is a comma-separated list of IDs (strings)
+            qs = qs.filter(category_id__icontains=value)
+
+        elif field == 'read_time':
+            num = _to_int_safe(value)
+            if num is not None:
+                qs = qs.filter(read_time=num)
+
+        elif field == 'publish_date':
+            if date_from:
+                qs = qs.filter(publish_time__date__gte=date_from)
+            if date_to:
+                qs = qs.filter(publish_time__date__lte=date_to)
+
+        # Legacy 'q' fallback (kept for compatibility)
+        q = (self.request.GET.get('q') or '').strip()
+        if q and not value:
             qs = qs.filter(Q(name__icontains=q) | Q(english_name__icontains=q))
-        return qs
+
+        return qs.distinct()  # important when tag joins are involved
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-
-        # collect all category ids across blogs
+        # Provide category names (instead of raw IDs) for display
         all_ids = set()
         for b in ctx['blogs']:
             raw = (b.category_id or '').strip()
@@ -691,13 +759,11 @@ class AdminBlogListView(ListView):
             b.category_ids_list = ids
             all_ids.update(ids)
 
-        # build a map {id: name}
+        # Map IDs -> names
         cat_map = {str(c.pk): c.name for c in Category.objects.filter(pk__in=all_ids)}
 
-        # attach category names to each blog
         for b in ctx['blogs']:
             b.category_names_list = [cat_map.get(cid, f"#{cid}") for cid in b.category_ids_list]
-
         return ctx
 
 
@@ -711,8 +777,8 @@ class BlogBuilderCreateView(View):
         return render(request, self.template_name, {
             "form": form,
             "title": "ایجاد بلاگ",
-            "tag_ids": [],              # no preselected tags
-            "category_ids": [],         # no preselected categories
+            "tag_ids": [],  # no preselected tags
+            "category_ids": [],  # no preselected categories
         })
 
     @transaction.atomic
@@ -736,7 +802,6 @@ class BlogBuilderCreateView(View):
                 messages.error(request, "مجموع شناسه‌های دسته‌بندی بیش از حد مجاز است. لطفاً تعداد کمتری انتخاب کنید.")
                 return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
             blog.category_id = cat_joined
-
 
             # ✅ author fields from the logged-in user
             user = request.user
@@ -828,7 +893,6 @@ class AdminBlogEditView(View):
         })
 
 
-
 @csrf_exempt
 def grapes_asset_upload(request):
     # Handles asset uploads from GrapesJS Asset Manager
@@ -866,8 +930,8 @@ def blog_delete_view(request, pk):
 
         # If AJAX (or JSON requested), keep old behavior:
         wants_json = (
-            request.headers.get("x-requested-with") == "XMLHttpRequest" or
-            "application/json" in (request.headers.get("accept") or "")
+                request.headers.get("x-requested-with") == "XMLHttpRequest" or
+                "application/json" in (request.headers.get("accept") or "")
         )
         if wants_json:
             return JsonResponse({'success': True})
