@@ -774,51 +774,95 @@ class BlogBuilderCreateView(View):
     def get(self, request):
         form = BlogForm()
         form = _prepare_blog_form_for_admin(form)
-        return render(request, self.template_name, {
-            "form": form,
-            "title": "ایجاد بلاگ",
-            "tag_ids": [],  # no preselected tags
-            "category_ids": [],  # no preselected categories
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "title": "ایجاد بلاگ",
+                "tag_ids": [],        # no preselected tags on create
+                "category_ids": [],   # no preselected categories on create
+            },
+        )
 
     @transaction.atomic
     def post(self, request):
-        # Normalize rel_* arrays if posted from JS
+        # If some fields are posted as repeated keys (checkboxes/multi-selects) and
+        # you want them as JSON strings, normalize here.
         for key in ["rel_news", "rel_blogs", "rel_products"]:
-            if isinstance(request.POST.get(key), list):
-                request.POST = request.POST.copy()
-                request.POST[key] = json.dumps(request.POST.getlist(key))
+            values = request.POST.getlist(key)
+            if values:
+                post = request.POST.copy()
+                post[key] = json.dumps(values)
+                request.POST = post  # replace with mutable copy
 
         form = BlogForm(request.POST, request.FILES)
         form = _prepare_blog_form_for_admin(form)
 
-        if form.is_valid():
-            blog = form.save(commit=False)
-            # MULTI categories -> store as comma-separated into category_id (<= 64 chars)
-            cats = form.cleaned_data.get("product_categories") or []
-            cat_ids = [str(c.pk) for c in cats]
-            cat_joined = _join_category_ids(cat_ids)
-            if len(cat_joined) > 64:
-                messages.error(request, "مجموع شناسه‌های دسته‌بندی بیش از حد مجاز است. لطفاً تعداد کمتری انتخاب کنید.")
-                return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
-            blog.category_id = cat_joined
+        if not form.is_valid():
+            # Form errors (including per-field ones) will render inline
+            return render(
+                request, self.template_name,
+                {
+                    "form": form,
+                    "title": "ایجاد بلاگ",
+                    "tag_ids": [],
+                    "category_ids": [],
+                }
+            )
 
-            # ✅ author fields from the logged-in user
-            user = request.user
-            blog.writer = user
-            blog.writer_name = _derive_writer_name(user)
-            blog.writer_profile = _derive_writer_profile_url(user)
-            blog.save()  # save before M2M
+        blog = form.save(commit=False)
 
-            # ✅ tags (M2M) — either from BlogForm's own field or our injected one
-            tags_qs = form.cleaned_data.get("tags")
-            if tags_qs is not None:
-                blog.tags.set(tags_qs)
+        # --- Categories packing (into CharField like `category_id`) ---
+        cats = list(form.cleaned_data.get("product_categories") or [])
+        cat_ids = [str(c.pk) for c in cats]
+        cat_joined = ",".join(cat_ids)
 
-            messages.success(request, "بلاگ ذخیره شد.")
-            return redirect("admin_dashboard:admin_blogs")
+        # Get max length from the model field to avoid hardcoding
+        try:
+            maxlen = blog._meta.get_field("category_id").max_length
+        except Exception:
+            maxlen = 64  # sensible fallback if field lookup fails
 
-        return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})
+        if len(cat_joined) > maxlen:
+            form.add_error(
+                "product_categories",
+                f"طول شناسه‌های دسته‌بندی از حد مجاز ({maxlen} کاراکتر) بیشتر است. "
+                f"لطفاً تعداد کمتری انتخاب کنید."
+            )
+            return render(
+                request, self.template_name,
+                {
+                    "form": form,
+                    "title": "ایجاد بلاگ",
+                    "tag_ids": [],
+                    "category_ids": cat_ids,  # optional: if you preselect from context elsewhere
+                }
+            )
+
+        # Store the packed IDs in your compact CharField
+        blog.category_id = cat_joined
+
+        # --- Author info from logged-in user ---
+        user = request.user
+        blog.writer = user
+        blog.writer_name = _derive_writer_name(user)
+        blog.writer_profile = _derive_writer_profile_url(user)
+
+        # Save instance before M2M
+        blog.save()
+
+        # --- M2M: tags ---
+        tags_qs = form.cleaned_data.get("tags")
+        if tags_qs is not None:
+            blog.tags.set(tags_qs)
+
+        # --- M2M: categories (if the model actually has it) ---
+        if hasattr(blog, "product_categories"):
+            blog.product_categories.set(cats)
+
+        messages.success(request, "بلاگ ذخیره شد.")
+        return redirect("admin_dashboard:admin_blogs")
 
 
 @method_decorator(login_required, name="dispatch")
