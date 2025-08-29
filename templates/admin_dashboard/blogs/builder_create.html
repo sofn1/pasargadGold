@@ -8,7 +8,7 @@
 
   <!-- Sticky top bar -->
   <div class="position-sticky top-0 z-3 mb-3" style="backdrop-filter:saturate(180%) blur(8px);">
-    <div class="card border-0 shadow-sm rounded-3" style="background:rgba(20,22,26,.8);">
+    <div class="card border-0 shadow-sm rounded-3" style="background:rgba(255,255,255,.8);">
       <div class="card-body py-2">
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-2">
@@ -179,7 +179,7 @@
 <!-- Preview Modal -->
 <div class="modal fade" id="previewModal" tabindex="-1">
   <div class="modal-dialog modal-fullscreen">
-    <div class="modal-content bg-dark text-light">
+    <div class="modal-content bg-white text-dark">
       <div class="modal-header border-0">
         <h5 class="modal-title">پیش‌نمایش بلاگ</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -194,109 +194,128 @@
 
 
 {% block extra_css %}
+
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
 <script src="https://unpkg.com/grapesjs"></script>
 
 <style>
-  /* ===== High-contrast palette (dark) ===== */
+  /* ========= Light palette ========= */
   :root{
-    --bg-elev-1: #1b2330;         /* card/table background */
-    --bg-elev-2: #232e42;         /* header/toolbar background */
-    --bg-elev-3: #2b3650;         /* hover/selected */
-    --text-main: #e6edf3;         /* main text */
-    --text-muted: #9fb0c3;        /* secondary text */
-    --border-soft: #2f3a55;       /* borders */
-    --brand: #1C39BB;             /* primary brand */
+    --bg-page: #f5f7fb;
+    --bg-card: #ffffff;
+    --bg-header: #f1f5f9;
+    --bg-soft: #f8fafc;
+    --text-main: #0f172a;      /* slate-900 */
+    --text-muted: #475569;     /* slate-600 */
+    --border-soft: #e2e8f0;    /* slate-200 */
+    --brand: #1C39BB;          /* brand blue */
     --brand-600:#2748d5;
     --success:#22c55e;
     --danger:#ef4444;
     --warning:#f59e0b;
-    --chip-bg:#2a344b;
-    --chip-text:#e6edf3;
+    --chip-bg:#eef2ff;         /* indigo-50 */
+    --chip-text:#1e293b;       /* slate-800 */
   }
 
-  /* Date input calendar icon */
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-  }
-  input[type="date"] {
-    color: #fff;
-  }
-  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
-  input[type="date"]::-webkit-datetime-edit-text,
-  input[type="date"]::-webkit-datetime-edit-year-field,
-  input[type="date"]::-webkit-datetime-edit-month-field,
-  input[type="date"]::-webkit-datetime-edit-day-field {
-    color: #fff;
-  }
+  body{ background: var(--bg-page); color: var(--text-main); direction: rtl; }
 
   /* Cards */
   .card{
-    background: var(--bg-elev-1) !important;
+    background: var(--bg-card) !important;
     color: var(--text-main);
     border: 1px solid var(--border-soft) !important;
     border-radius: 14px;
   }
   .card-header{
-    background: var(--bg-elev-2) !important;
+    background: var(--bg-header) !important;
     color: var(--text-main);
     border-bottom: 1px solid var(--border-soft) !important;
-    border-top-left-radius: 1rem;
-    border-top-right-radius: 1rem;
+    border-top-left-radius: 1rem; border-top-right-radius: 1rem;
   }
 
   /* Inputs */
   .form-control, .form-select, textarea {
-    background: #0f1724 !important;
+    background: #fff !important;
     color: var(--text-main) !important;
     border: 1px solid var(--border-soft) !important;
     border-radius: 10px;
     padding: .55rem .75rem;
   }
-  .form-control::placeholder { color: #8aa0b6; }
+  .form-control::placeholder { color: #94a3b8; }
   .form-control:focus, .form-select:focus, textarea:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 .2rem rgba(28,57,187,.15) !important;
     outline: none;
   }
-  label.form-label { color: var(--text-muted); }
+  label.form-label{ color: var(--text-muted); }
+  .text-secondary{ color: var(--text-muted) !important; }
 
   /* Buttons */
   .btn-primary{ background: var(--brand) !important; border:none !important; }
   .btn-primary:hover{ background: var(--brand-600) !important; }
-  .btn-success{ background: var(--success) !important; border:none !important; }
-  .btn-warning{ background: var(--warning) !important; border:none !important; color:#1c1917 !important; }
-  .btn-danger { background: var(--danger) !important; border:none !important; }
   .btn-outline-secondary{ color: var(--text-main); border-color: var(--border-soft); }
-  .btn-outline-secondary:hover{ background: var(--bg-elev-3); }
+  .btn-outline-secondary:hover{ background: var(--bg-soft); }
+  .btn-outline-light{ color:#334155; border-color:#cbd5e1; }
+  .btn-outline-light:hover{ background:#e2e8f0; }
+  .btn-warning{ background: var(--warning) !important; border: none !important; color:#1c1917 !important; }
+  .btn-danger { background: var(--danger)  !important; border: none !important; }
 
-  /* GrapesJS dark UI adjustments */
-  .gjs-one-bg    { background:#101216 !important; }
-  .gjs-two-bg    { background:#171a1f !important; }
-  .gjs-three-bg  { background:#1b1f26 !important; }
-  .gjs-four-color{ color:#cfd3da !important; }
-  .gjs-color-warn{ color:#ffb454 !important; }
-  .gjs-title     { color:#dfe3ea !important; }
-
-  /* Chips */
-  .badge.bg-info { background:#3b82f6 !important; }
+  /* Chips (badges) */
+  .badge.bg-info{ background:#3b82f6 !important; }
   .badge.bg-secondary-subtle{
     background: var(--chip-bg) !important;
     color: var(--chip-text) !important;
-    border: 1px solid var(--border-soft) !important;
+    border: 1px solid #e5e7eb !important;
   }
 
-  /* Blocks look nicer */
+  /* GrapesJS (light) */
+  #gjs{ background:#ffffff !important; }
+  .gjs-one-bg    { background:#ffffff !important; }
+  .gjs-two-bg    { background:#f8fafc !important; }
+  .gjs-three-bg  { background:#f1f5f9 !important; }
+  .gjs-four-color{ color:#0f172a !important; }
+  .gjs-color-warn{ color:#b45309 !important; }
+  .gjs-title     { color:#0f172a !important; }
+
+  /* Blocks */
   #blocks .gjs-block, #blocks-mobile .gjs-block {
-    border-radius: 12px; padding: 10px; margin: 6px; border:1px dashed var(--border-soft);
-    background:#111318; cursor:grab; text-align:center;
+    border-radius: 12px; padding: 10px; margin: 6px;
+    border:1px dashed #e2e8f0; background:#ffffff; cursor:grab; text-align:center;
   }
-  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background: var(--bg-elev-3); }
+  #blocks .gjs-block:hover, #blocks-mobile .gjs-block:hover { background:#f8fafc; }
 
-  /* Editor canvas */
-  #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; }
+  /* Editor canvas edges */
+  #gjs .gjs-cv-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-soft); }
+
+  /* Select2 chips color overrides (optional) */
+  #id_tags + .select2 .select2-selection__choice {
+    color: #1c1917 !important;   /* readable on light */
+    background:#fde68a !important; /* amber-200 */
+    border-color: #f59e0b !important;
+  }
+  #id_product_categories + .select2 .select2-selection__choice {
+    color: #1c1917 !important;
+    background:#bbf7d0 !important; /* green-200 */
+    border-color: #22c55e !important;
+  }
+
+  /* Date input – keep icon dark & visible on light */
+  input[type="date"]{
+    color: var(--text-main);
+    background:#fff;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator{
+    filter: invert(0); /* keep default dark icon for light bg */
+    opacity: .85;
+    cursor: pointer;
+  }
+
+  /* Offcanvas light */
+  .offcanvas{ background:#fff; color:var(--text-main); }
+  .offcanvas .nav-pills .nav-link{ color:var(--text-main); }
+  .offcanvas .nav-pills .nav-link.active{ background: var(--brand); color:#fff; }
 </style>
+
 {% endblock %}
 
 {% block extra_js %}
