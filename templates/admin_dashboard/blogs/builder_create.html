@@ -420,6 +420,61 @@
     blockManager: { appendTo: '#blocks' },
     traitManager: { appendTo: '#traits' },
   });
+  // Always show useful traits
+  const dc = editor.DomComponents;
+
+  // Default node (applies to most elements)
+  {
+    const type = dc.getType('default');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'id', label: 'Id' },
+      { type: 'text', name: 'title', label: 'Title' },
+    ]);
+  }
+
+  // Image
+  {
+    const type = dc.getType('image');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      'alt',
+      { type: 'text', name: 'title', label: 'Title' },
+    ]);
+  }
+
+  // Link
+  {
+    const type = dc.getType('link');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'href', label: 'لینک' },
+      {
+        type: 'select', name: 'target', label: 'Target',
+        options: [{ value: '', name: 'همین پنجره' }, { value: '_blank', name: 'پنجره جدید' }]
+      },
+    ]);
+  }
+
+  // Video (optional)
+  {
+    const type = dc.getType('video');
+    const proto = type.model.prototype;
+    proto.defaults.traits = (proto.defaults.traits || []).concat([
+      { type: 'text', name: 'src', label: 'ویدیو URL' },
+      { type: 'checkbox', name: 'controls', label: 'کنترل‌ها' },
+    ]);
+  }
+
+  // Re-render traits when selection changes
+  editor.on('component:selected', () => editor.TraitManager.render());
+
+  // Ensure we have something selected on load (so Traits isn't empty)
+  editor.on('load', () => {
+    const wrapper = editor.getWrapper();
+    if (wrapper) editor.select(wrapper);
+  });
+
 
   // ---------- Blocks ----------
   const bm = editor.BlockManager;
