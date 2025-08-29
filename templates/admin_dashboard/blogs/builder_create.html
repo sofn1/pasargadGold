@@ -178,19 +178,23 @@
 </div>
 
 <!-- Preview Modal -->
-<div class="modal fade" id="previewModal" tabindex="-1">
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content bg-white text-dark">
       <div class="modal-header border-0">
-        <h5 class="modal-title">پیش‌نمایش بلاگ</h5>
-        <button type="button" class="btn-close btn-close-black" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="previewModalLabel">پیش‌نمایش بلاگ</h5>
+        <!-- use Bootstrap's default close (works on light); "btn-close-black" doesn't exist -->
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
       </div>
       <div class="modal-body">
-        <iframe id="previewFrame" class="w-100 border-0 rounded-3 shadow" style="height: calc(100vh - 140px); background:#0e0f11;"></iframe>
+        <iframe id="previewFrame"
+                class="w-100 border rounded-3 shadow-sm"
+                style="height: calc(100vh - 140px); background:#ffffff;"></iframe>
       </div>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 
@@ -315,6 +319,7 @@
   .offcanvas{ background:#fff; color:var(--text-main); }
   .offcanvas .nav-pills .nav-link{ color:var(--text-main); }
   .offcanvas .nav-pills .nav-link.active{ background: var(--brand); color:#fff; }
+
 </style>
 
 {% endblock %}
@@ -401,11 +406,29 @@
   previewBtn?.addEventListener('click', () => {
     const html = editor.getHtml();
     const css  = `<style>${editor.getCss()}</style>`;
-    const doc  = `<html dir="rtl"><head><meta charset="utf-8">${css}</head><body style="background:#0e0f11;color:#faf7f7;">${html}</body></html>`;
+    // Light preview palette inside iframe
+    const doc  = `
+      <html dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          ${css}
+          <style>
+            body{
+              background:#ffffff;
+              color:#0f172a;
+              margin:0; padding:1rem;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+            }
+            a{ color:#1C39BB; }
+          </style>
+        </head>
+        <body>${html}</body>
+      </html>`;
     const blob = new Blob([doc], {type:'text/html'});
     const url  = URL.createObjectURL(blob);
     if (previewFrame) { previewFrame.src = url; previewModal?.show(); }
   });
+
 
   // ---------- Form submit wiring ----------
   const formEl = document.getElementById('blog-form');
