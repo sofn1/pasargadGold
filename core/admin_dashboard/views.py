@@ -815,7 +815,7 @@ class BlogBuilderCreateView(View):
             if tags_qs is not None:
                 blog.tags.set(tags_qs)
 
-            messages.success(request, "وبلاگ با موفقیت ایجاد شد.")
+            messages.success(request, "بلاگ ذخیره شد.")
             return redirect("admin_dashboard:admin_blogs")
 
         return render(request, self.template_name, {"form": form, "title": "ایجاد بلاگ"})

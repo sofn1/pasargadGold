@@ -26,7 +26,8 @@
             <button class="btn btn-outline-info btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#builderSidebar">پنل ابزار</button>
             <button id="btn-clear"   type="button" class="btn btn-outline-danger btn-sm">پاک‌سازی</button>
             <button id="btn-preview" type="button" class="btn btn-outline-secondary btn-sm">پیش‌نمایش</button>
-            <button id="btn-save"    type="submit" class="btn btn-primary btn-sm px-3">ذخیره بلاگ</button>
+            <button id="btn-save" type="submit" class="btn btn-primary btn-sm px-3" form="blog-form">ذخیره بلاگ</button>
+
           </div>
         </div>
       </div>
@@ -655,19 +656,31 @@
   });
 
 
-  document.getElementById('btn-save')?.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    if (formEl?.requestSubmit) formEl.requestSubmit();
-    else { fillBuilderIntoForm(); formEl.submit(); }
+  const formEl = document.getElementById('blog-form');
+  let submitting = false;
+
+  formEl?.addEventListener('submit', () => {
+    if (submitting) return;          // double-click guard
+    submitting = true;
+
+    fillBuilderIntoForm();           // put HTML/CSS + project_json + short_description into fields
+    editor.clearDirtyCount();
+
+    // disable all submit buttons to avoid double posts
+    formEl.querySelectorAll('button[type="submit"]').forEach(b => {
+      b.disabled = true;
+      b.classList.add('disabled');
+    });
   });
+
 
   document.addEventListener('keydown', function(e){
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      if (formEl?.requestSubmit) formEl.requestSubmit();
-      else { fillBuilderIntoForm(); formEl.submit(); }
+      formEl?.requestSubmit();  // triggers the same 'submit' listener above
     }
   });
+
 
 
   // ---------- Unsaved changes warning ----------
