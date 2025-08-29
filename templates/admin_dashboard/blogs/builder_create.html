@@ -282,6 +282,28 @@
   .gjs-color-warn{ color:#b45309 !important; }
   .gjs-title     { color:#0f172a !important; }
 
+  /* === Traits Manager (Id, Title, etc.) === */
+
+  /* Labels */
+  .gjs-traits-c .gjs-label,
+  .gjs-traits-c .gjs-label-wrp {
+    color: #000 !important;
+  }
+
+  /* Input fields inside traits */
+  .gjs-traits-c .gjs-field input[type="text"],
+  .gjs-traits-c .gjs-field textarea,
+  .gjs-traits-c .gjs-field select {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #d1d5db !important; /* soft gray */
+    border-radius: 6px;
+    padding: 4px 6px;
+  }
+
+  .gjs-traits-c .gjs-field input::placeholder {
+    color: #9ca3af; /* muted gray */
+  }
 
   /* === GrapesJS light palette text overrides === */
 
